@@ -1,2 +1,2 @@
 # Chateau
-This is a repository for networks project 1. 
+This is a Repository for networks project 1.
