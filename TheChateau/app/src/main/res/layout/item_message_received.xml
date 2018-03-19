@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Area that message shows up in -->
+    <android.support.constraint.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="8dp">
+
+
+        <!-- Optional User Icon -->
+        <ImageView
+            android:id="@+id/message_icon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/circle"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginLeft="8dp"
+            app:layout_constraintLeft_toLeftOf="parent" />
+
+        <!-- User's name -->
+        <TextView
+            android:id="@+id/text_message_sender"
+            android:text="Other User"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            app:layout_constraintLeft_toRightOf="@+id/message_icon"
+            android:layout_marginLeft="8dp"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="4dp" />
+
+        <!-- Message content -->
+        <TextView
+            android:id="@+id/text_message_body"
+            android:text="Hiya how are you?"
+            android:background="@drawable/rounded_rectangle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxWidth="240dp"
+            android:padding="8dp"
+            android:textColor="#ffffff"
+            android:layout_marginTop="4dp"
+            app:layout_constraintTop_toBottomOf="@+id/text_message_sender"
+            app:layout_constraintLeft_toRightOf="@+id/message_icon"
+            android:layout_marginLeft="8dp" />
+
+        <!-- Message Timestamp -->
+        <TextView
+            android:id="@+id/text_message_time"
+            android:text="11:40"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="4dp"
+            android:textSize="10sp"
+            app:layout_constraintLeft_toRightOf="@+id/text_message_body"
+            app:layout_constraintBottom_toBottomOf="@+id/text_message_body" />
+
+    </android.support.constraint.ConstraintLayout>
+</android.support.constraint.ConstraintLayout>
