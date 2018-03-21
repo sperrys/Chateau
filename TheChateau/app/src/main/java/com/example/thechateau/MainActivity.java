@@ -34,11 +34,19 @@ public class MainActivity extends AppCompatActivity {
     private Button              _AddNewChatButton;
     private Button              _AddChatToTopButton;
     private int                 _newChatCounter       = 0;
+    private static String        _CurrentUser;
+
+    public static String getCurrentUser()
+    {
+        return _CurrentUser;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        _CurrentUser = "User1";
 
         // Get the Add New Chat Button
         _AddNewChatButton = findViewById(R.id.addChatButton);
@@ -125,6 +133,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Tell activity which chat we will be using
         chatHistory.putExtra("chatName", chatName);
+
 
         // Start the activity
         startActivity(chatHistory);
