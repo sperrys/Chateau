@@ -1,5 +1,7 @@
 package com.example.thechateau;
 
+import java.io.Serializable;
+
 /**
  * Created by russgomez on 3/19/18.
  */
