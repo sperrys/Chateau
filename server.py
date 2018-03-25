@@ -79,7 +79,7 @@ def MessageHandler(sock, msg):
             MessageRequestHandler(sock, msg)
         elif msgType == 4:
             ClientListRequestHandler(sock, msg)
-        elif msgType === 5:
+        elif msgType == 5:
             RandomMessageRequestHandler(sock, msg)
         else: 
             print("Not a valid Message Type")
@@ -190,12 +190,13 @@ def ClientListRequestHandler(sock, msg):
         sock.write_message(json.dumps(response))
         RemoveClientWSock(sock)
 
+
+
 def RandomMessageRequestHandler(sock, msg):
     print("Random Message Request")
 
     try:
         c = GetClientWSock(sock)
-
         new_friend = sample(clients, 1)
 
         while new_friend.username == c.username:
@@ -211,11 +212,8 @@ def RandomMessageRequestHandler(sock, msg):
 
     except Exception as e:
         print("Sending Error Response")
-        response = { 
-                    "status": 400
-                   }
+        response = { "status": 400 }
         sock.write_message(json.dumps(response)) 
-
 
 
 
@@ -223,6 +221,7 @@ app = tornado.web.Application([
     (r'/', IndexHandler),
     (r'/ws', WebSocketHandler),
 ])
+
 
 if __name__ == '__main__':
     parse_command_line()
