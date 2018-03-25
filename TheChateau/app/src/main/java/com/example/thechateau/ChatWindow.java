@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,30 +21,45 @@ public class ChatWindow extends AppCompatActivity {
 
     private List<Message> _MessageList;
 
-    private String _tag = "ChatWindow";
+    private String   _tag = "ChatWindow";
+    private String   _chatName;
 
-    private Button _sendButton;
+    private TextView _chatNameTextView;
+    private Button   _sendButton;
     private EditText _sendMessageText;
-    private User _currentUser = new User(MainActivity.getCurrentUser());
+    private User     _currentUser = new User(MainActivity.getCurrentUser());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat_window);
 
-        // Get the intent that called our activity
+        // Retrieve the chatName given to us by the calling intent
         Intent intent = getIntent();
-        String chatName = intent.getStringExtra("chatName");
+        _chatName = intent.getStringExtra("chatName");
 
-        Log.i(_tag, "Got chatName from intent: " + chatName);
+        Log.i(_tag, "Got chatName from intent: " + _chatName);
+
+        /************************************/
+        /* Display Chat Name in Chat Window */
+        /************************************/
+        _chatNameTextView = findViewById(R.id.chatName);
+        _chatNameTextView.setText(_chatName);
+
+        /************************************/
+        /*     Retrieve other variables     */
+        /************************************/
 
         // Get the chat history from the main activity
-        _MessageList = MainActivity.getChatHistory(chatName);
+        _MessageList = MainActivity.getChatHistory(_chatName);
 
-
-
+        // Get sendMessageText view (represents text user wants to send)
         _sendMessageText = findViewById(R.id.edittext_chatbox);
 
+        /************************************/
+        /*       Set up Send Button       */
+        /************************************/
+        // When clicked, it sends text found in the _sendMessageText object onto the screen
         _sendButton = findViewById(R.id.button_chatbox_send);
         _sendButton.setOnClickListener(   new View.OnClickListener()
         {
@@ -65,6 +81,8 @@ public class ChatWindow extends AppCompatActivity {
                 // Clear the text box
                 _sendMessageText.getText().clear();
 
+                // Move the current chat to most recently sent in Main's chat list
+                //((MainActivity)getParent()).moveChatToTop(_chatName);
             }
         });
 
@@ -74,24 +92,25 @@ public class ChatWindow extends AppCompatActivity {
         //Message message2 = new Message("Second message", _currentUser, System.currentTimeMillis());
         //Message message3 = new Message("First Received Message", user2, System.currentTimeMillis());
 
-
         //_MessageList.add(message1);
         //_MessageList.add(message2);
         //_MessageList.add(message3);
+        //_MessageList.add(message3);
+        //_MessageList.add(message3);
+
+
+        /************************************/
+        /*       Set up recycler view       */
+        /************************************/
 
         _MessageRecycler = (RecyclerView) findViewById(R.id.reyclerview_message_list);
-        _MessageAdapter  = new MessageListAdapter(this, _MessageList);
         _MessageRecycler.setLayoutManager(new LinearLayoutManager(this));
 
-
+        // Initialize an adapter that can adapt messages in the message list
+        // And set it as the recycler view's adapter
+        _MessageAdapter  = new MessageListAdapter(this, _MessageList);
         _MessageRecycler.setAdapter(_MessageAdapter);
 
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-
-    }
 }

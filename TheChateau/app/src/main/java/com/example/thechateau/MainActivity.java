@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
     private String              _WSHOST      = "ws://websockethost:8080";
 
     private ListView                                _ChatListView;
-    private final String[]                          _ChatListStrings = {"Spencer", "Russ", "Fahad", "Joe"};
+    private final String[]                          _SampleChatListStrings = {"Spencer", "Russ", "Fahad", "Joe"};
     private LinkedList<String>                      _ChatListEntries;
     private static Hashtable<String, List<Message>> _ChatHistories = new Hashtable<>();
 
@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
         return _CurrentUser;
     }
 
+    // Returns a chat history with the given name
     public static List<Message> getChatHistory(String chatName)
     {
         return _ChatHistories.get(chatName);
@@ -57,9 +58,38 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //*******************************/
+        /* Set up Fragment Stuff       */
+        /*******************************/
+        /*// Check that the activity is using the layout version with
+        // the fragment_container FrameLayout
+        if (findViewById(R.id.fragment_container) != null) {
+
+            // However, if we're being restored from a previous state,
+            // then we don't need to do anything and should return or else
+            // we could end up with overlapping fragments.
+            if (savedInstanceState != null) {
+                return;
+            }
+
+            // Create a new Fragment to be placed in the activity layout
+            HeadlinesFragment firstFragment = new HeadlinesFragment();
+
+            // In case this activity was started with special instructions from an
+            // Intent, pass the Intent's extras to the fragment as arguments
+            firstFragment.setArguments(getIntent().getExtras());
+
+            // Add the fragment to the 'fragment_container' FrameLayout
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.fragment_container, firstFragment).commit();
+        }*/
+
+
         _CurrentUser = "User1";
 
-        // Setup the "Add New Chat Button"
+        /******************************/
+        /* Set up Add New Chat Button */
+        /******************************/
         _AddNewChatButton = findViewById(R.id.addChatButton);
         _AddNewChatButton.setOnClickListener(
                 new View.OnClickListener()
@@ -69,12 +99,14 @@ public class MainActivity extends AppCompatActivity {
 
                         // Add a new chat to our list
                         _newChatCounter++;
-                        AddChatEntryToList("New User " + _newChatCounter);
+                        AddChat("New User " + _newChatCounter);
                     }
                 }
         );
 
-        // Setup "Add Chat To Top" Button
+        /*********************************/
+        /* Set up Add Chat To Top Button */
+        /*********************************/
         _AddChatToTopButton = findViewById(R.id.MoveChatToTopButton);
         _AddChatToTopButton.setOnClickListener(
 
@@ -93,8 +125,12 @@ public class MainActivity extends AppCompatActivity {
 
         Log.i("Setup", "In Setup");
 
-        // Make array list of strings so we can dynamically add
-        _ChatListEntries = new LinkedList<String>(Arrays.asList(_ChatListStrings));
+        /*************************/
+        /* Set up Chat List View */
+        /*************************/
+
+        // Make linked list of strings so we can easily add elements to front of list
+        _ChatListEntries = new LinkedList<String>(Arrays.asList(_SampleChatListStrings));
 
         // Make an adapter for the Chat List view and set it
         _ChatListAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, _ChatListEntries);
@@ -118,13 +154,47 @@ public class MainActivity extends AppCompatActivity {
                     // Open a new chat window for that specific chat
                     openChatWindow(chatName);
                 }
-
             });
 
+        /*****************************************************************/
+        /* Initialize Sample Chat Histories                              */
+        /* (As if these chats were already present when opening the app) */
+        /*****************************************************************/
+        for (String chatName : _ChatListEntries)
+        {
+            List <Message> chatHistory = new ArrayList<Message>();
+
+            _ChatHistories.put(chatName, chatHistory);
+        }
+    }
+
+    // Adds a new chat name to the list view
+    private void AddChat(String chatName) {
+
+        // Add item to list of entries
+        _ChatListEntries.add(chatName);
+
+        // Notify Adapter that data has changed
+        _ChatListAdapter.notifyDataSetChanged();
+
+        // Add a chat history for the chat name if necessary
+        List <Message> chatHistory = _ChatHistories.get(chatName);
+
+        if (chatHistory == null)
+        {
+            chatHistory = new ArrayList<Message>();
+            _ChatHistories.put(chatName, chatHistory);
+        }
+        else
+        {
+            Log.i("AddChat", "ERROR chatHistory wasn't null, but sender didn't exist previously");
+        }
 
     }
 
-    private void moveChatToTop(String chatToMoveString)
+    // Moves a chat to the top of the list view (i.e. to show the most recent chat)
+    // If the chat doesn't exist, it does nothing
+    public void moveChatToTop(String chatToMoveString)
     {
         // Check if string exists in the list
         if(_ChatListEntries.contains(chatToMoveString))
@@ -141,42 +211,63 @@ public class MainActivity extends AppCompatActivity {
         };
     }
 
-    // Opens a new activity with the chat window
+    // Opens a new activity with the chat window for the given chat name
     private void openChatWindow(String chatName)
     {
-        int initialSize;
-
         // Declare intent of starting activity
         Intent chatWindow = new Intent(this, ChatWindow.class);
-
-
-        // Check if the chat history exists, and initialize it if necessary
-        List<Message> chatHistory= _ChatHistories.get(chatName);
-        if (chatHistory == null)
-        {
-            chatHistory = new ArrayList<Message>();
-            _ChatHistories.put(chatName, chatHistory);
-        }
-
-        //
-        initialSize = chatHistory.size();
 
         // Tell activity which chat we will be using
         chatWindow.putExtra("chatName", chatName);
 
         // Start the activity
         startActivity(chatWindow);
+
+        // Move the chat to the top of the list
+        moveChatToTop(chatName);
     }
 
-    private void AddChatEntryToList(String s) {
+    // Returns chat history found in the chat history list with the given name
+    // If no chat history with the game exists, it initializes a chat history for the name
+    /*private List <Message> retrieveChatHistory(String chatName)
+    {
+        List <Message>  chatHistory = _ChatHistories.get(chatName);
 
-            // Add item to list of entries
-            _ChatListEntries.add(s);
+        if (chatHistory == null)
+        {
+            chatHistory = new ArrayList<Message>();
+            _ChatHistories.put(chatName, chatHistory);
+        }
 
-            // Notify Adapter that data has changed
-            _ChatListAdapter.notifyDataSetChanged();
+        return chatHistory;
+    }*/
+
+    // Called when a message is received by the user
+    private void onMessageReceived(Message message, String chatName)
+    {
+
+        // Initialize a chat for the sender if necessary
+        if(!_ChatListEntries.contains(chatName))
+        {
+            AddChat(chatName);
+        }
+
+        List<Message> chatHistory = getChatHistory(chatName);
+
+        // Initialize a chat history for the person if necessary
+        if (chatHistory != null)
+        {
+            Log.i("OnMessage", "Adding message to chatHistory");
+            chatHistory.add(message);
+
+            // Move the chat to the top of the list of chats
+            moveChatToTop(chatName);
+        }
+        else
+        {
+            Log.i("OnMessage", "ERROR chatHistory was null");
+        }
     }
-
 
     /*private void connectWebSocket() {
 

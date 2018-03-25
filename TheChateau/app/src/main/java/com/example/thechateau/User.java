@@ -5,7 +5,7 @@ package com.example.thechateau;
  */
 
 public class User {
-    String _Name;
+    private String _Name;
 
     public User(String name)
     {

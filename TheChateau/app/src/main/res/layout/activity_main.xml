@@ -5,6 +5,12 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <!-- Empty Container for Fragment to Live in -->
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
     <!-- Left Hand Side -->
     <LinearLayout
         android:id="@+id/LeftHandLayout"
@@ -76,6 +82,10 @@
             android:layout_gravity="center"
             >
         </EditText>
+
+
+
+
     </LinearLayout>
 
 

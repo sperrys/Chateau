@@ -6,6 +6,15 @@
     android:layout_height="match_parent"
     tools:context="com.example.thechateau.ChatWindow">
 
+    <!-- Chat Name Section -->
+    <TextView
+        android:id="@+id/chatName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:text="Chat Name Goes Here"
+        >
+    </TextView>
 
     <!-- Chat Messages Section -->
     <android.support.v7.widget.RecyclerView
@@ -15,7 +24,7 @@
         app:layout_constraintBottom_toTopOf="@id/chatWindowSpacer"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/chatName"
 
         ></android.support.v7.widget.RecyclerView>
 

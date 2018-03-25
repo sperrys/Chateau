@@ -31,7 +31,6 @@ public class MessageListAdapter extends RecyclerView.Adapter {
         _MessageList = messageList;
 
         Log.i("MessageListAdapter", "Here");
-
     }
 
     @Override
@@ -130,7 +129,7 @@ public class MessageListAdapter extends RecyclerView.Adapter {
             messageText  = (TextView)  itemView.findViewById(R.id.text_message_body);
             timeText     = (TextView)  itemView.findViewById(R.id.text_message_time);
             nameText     = (TextView)  itemView.findViewById(R.id.text_message_sender);
-            profileImage = (ImageView) itemView.findViewById(R.id.message_icon);
+            //profileImage = (ImageView) itemView.findViewById(R.id.message_icon);
         }
 
         void bind(Message message) {
