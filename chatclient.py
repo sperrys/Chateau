@@ -7,6 +7,7 @@ class ChatClient():
     def __init__(self, WebSocketHandler):
         self.sock = WebSocketHandler
         self.username = ""
+        self.registered = False
 
     def set_username(username):
         self.username = username

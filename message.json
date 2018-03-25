@@ -1,3 +1,5 @@
 {
-  "type" : 4
+  "type" : 3,
+  "recipients" : [ "bob" ],
+  "content": "hey"
 }

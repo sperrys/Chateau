@@ -26,11 +26,13 @@ For message types and message arguements, the keyword format must match exactly.
 type: 1 
 
 Arguments
-	- username
+	- `"username"`
 
 Response:
 	- If successful, `"status": 200`
-	- if failure, `"status": 400` 
+	- if generic failure, `"status": 400` 
+	- if no socket (this shouldn't happen), `"status": 300` 
+	- if user is already registered, `"status": 302` 
 
 
 **Message Client:**
@@ -57,6 +59,22 @@ Response:
 	- if failure, `"status": 400` 
 
 
+**Random Message:** 
+
+type: 5
+
+Arguments
+	- `"content"`
+Response:
+	- If successful, `"status": 200` and a random `"clients"` username. 
+	- if failure, `"status": 400` 
+
+
+
 # To Use The Python Test Client
 ### In order to use the python test client, make sure that the server is running locally with `python server.py`. Then
 in a seperate window, start the client with `python test_client.py`. The test client is configured to read in a json message from file eg. `message.json` and then send that json file to the server as a message. The test client then reads from the server and prints to console. The client will then loop back and listen for another file message. **Note that the client is currently configured to only read once, so if a message sent to the server prompts multiple messages back to the client, only one message will show. (Assumes port localhost:8888)***
+
+
+## Current Behaviours
+1) You must succesfully have a register client request (1) before making any other requests

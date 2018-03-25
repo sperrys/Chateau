@@ -25,7 +25,7 @@ class Client(object):
         self.ws = None
         self.connect()
 
-        PeriodicCallback(self.keep_alive, 20000).start()
+        PeriodicCallback(self.keep_alive, 30000).start()
         self.ioloop.start()
 
     @gen.coroutine
@@ -45,18 +45,19 @@ class Client(object):
             message = ""
 
             # Prompt User for Message 
-            file = input("Message File: ")
-            print("Opening File... ", file)
+            stdin = input("Message File or Read for read input (r): ")
 
             # Open File, Read and Format Nicely
             try:
-                with open(file) as fp:
-                  for line in fp:
-                    message += line
 
-                # Send Message to Server
-                print("Sending Message: ", message)
-                self.ws.write_message(message)
+                if stdin != 'r':
+                    with open(stdin) as fp:
+                      for line in fp:
+                        message += line
+
+                    # Send Message to Server
+                    print("Sending Message: ", message)
+                    self.ws.write_message(message)
 
                 # Read Response from Serve
                 msg = yield self.ws.read_message()
