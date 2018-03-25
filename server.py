@@ -20,6 +20,12 @@ class IndexHandler(tornado.web.RequestHandler):
         self.render("index.html")
 
 
+class CertRequestHandler(tornado.web.RequestHandler):
+    @tornado.web.asynchronous
+    def get(self):
+        self.write('eBavPJ_kR67DbW7MEJ49Z-L7xqUyJZgvi5shL5iCI78.VC6txwIMOMmKlkjWLi-iG47yPMBGmPSp3-r_5m8IY34')
+
+
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
     # When A Web Socket Connection Has Been Opened 
@@ -218,9 +224,13 @@ def RandomMessageRequestHandler(sock, msg):
 
 
 
+
+
+
 app = tornado.web.Application([
     (r'/', IndexHandler),
     (r'/ws', WebSocketHandler),
+    (r'/.well-known/acme-challenge/eBavPJ_kR67DbW7MEJ49Z-L7xqUyJZgvi5shL5iCI78/', CertRequestHandler)
 ])
 
 
