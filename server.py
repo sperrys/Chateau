@@ -8,7 +8,7 @@ from chatclient import ChatClient
 from tornado.options import define, options, parse_command_line
 
 
-port = process.env.PORT || 5000;
+options.port = int(os.environ.get('PORT', 5000))
 
 # We gonna store clients in an array.
 clients = []
@@ -224,7 +224,6 @@ app = tornado.web.Application([
 
 
 if __name__ == '__main__':
-    parse_command_line()
     app.listen(options.port)
     tornado.ioloop.IOLoop.instance().start()
 
