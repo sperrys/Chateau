@@ -75,6 +75,9 @@ Response:
 ### In order to use the python test client, make sure that the server is running locally with `python server.py`. Then
 in a seperate window, start the client with `python test_client.py`. The test client is configured to read in a json message from file eg. `message.json` and then send that json file to the server as a message. The test client then reads from the server and prints to console. The client will then loop back and listen for another file message. **Note that the client is currently configured to only read once, so if a message sent to the server prompts multiple messages back to the client, only one message will show. (Assumes port localhost:8888)***
 
+# To Test the Potential Tufts Auth Functionality
+Run the script `python ldap_client.py` and try your username and password. This is done over tls and you can check the source, nothing is saved"
+
 
 ## Current Behaviours
 1) You must succesfully have a register client request (1) before making any other requests
