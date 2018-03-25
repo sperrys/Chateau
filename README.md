@@ -17,7 +17,7 @@ This is a Repository for networks project 1.
 
 ## The WS portion of the Server takes JSON messsages at the /ws url and then based 
 upon the message, acts accordingly. The messages and their responses are documented below.
-For message types and message arguements, the keyword format must match exactly.
+For message types and message arguements, the keyword format must match exactly. ##
 
 ### Message Types:
 
