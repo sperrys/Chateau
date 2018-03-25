@@ -1,7 +1,13 @@
 package com.example.thechateau;
 
+
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,7 +17,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -24,7 +29,8 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+                          implements ChatWindowFragment.OnFragmentInteractionListener{
 
     private WebSocketClient     _WSClient;
     private String              _WSHOST      = "ws://websockethost:8080";
@@ -42,6 +48,8 @@ public class MainActivity extends AppCompatActivity {
     private int                 _newChatCounter       = 0;
     private static String       _CurrentUser;
 
+    private FragmentManager _FragmentManager;
+
     public static String getCurrentUser()
     {
         return _CurrentUser;
@@ -54,6 +62,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onFragmentInteraction(Uri uri){
+        //you can leave it empty
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -61,6 +74,11 @@ public class MainActivity extends AppCompatActivity {
         //*******************************/
         /* Set up Fragment Stuff       */
         /*******************************/
+
+
+        //Fragment chatWindowFrag = new ChatWindowFragment();
+
+
         /*// Check that the activity is using the layout version with
         // the fragment_container FrameLayout
         if (findViewById(R.id.fragment_container) != null) {
@@ -77,11 +95,12 @@ public class MainActivity extends AppCompatActivity {
 
             // In case this activity was started with special instructions from an
             // Intent, pass the Intent's extras to the fragment as arguments
-            firstFragment.setArguments(getIntent().getExtras());
+            //firstFragment.setArguments(getIntent().getExtras());
 
             // Add the fragment to the 'fragment_container' FrameLayout
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.fragment_container, firstFragment).commit();
+                                       .add(R.id.fragment_container, firstFragment)
+                                       .commit();
         }*/
 
 
@@ -97,9 +116,18 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View view) {
 
+                        EditText _chatToAdd = findViewById(R.id.ChatToAdd);
+                        String newChatName  = _chatToAdd.getText().toString();
+
+
+
+
                         // Add a new chat to our list
-                        _newChatCounter++;
-                        AddChat("New User " + _newChatCounter);
+                        //_newChatCounter++;
+                        AddChat(newChatName);
+
+                        // Clear the text box
+                        _chatToAdd.getText().clear();
                     }
                 }
         );
@@ -107,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
         /*********************************/
         /* Set up Add Chat To Top Button */
         /*********************************/
-        _AddChatToTopButton = findViewById(R.id.MoveChatToTopButton);
+        /*_AddChatToTopButton = findViewById(R.id.MoveChatToTopButton);
         _AddChatToTopButton.setOnClickListener(
 
                 new View.OnClickListener()
@@ -115,13 +143,13 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View view) {
 
-                        EditText chatToMove     = findViewById(R.id.ChatToAddToTop);
+                        EditText chatToMove     = findViewById(R.id.ChatToMoveToTop);
                         String chatToMoveString = chatToMove.getText().toString();
 
                         moveChatToTop(chatToMoveString);
                     }
                 }
-        );
+        );*/
 
         Log.i("Setup", "In Setup");
 
@@ -155,6 +183,9 @@ public class MainActivity extends AppCompatActivity {
                     openChatWindow(chatName);
                 }
             });
+
+        // Connect to web server
+        //connectWebSocket();
 
         /*****************************************************************/
         /* Initialize Sample Chat Histories                              */
@@ -199,6 +230,7 @@ public class MainActivity extends AppCompatActivity {
         // Check if string exists in the list
         if(_ChatListEntries.contains(chatToMoveString))
         {
+
             // Removes chat from list
             _ChatListEntries.remove(chatToMoveString);
 
@@ -215,32 +247,54 @@ public class MainActivity extends AppCompatActivity {
     private void openChatWindow(String chatName)
     {
         // Declare intent of starting activity
-        Intent chatWindow = new Intent(this, ChatWindow.class);
+        /*Intent chatWindow = new Intent(this, ChatWindow.class);
 
         // Tell activity which chat we will be using
         chatWindow.putExtra("chatName", chatName);
 
         // Start the activity
-        startActivity(chatWindow);
+        startActivity(chatWindow);*/
+
+        _FragmentManager = this.getSupportFragmentManager();
+
+        Log.i("openChatWindow", "starting chat window fragment");
+
+        FragmentTransaction fragmentTransaction = _FragmentManager.beginTransaction();
+
+        ChatWindowFragment chatWindowFragment = ChatWindowFragment.newInstance(chatName);
+        fragmentTransaction.add(R.id.fragment_container, chatWindowFragment);
+        fragmentTransaction.addToBackStack("Adding chatwindow");
+
+        fragmentTransaction.commit();
 
         // Move the chat to the top of the list
-        moveChatToTop(chatName);
+        //moveChatToTop(chatName);
     }
 
-    // Returns chat history found in the chat history list with the given name
-    // If no chat history with the game exists, it initializes a chat history for the name
-    /*private List <Message> retrieveChatHistory(String chatName)
+    /*private void openAddChatWindow()
     {
-        List <Message>  chatHistory = _ChatHistories.get(chatName);
+        _FragmentManager = this.getSupportFragmentManager();
 
-        if (chatHistory == null)
-        {
-            chatHistory = new ArrayList<Message>();
-            _ChatHistories.put(chatName, chatHistory);
-        }
+        Log.i("openChatWindow", "starting add chat fragment");
 
-        return chatHistory;
+        FragmentTransaction fragmentTransaction = _FragmentManager.beginTransaction();
+
+        //ChatWindowFragment chatWindowFragment = ChatWindowFragment.newInstance(chatName);
+        //AddChatFragment =
+        //fragmentTransaction.add(R.id.fragment_container, chatWindowFragment);
+        fragmentTransaction.addToBackStack("Adding chatwindow");
+
+        fragmentTransaction.commit();
     }*/
+
+    // Have to override this so returning fragments don't leave main activity blank
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+
+        // Make the activity's components visible again
+        findViewById(R.id.nonFragmentStuff).setVisibility(View.VISIBLE);
+    }
 
     // Called when a message is received by the user
     private void onMessageReceived(Message message, String chatName)
@@ -269,7 +323,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /*private void connectWebSocket() {
+    private void connectWebSocket() {
 
         // Make a URI to connect to the server
         URI uri;
@@ -321,7 +375,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Connect the webclient
         _WSClient.connect();
-    }*/
+    }
 
 
 }
