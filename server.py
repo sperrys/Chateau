@@ -2,16 +2,15 @@ import tornado.ioloop
 import tornado.web
 import tornado.websocket
 import json
-import os
 
 from chatclient import ChatClient
 
 from tornado.options import define, options, parse_command_line
 
+define("port", default=8888, help="run on the given port", type=int)
+
 
 options.port = int(os.environ.get('PORT', 5000))
-
-# We gonna store clients in an array.
 clients = []
 
 class IndexHandler(tornado.web.RequestHandler):
@@ -225,6 +224,7 @@ app = tornado.web.Application([
 
 
 if __name__ == '__main__':
+    parse_command_line()
     app.listen(options.port)
     tornado.ioloop.IOLoop.instance().start()
 
