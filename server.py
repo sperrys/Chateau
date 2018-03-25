@@ -2,6 +2,7 @@ import tornado.ioloop
 import tornado.web
 import tornado.websocket
 import json
+import os
 
 from chatclient import ChatClient
 
