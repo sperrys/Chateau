@@ -1,8 +1,10 @@
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
+import json
 
 from tornado.options import define, options, parse_command_line
+
 
 define("port", default=8888, help="run on the given port", type=int)
 
@@ -19,15 +21,29 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         print("WebSocket opened")
 
     def on_message(self, message):
-        self.write_message(u"You said: " + message)
+        print ("Client Sent: ", message)
+        
+        try: 
+            msg = json.loads(message)
+            print(msg)
+            
+            self.write_message(u"You said: " + message)
+
+        except Exception as e: 
+            print("Server caught Exception: %e", e)
+
+
 
     def on_close(self):
         print("WebSocket closed")
 
+
+
 app = tornado.web.Application([
     (r'/', IndexHandler),
-    (r'/websocket', WebSocketHandler),
+    (r'/ws', WebSocketHandler),
 ])
+
 
 if __name__ == '__main__':
     parse_command_line()
