@@ -2,21 +2,28 @@ import tornado.ioloop
 import tornado.web
 import tornado.websocket
 import json
+import os
 
 from chatclient import ChatClient
 
 from tornado.options import define, options, parse_command_line
 
-
 define("port", default=8888, help="run on the given port", type=int)
 
-# We gonna store clients in an array.
+
+options.port = int(os.environ.get('PORT', 5000))
 clients = []
 
 class IndexHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
         self.render("index.html")
+
+
+class CertRequestHandler(tornado.web.RequestHandler):
+    @tornado.web.asynchronous
+    def get(self):
+        self.write('eBavPJ_kR67DbW7MEJ49Z-L7xqUyJZgvi5shL5iCI78.VC6txwIMOMmKlkjWLi-iG47yPMBGmPSp3-r_5m8IY34')
 
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
@@ -79,7 +86,7 @@ def MessageHandler(sock, msg):
             MessageRequestHandler(sock, msg)
         elif msgType == 4:
             ClientListRequestHandler(sock, msg)
-        elif msgType === 5:
+        elif msgType == 5:
             RandomMessageRequestHandler(sock, msg)
         else: 
             print("Not a valid Message Type")
@@ -190,12 +197,13 @@ def ClientListRequestHandler(sock, msg):
         sock.write_message(json.dumps(response))
         RemoveClientWSock(sock)
 
+
+
 def RandomMessageRequestHandler(sock, msg):
     print("Random Message Request")
 
     try:
         c = GetClientWSock(sock)
-
         new_friend = sample(clients, 1)
 
         while new_friend.username == c.username:
@@ -211,10 +219,10 @@ def RandomMessageRequestHandler(sock, msg):
 
     except Exception as e:
         print("Sending Error Response")
-        response = { 
-                    "status": 400
-                   }
+        response = { "status": 400 }
         sock.write_message(json.dumps(response)) 
+
+
 
 
 
@@ -222,7 +230,9 @@ def RandomMessageRequestHandler(sock, msg):
 app = tornado.web.Application([
     (r'/', IndexHandler),
     (r'/ws', WebSocketHandler),
+    (r'/.well-known/acme-challenge/eBavPJ_kR67DbW7MEJ49Z-L7xqUyJZgvi5shL5iCI78/', CertRequestHandler)
 ])
+
 
 if __name__ == '__main__':
     parse_command_line()
