@@ -20,6 +20,8 @@ import android.widget.ListView;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -32,8 +34,8 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity
                           implements ChatWindowFragment.OnFragmentInteractionListener{
 
-    private WebSocketClient     _WSClient;
-    private String              _WSHOST      = "ws://websockethost:8080";
+    private ChatWebSocket       _WSClient;
+    private String              _WSHOST      = "ws://localhost:5000/ws";
 
     private ListView                                _ChatListView;
     private final String[]                          _SampleChatListStrings = {"Spencer", "Russ", "Fahad", "Joe"};
@@ -47,6 +49,9 @@ public class MainActivity extends AppCompatActivity
     private Button              _AddChatToTopButton;
     private int                 _newChatCounter       = 0;
     private static String       _CurrentUser;
+
+    private final String _RegisterType = "1";
+
 
     private FragmentManager _FragmentManager;
 
@@ -71,39 +76,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //*******************************/
-        /* Set up Fragment Stuff       */
-        /*******************************/
-
-
-        //Fragment chatWindowFrag = new ChatWindowFragment();
-
-
-        /*// Check that the activity is using the layout version with
-        // the fragment_container FrameLayout
-        if (findViewById(R.id.fragment_container) != null) {
-
-            // However, if we're being restored from a previous state,
-            // then we don't need to do anything and should return or else
-            // we could end up with overlapping fragments.
-            if (savedInstanceState != null) {
-                return;
-            }
-
-            // Create a new Fragment to be placed in the activity layout
-            HeadlinesFragment firstFragment = new HeadlinesFragment();
-
-            // In case this activity was started with special instructions from an
-            // Intent, pass the Intent's extras to the fragment as arguments
-            //firstFragment.setArguments(getIntent().getExtras());
-
-            // Add the fragment to the 'fragment_container' FrameLayout
-            getSupportFragmentManager().beginTransaction()
-                                       .add(R.id.fragment_container, firstFragment)
-                                       .commit();
-        }*/
-
-
+        // Set current user
         _CurrentUser = "User1";
 
         /******************************/
@@ -119,9 +92,6 @@ public class MainActivity extends AppCompatActivity
                         EditText _chatToAdd = findViewById(R.id.ChatToAdd);
                         String newChatName  = _chatToAdd.getText().toString();
 
-
-
-
                         // Add a new chat to our list
                         //_newChatCounter++;
                         AddChat(newChatName);
@@ -131,25 +101,6 @@ public class MainActivity extends AppCompatActivity
                     }
                 }
         );
-
-        /*********************************/
-        /* Set up Add Chat To Top Button */
-        /*********************************/
-        /*_AddChatToTopButton = findViewById(R.id.MoveChatToTopButton);
-        _AddChatToTopButton.setOnClickListener(
-
-                new View.OnClickListener()
-                {
-                    @Override
-                    public void onClick(View view) {
-
-                        EditText chatToMove     = findViewById(R.id.ChatToMoveToTop);
-                        String chatToMoveString = chatToMove.getText().toString();
-
-                        moveChatToTop(chatToMoveString);
-                    }
-                }
-        );*/
 
         Log.i("Setup", "In Setup");
 
@@ -184,9 +135,6 @@ public class MainActivity extends AppCompatActivity
                 }
             });
 
-        // Connect to web server
-        //connectWebSocket();
-
         /*****************************************************************/
         /* Initialize Sample Chat Histories                              */
         /* (As if these chats were already present when opening the app) */
@@ -197,6 +145,53 @@ public class MainActivity extends AppCompatActivity
 
             _ChatHistories.put(chatName, chatHistory);
         }
+
+
+        /*******************/
+        /**Set up WebSocket*/
+        /*******************/
+
+        // Make a URI to connect to the server
+        URI uri;
+        try {
+            uri = new URI(_WSHOST);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        // Connect to web server
+        Log.i("MainActivity", "Calling SetupWS()");
+        _WSClient = new ChatWebSocket(uri);
+
+        Log.i("MainActivity", "Calling WSConnect()");
+        _WSClient.connect();
+
+
+        /*JSONObject json = new JSONObject();
+
+        try {
+            json.put("type", _RegisterType);
+            json.put("username", _CurrentUser);
+
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        String message = json.toString();
+
+
+
+        while(_WSClient == null || !_WSClient.isOpen())
+        {
+            Log.i("MainActivity", "WS client is still null");
+        }
+
+        Log.i("MainActivity", "Sending WS message()");
+        _WSClient.send(message);*/
+
+
     }
 
     // Adds a new chat name to the list view
@@ -243,18 +238,9 @@ public class MainActivity extends AppCompatActivity
         };
     }
 
-    // Opens a new activity with the chat window for the given chat name
+    // Opens a new fragment with the chat window for the given chat name
     private void openChatWindow(String chatName)
     {
-        // Declare intent of starting activity
-        /*Intent chatWindow = new Intent(this, ChatWindow.class);
-
-        // Tell activity which chat we will be using
-        chatWindow.putExtra("chatName", chatName);
-
-        // Start the activity
-        startActivity(chatWindow);*/
-
         _FragmentManager = this.getSupportFragmentManager();
 
         Log.i("openChatWindow", "starting chat window fragment");
@@ -267,8 +253,6 @@ public class MainActivity extends AppCompatActivity
 
         fragmentTransaction.commit();
 
-        // Move the chat to the top of the list
-        //moveChatToTop(chatName);
     }
 
     /*private void openAddChatWindow()
@@ -323,8 +307,12 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void connectWebSocket() {
 
+
+
+    
+    /*private void setupWebSocket()
+    {
         // Make a URI to connect to the server
         URI uri;
         try {
@@ -334,14 +322,16 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
-        _WSClient = new WebSocketClient(uri) {
+        _WSClient = new WebSocketClient(uri, a) {
+
 
             // Called when client first successfully connects with server
             @Override
             public void onOpen(ServerHandshake serverHandshake) {
 
-                Log.i("Websocket", "Opened");
-                _WSClient.send("Hello from " + Build.MANUFACTURER + " " + Build.MODEL);
+                Log.i(_WSTAG, "Opened");
+                //_WSClient.send("Hello from " + Build.MANUFACTURER + " " + Build.MODEL);
+
             }
 
             // Called when the client receives a message
@@ -354,7 +344,6 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void run() {
 
-
                         //TextView textView = (TextView) findViewById(R.id.messages);
 
                         //textView.setText(textView.getText() + "\n" + message);
@@ -364,18 +353,16 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onClose(int i, String s, boolean b) {
-                Log.i("Websocket", "Closed " + s);
+                Log.i(_WSTAG, "Closed " + s);
             }
 
             @Override
             public void onError(Exception e) {
-                Log.i("Websocket", "Error " + e.getMessage());
+                Log.i(_WSTAG, "Error " + e.getMessage());
             }
         };
+    }*/
 
-        // Connect the webclient
-        _WSClient.connect();
-    }
 
 
 }
