@@ -1,18 +1,35 @@
 package com.example.thechateau;
 
-import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+
+import java.util.ArrayList;
 
 public class AddChatFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
+
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
+
+    private ArrayList<String>  _ContactsToAddList = new ArrayList<String>();
+    private String             _ContactsAddedString = "Contacts Added: ";
+    private String             _newChatName;
+
+    private Button   _SubmitButton;
+    private Button   _AddContactButton;
+    private EditText _ChatNameText;
+    private EditText _AddContactText;
+    private TextView _ContactsAddedText;
+    private TextView _ErrorText;
+    private View     _FragmentView;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -26,6 +43,7 @@ public class AddChatFragment extends Fragment {
 
     // TODO: Rename and change types and number of parameters
     public static AddChatFragment newInstance(String param1, String param2) {
+
         AddChatFragment fragment = new AddChatFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
@@ -41,13 +59,184 @@ public class AddChatFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+
+
+
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        // Make activity view invisible
+        getActivity().findViewById(R.id.nonFragmentStuff).setVisibility(View.INVISIBLE);
+
+        _SubmitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                boolean success = false;
+                success = AttemptSubmission();
+
+                if(success)
+                {
+
+                    ((MainActivity) getActivity()).AddChat(_newChatName);
+                    getActivity().onBackPressed();
+                }
+
+            }
+        });
+
+        _AddContactButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                AttemptAddContact();
+
+                // Clear the contact text field
+                _AddContactText.getText().clear();;
+            }
+        });
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        _FragmentView = inflater.inflate(R.layout.fragment_add_chat, container, false);
+
+        _SubmitButton     = _FragmentView.findViewById(R.id.SubmitButton);
+        _AddContactButton = _FragmentView.findViewById(R.id.AddContactButton);
+        _ChatNameText     = _FragmentView.findViewById(R.id.ChatNameTextBox);
+        _AddContactText   = _FragmentView.findViewById(R.id.AddContactTextBox);
+        _ContactsAddedText = _FragmentView.findViewById(R.id.ContactsAdded);
+        _ErrorText        = _FragmentView.findViewById(R.id.ErrorMessage);
+
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_add_chat, container, false);
+        return _FragmentView;
+    }
+
+    private void AttemptAddContact()
+    {
+        String contact = _AddContactText.getText().toString();
+
+        if (contact.equals(""))
+        {
+            Log.i("AddChatFragment","contact field is empty");
+            _ErrorText.setText("ERROR: contact field is empty");
+            return;
+        }
+
+        // Check if contact exists
+        if (contactExists(contact))
+        {
+            // Add contacts to our contactList
+            _ContactsToAddList.add(contact);
+
+
+            // Update the UI to show all contacts added
+            // -Added a comma if necessary
+            // -Add contacts's name to list
+            // -Update the ContactsAdded View on the UI
+            if (_ContactsToAddList.size() > 1)
+            {
+                _ContactsAddedString += ", Lexie";
+            }
+
+            _ContactsAddedString += contact;
+
+            _ContactsAddedText.setText(_ContactsAddedString);
+        }
+        else
+        {
+            Log.i("AddChatFragment","ERROR: contact is not registered in our database");
+            _ErrorText.setText("ERROR: contact is not registered in our database");
+        }
+
+
+
+    }
+
+
+    private boolean contactExists(String contact)
+    {
+        // Request contact list from server
+
+        // Update UI's list of contacts with server's contact list
+
+        // Look through server's contact list and check if contact exists
+        /*for (String serverContact: contactList)
+        {
+            if (serverContact.equals(contact))
+            {
+                return true;
+            }
+        }*/
+
+        // Return true for testing for now
+        //return false;
+        return true;
+    }
+
+    private boolean AttemptSubmission()
+    {
+        String chatName = _ChatNameText.getText().toString();
+
+        /********************/
+        /* Check for Errors */
+        /********************/
+
+        // If no contacts were added, give an error
+        if (_ContactsToAddList.size() < 1)
+        {
+            _ErrorText.setText("ERROR: Add at least one contact to create a new chat");
+            return false;
+        }
+
+        // Handle "chatName is empty" case
+        if (chatName.equals(""))
+        {
+            // If chatName is empty for group chat, give an error
+            if (_ContactsToAddList.size() > 1)
+            {
+                _ErrorText.setText("ERROR: You must have a chat name for group chats");
+                return false;
+            }
+
+            // If it's a 1 on 1 chat, default chatName is name of person you're chatting with
+            else
+            {
+                chatName = _ContactsToAddList.get(0);
+            }
+        }
+
+        // Attempt to register the new chat with the server and send the result
+        return sendSubmissionToServer(chatName);
+
+
+
+    }
+
+
+    private boolean sendSubmissionToServer(String chatName)
+    {
+        // Put chatName in json object
+
+        // Put contacts in json objects
+
+        // Put starting message in json object
+
+
+        // Send json message to server
+
+        // Let client know if chat was created or not
+
+
+
+        // Return true if we successfully registered new chat
+        _newChatName = chatName;
+        return true;
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -55,23 +244,6 @@ public class AddChatFragment extends Fragment {
         if (mListener != null) {
             mListener.onFragmentInteraction(uri);
         }
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
     }
 
     public interface OnFragmentInteractionListener {

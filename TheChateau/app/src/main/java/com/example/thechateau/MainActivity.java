@@ -87,17 +87,22 @@ public class MainActivity extends AppCompatActivity
                 new View.OnClickListener()
                 {
                     @Override
-                    public void onClick(View view) {
+                    public void onClick(View view)
+                    {
 
-                        EditText _chatToAdd = findViewById(R.id.ChatToAdd);
-                        String newChatName  = _chatToAdd.getText().toString();
+                        //EditText _chatToAdd = findViewById(R.id.ChatToAdd);
+                        //String newChatName  = _chatToAdd.getText().toString();
 
                         // Add a new chat to our list
                         //_newChatCounter++;
-                        AddChat(newChatName);
+                        //AddChat(newChatName);
 
                         // Clear the text box
-                        _chatToAdd.getText().clear();
+                        //_chatToAdd.getText().clear();
+
+
+                        // Open an Add Chat Fragment
+                        openAddChatWindow();
                     }
                 }
         );
@@ -151,7 +156,7 @@ public class MainActivity extends AppCompatActivity
         /**Set up WebSocket*/
         /*******************/
 
-        // Make a URI to connect to the server
+        /*// Make a URI to connect to the server
         URI uri;
         try {
             uri = new URI(_WSHOST);
@@ -165,7 +170,7 @@ public class MainActivity extends AppCompatActivity
         _WSClient = new ChatWebSocket(uri);
 
         Log.i("MainActivity", "Calling WSConnect()");
-        _WSClient.connect();
+        _WSClient.connect();*/
 
 
         /*JSONObject json = new JSONObject();
@@ -195,7 +200,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     // Adds a new chat name to the list view
-    private void AddChat(String chatName) {
+    public void AddChat(String chatName) {
 
         // Add item to list of entries
         _ChatListEntries.add(chatName);
@@ -255,21 +260,21 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    /*private void openAddChatWindow()
+    private void openAddChatWindow()
     {
         _FragmentManager = this.getSupportFragmentManager();
 
-        Log.i("openChatWindow", "starting add chat fragment");
+        Log.i("openAddChatWindow", "starting add chat fragment");
 
         FragmentTransaction fragmentTransaction = _FragmentManager.beginTransaction();
 
-        //ChatWindowFragment chatWindowFragment = ChatWindowFragment.newInstance(chatName);
-        //AddChatFragment =
-        //fragmentTransaction.add(R.id.fragment_container, chatWindowFragment);
-        fragmentTransaction.addToBackStack("Adding chatwindow");
+        AddChatFragment addChatFragment = new AddChatFragment();
+
+        fragmentTransaction.add(R.id.fragment_container, addChatFragment);
+        fragmentTransaction.addToBackStack("Adding AddChatFragment");
 
         fragmentTransaction.commit();
-    }*/
+    }
 
     // Have to override this so returning fragments don't leave main activity blank
     @Override
@@ -310,7 +315,7 @@ public class MainActivity extends AppCompatActivity
 
 
 
-    
+
     /*private void setupWebSocket()
     {
         // Make a URI to connect to the server
