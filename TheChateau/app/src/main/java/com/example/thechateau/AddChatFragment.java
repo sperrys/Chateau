@@ -87,6 +87,22 @@ public class AddChatFragment extends Fragment {
             @Override
             public void onClick(View view) {
 
+                // If no contacts have been added yet, it's possible the user
+                // entered a contact in the contact field without clicking Add Contact
+                // If adding a contact fails (Error messages will be shown after
+                // calling AttemptAddcContact)
+                // Otherwise, continue and attempt to submit the new chat
+                if (_ContactsToAddList.size() < 1)
+                {
+                    // Attempt to add a contact, and
+                    if(!AttemptAddContact())
+                    {
+                        _ErrorText.setText("ERROR: Add at least one contact to create a new chat");
+                        return;
+                    }
+
+                }
+
                 boolean success = false;
                 success = AttemptSubmission();
 
@@ -143,7 +159,7 @@ public class AddChatFragment extends Fragment {
         return _FragmentView;
     }
 
-    private void AttemptAddContact()
+    private boolean AttemptAddContact()
     {
         String contact = _AddContactText.getText().toString();
 
@@ -151,7 +167,7 @@ public class AddChatFragment extends Fragment {
         {
             Log.i("AddChatFragment","contact field is empty");
             _ErrorText.setText("ERROR: contact field is empty");
-            return;
+            return false;
         }
 
         // Check if contact exists
@@ -173,13 +189,15 @@ public class AddChatFragment extends Fragment {
             _ContactsAddedString += contact;
 
             _ContactsAddedText.setText(_ContactsAddedString);
+
+            return true;
         }
         else
         {
             Log.i("AddChatFragment","ERROR: contact is not registered in our database");
             _ErrorText.setText("ERROR: contact is not registered in our database");
+            return false;
         }
-
 
 
     }
@@ -213,13 +231,6 @@ public class AddChatFragment extends Fragment {
         /* Check for Errors */
         /********************/
 
-        // If no contacts were added, give an error
-        if (_ContactsToAddList.size() < 1)
-        {
-            _ErrorText.setText("ERROR: Add at least one contact to create a new chat");
-            return false;
-        }
-
         // Handle "chatName is empty" case
         if (chatName.equals(""))
         {
@@ -236,6 +247,11 @@ public class AddChatFragment extends Fragment {
                 chatName = _ContactsToAddList.get(0);
             }
         }
+
+
+        // todo Check if chat name already exists for that user
+
+
 
         // Attempt to register the new chat with the server and send the result
         return sendSubmissionToServer(chatName);
