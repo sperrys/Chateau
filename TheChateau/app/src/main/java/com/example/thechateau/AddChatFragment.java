@@ -8,11 +8,16 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Adapter;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 
 public class AddChatFragment extends Fragment {
 
@@ -30,6 +35,13 @@ public class AddChatFragment extends Fragment {
     private TextView _ContactsAddedText;
     private TextView _ErrorText;
     private View     _FragmentView;
+
+    private String[]              _SampleAvailableContacts = {"Arnold", "Honnu", "Joey", "Johnny", "Alex", "Fernando", "Alfred", "Hitchcock", "Dennis", "Yorgen"};
+    private ArrayList<String>     _AvailableContactList;
+    private ArrayAdapter          _ContactListAdapter;
+    private ListView              _ContactListView;
+
+
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -98,6 +110,15 @@ public class AddChatFragment extends Fragment {
                 _AddContactText.getText().clear();;
             }
         });
+
+        _AvailableContactList = new ArrayList(Arrays.asList(_SampleAvailableContacts));
+
+        // Make an adapter for the Chat List view and set it
+        _ContactListAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_list_item_1, _AvailableContactList);
+
+        // Set up Contact List View from UI
+        _ContactListView = _FragmentView.findViewById(R.id.ContactListView);
+        _ContactListView.setAdapter(_ContactListAdapter);
     }
 
     @Override
