@@ -92,8 +92,13 @@ public class AddChatFragment extends Fragment {
 
                 if(success)
                 {
-
+                    // Add new chat to our database of chats
                     ((MainActivity) getActivity()).AddChat(_newChatName);
+
+                    // Make new chat appear at top of user's list of chats
+                    ((MainActivity) getActivity()).moveChatToTop(_newChatName);
+
+                    // Go back to the activity
                     getActivity().onBackPressed();
                 }
 
