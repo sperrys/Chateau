@@ -56,12 +56,12 @@ public class MainActivity extends AppCompatActivity
     private int                 _newChatCounter       = 0;
     private String              _CurrentUser;
 
-    private final String _RegisterType             = "1";
+    private final int _RegisterType             = 1;
     //private final String _RegisterType = "2";
-    private final String _SendMessageToClientsType = "3";
-    private final String _GetClientsListType       = "4";
-    private final String _GetRandomContactType     = "5";
-    private final String _SendSingleMessageType    = "6";
+    private final int _SendMessageToClientsType = 3;
+    private final int _GetClientsListType       = 4;
+    private final int _GetRandomContactType     = 5;
+    private final int _SendSingleMessageType    = 6;
 
 
     private FragmentManager _FragmentManager;
@@ -175,7 +175,8 @@ public class MainActivity extends AppCompatActivity
 
         while(_WSClient == null || !_WSClient.isOpen())
         {
-            Log.i("MainActivity", "Websocket client is null, exiting");
+
+            Log.i("MainActivity", "Websocket client is still null");
             //this.finish();
             //System.exit(-4);
         }
@@ -185,7 +186,7 @@ public class MainActivity extends AppCompatActivity
         JSONObject json = new JSONObject();
 
         try {
-            //json.put("type",     _RegisterType);
+            json.put("type",     _RegisterType);
             json.put("username", _CurrentUser);
 
 
