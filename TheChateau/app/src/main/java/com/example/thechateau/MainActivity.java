@@ -199,6 +199,18 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    private void startRandomChat()
+    {
+        // Set loading bar on UI screen with messages showing retrieval process
+
+        // Ask server for Random person to chat
+
+        // Check if random person is already being chatted with?
+        // -But what if they exist in a 1-1 chat you already have?
+
+        // Open chat window of random chat created
+    }
+
     // Adds a new chat name to the list view
     public void AddChat(String chatName) {
 
