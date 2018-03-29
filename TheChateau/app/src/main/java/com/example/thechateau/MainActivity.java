@@ -1,6 +1,7 @@
 package com.example.thechateau;
 
 
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -48,17 +49,24 @@ public class MainActivity extends AppCompatActivity
     private boolean             _enteredUsername = false;
 
 
+
+
     private Button              _AddNewChatButton;
     private Button              _AddChatToTopButton;
     private int                 _newChatCounter       = 0;
-    private static String       _CurrentUser;
+    private String              _CurrentUser;
 
-    private final String _RegisterType = "1";
+    private final String _RegisterType             = "1";
+    //private final String _RegisterType = "2";
+    private final String _SendMessageToClientsType = "3";
+    private final String _GetClientsListType       = "4";
+    private final String _GetRandomContactType     = "5";
+    private final String _SendSingleMessageType    = "6";
 
 
     private FragmentManager _FragmentManager;
 
-    public static String getCurrentUser()
+    public String getCurrentUser()
     {
         return _CurrentUser;
     }
@@ -165,11 +173,19 @@ public class MainActivity extends AppCompatActivity
         Log.i("MainActivity", "Calling WSConnect()");
         _WSClient.connect();
 
+        while(_WSClient == null || !_WSClient.isOpen())
+        {
+            Log.i("MainActivity", "Websocket client is null, exiting");
+            //this.finish();
+            //System.exit(-4);
+        }
 
-        /*JSONObject json = new JSONObject();
+
+        // Register current client in web server
+        JSONObject json = new JSONObject();
 
         try {
-            json.put("type", _RegisterType);
+            //json.put("type",     _RegisterType);
             json.put("username", _CurrentUser);
 
 
@@ -180,14 +196,8 @@ public class MainActivity extends AppCompatActivity
         String message = json.toString();
 
 
-
-        while(_WSClient == null || !_WSClient.isOpen())
-        {
-            Log.i("MainActivity", "WS client is still null");
-        }
-
-        Log.i("MainActivity", "Sending WS message()");
-        _WSClient.send(message);*/
+        Log.i("MainActivity", "Sending registration message(): " + message);
+        _WSClient.send(message);
 
 
     }

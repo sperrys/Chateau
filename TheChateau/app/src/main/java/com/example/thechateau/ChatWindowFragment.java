@@ -37,7 +37,7 @@ public class ChatWindowFragment extends Fragment {
     private Button   _sendButton;
     private Button   _backButton;
     private EditText _sendMessageText;
-    private User     _currentUser = new User(MainActivity.getCurrentUser());
+    private User     _currentUser;
 
     private View _FragmentView;
     private Fragment thisFragment;
@@ -78,6 +78,9 @@ public class ChatWindowFragment extends Fragment {
         }
 
         Log.i(_tag, "Got chatName: " + _ChatName);
+
+        // Get current user
+        _currentUser = new User(((MainActivity)getActivity()).getCurrentUser());
 
 
         /************************************/
@@ -173,7 +176,7 @@ public class ChatWindowFragment extends Fragment {
 
         // Initialize an adapter that can adapt messages in the message list
         // And set it as the recycler view's adapter
-        _MessageAdapter  = new MessageListAdapter(this.getContext(), _MessageList);
+        _MessageAdapter  = new MessageListAdapter(this.getContext(), _MessageList, _currentUser.getName());
         _MessageRecycler.setAdapter(_MessageAdapter);
     }
 

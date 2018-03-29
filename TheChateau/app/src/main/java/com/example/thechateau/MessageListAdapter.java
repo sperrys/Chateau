@@ -19,6 +19,7 @@ import java.util.List;
 public class MessageListAdapter extends RecyclerView.Adapter {
     private Context       _Context;
     private List<Message> _MessageList;
+    private String        _CurrentUser;
 
     // Flags for formatting the timestamp displayed next to a message
     private int _dateFlags = DateUtils.FORMAT_SHOW_TIME;
@@ -26,9 +27,10 @@ public class MessageListAdapter extends RecyclerView.Adapter {
     private static final int VIEW_TYPE_MESSAGE_RECEIVED = 1;
     private static final int VIEW_TYPE_MESSAGE_SENT     = 2;
 
-    public MessageListAdapter(Context context, List<Message> messageList) {
+    public MessageListAdapter(Context context, List<Message> messageList, String currentUser) {
         _Context     = context;
         _MessageList = messageList;
+        _CurrentUser = currentUser;
 
         Log.i("MessageListAdapter", "Here");
     }
@@ -45,14 +47,13 @@ public class MessageListAdapter extends RecyclerView.Adapter {
         Log.i("getItemViewType", "Here");
         // Get the message
         Message message = (Message) _MessageList.get(position);
-        String currentUser = MainActivity.getCurrentUser();
         String sender = message.getSender().getName();
 
-        Log.i("getItemViewType", "Sender is " + sender + ", Current is " + currentUser);
+        Log.i("getItemViewType", "Sender is " + sender + ", Current is " + _CurrentUser);
 
         // If message sender is current user, it's a sent message
         // Otherwise, it's a received message
-        if(sender.equals(currentUser))
+        if(sender.equals(_CurrentUser))
         {
             return VIEW_TYPE_MESSAGE_SENT;
         }
