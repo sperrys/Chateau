@@ -67,6 +67,18 @@ Response:
 	- If successful, `"status": 200` and a random `"clients"` username. 
 	- if failure, `"status": 400` 
 
+**Initiate Single Conversation**
+
+type: 6
+
+Arguments
+	- `"recipient"`
+	- `"content"`
+
+Response:
+	- If successful, `"status": 200`
+
+
 
 
 # To Use The Python Test Client

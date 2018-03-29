@@ -186,7 +186,6 @@ def GetClientWName(name):
     return None
     
 
-
 def SingMessageRequestHandler(sock, msg):
     print("Single Message Request")
 
@@ -206,6 +205,7 @@ def SingMessageRequestHandler(sock, msg):
                 "content": content
             }
             r.sock.write_message(json.dumps(response))
+            c.sock.write_message(json.dumps({"status": 200})) 
     else:
         RemoveClientWSock(c)
 
