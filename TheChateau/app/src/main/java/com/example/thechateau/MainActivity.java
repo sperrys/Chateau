@@ -35,7 +35,8 @@ public class MainActivity extends AppCompatActivity
                           implements ChatWindowFragment.OnFragmentInteractionListener{
 
     private ChatWebSocket       _WSClient;
-    private String              _WSHOST      = "ws://localhost:5000/ws";
+    private String              _WSHOST      = "ws://10.0.2.2:5000/ws";
+    private String              _HerokuHost  = "ws://chateautufts.herokuapp.com:80/ws";
 
     private ListView                                _ChatListView;
     private final String[]                          _SampleChatListStrings = {"Spencer", "Russ", "Fahad", "Joe"};
@@ -43,6 +44,8 @@ public class MainActivity extends AppCompatActivity
     private static Hashtable<String, List<Message>> _ChatHistories = new Hashtable<>();
 
     private ArrayAdapter        _ChatListAdapter;
+
+    private boolean             _enteredUsername = false;
 
 
     private Button              _AddNewChatButton;
@@ -89,17 +92,6 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onClick(View view)
                     {
-
-                        //EditText _chatToAdd = findViewById(R.id.ChatToAdd);
-                        //String newChatName  = _chatToAdd.getText().toString();
-
-                        // Add a new chat to our list
-                        //_newChatCounter++;
-                        //AddChat(newChatName);
-
-                        // Clear the text box
-                        //_chatToAdd.getText().clear();
-
 
                         // Open an Add Chat Fragment
                         openAddChatWindow();
@@ -152,14 +144,15 @@ public class MainActivity extends AppCompatActivity
         }
 
 
+
         /*******************/
         /**Set up WebSocket*/
         /*******************/
 
-        /*// Make a URI to connect to the server
+        // Make a URI to connect to the server
         URI uri;
         try {
-            uri = new URI(_WSHOST);
+            uri = new URI(_HerokuHost);
         } catch (URISyntaxException e) {
             e.printStackTrace();
             return;
@@ -170,7 +163,7 @@ public class MainActivity extends AppCompatActivity
         _WSClient = new ChatWebSocket(uri);
 
         Log.i("MainActivity", "Calling WSConnect()");
-        _WSClient.connect();*/
+        _WSClient.connect();
 
 
         /*JSONObject json = new JSONObject();
@@ -195,6 +188,12 @@ public class MainActivity extends AppCompatActivity
 
         Log.i("MainActivity", "Sending WS message()");
         _WSClient.send(message);*/
+
+
+    }
+
+    private void startGetUsernameFragment()
+    {
 
 
     }
