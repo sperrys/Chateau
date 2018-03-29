@@ -284,7 +284,7 @@ def RandomMessageRequestHandler(sock, msg):
 
         print("Sending Response...")
         new_friend.sock.write_message(json.dumps(response))
-        c.write_message(json.dumps("client": new_friend.username))
+        c.write_message(json.dumps({"client": new_friend.username}))
 
     except Exception as e:
         print("Sending Error Response")
