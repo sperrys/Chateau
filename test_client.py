@@ -83,4 +83,4 @@ class Client(object):
 
 
 if __name__ == "__main__":
-    client = Client("ws://localhost:8888/ws", 5)
+    client = Client("ws://localhost:5000/ws", 5)
