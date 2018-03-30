@@ -11,6 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+
     <RelativeLayout
         android:id="@+id/nonFragmentStuff"
         android:layout_width="match_parent"
@@ -48,6 +49,9 @@
             android:layout_centerHorizontal="true"
             android:background="@color/colorPrimaryDark" />
 
+
+
+
         <!-- Right Hand Side -->
         <LinearLayout
             android:id="@+id/RightHandLayout"
@@ -67,6 +71,31 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:text="Add New Chat" />
+
+            <!-- Moves Connecting View to Bottom of Scrren -->
+            <View
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <!-- Connecting... View -->
+            <RelativeLayout
+                android:id="@+id/ConnectingLayout"
+                android:background="#550000AB"
+                android:layout_width ="match_parent"
+                android:layout_height="100dp"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:layout_alignParentBottom="true">
+
+                <TextView
+                    android:id="@+id/ConnectingText"
+                    android:text="Connecting..."
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    />
+
+            </RelativeLayout>
 
             <!--<EditText
                 android:id="@+id/ChatToAdd"

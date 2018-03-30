@@ -18,6 +18,8 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -53,7 +55,8 @@ public class MainActivity extends AppCompatActivity
 
     private boolean             _enteredUsername = false;
 
-
+    private TextView      _ConnectingText;
+    private RelativeLayout _ConnectingLayout;
 
 
     private Button              _AddNewChatButton;
@@ -178,17 +181,6 @@ public class MainActivity extends AppCompatActivity
         Log.i("MainActivity", "Calling WSConnect()");
         _WSClient.connect();
 
-        // Wait to connect
-        while(_WSClient == null || !_WSClient.isOpen())
-        {
-
-            Log.i("MainActivity", "Websocket client is still null");
-            //this.finish();
-            //System.exit(-4);
-        }
-
-
-        registerCurrentUser();
 
     }
 
@@ -377,8 +369,43 @@ public class MainActivity extends AppCompatActivity
     }
 
     // Called by WebSocketClient when it has connected to the server
-    public void onConnected()
-    {
+    public void onConnectedToServer() {
+        // Update text view that says connecting or not
+
+        // Register current user with the client
+        registerCurrentUser();
+
+        _ConnectingLayout = findViewById(R.id.ConnectingLayout);
+        _ConnectingText = findViewById(R.id.ConnectingText);
+
+        _ConnectingText.setText("Connected!");
+
+
+        Thread waiter = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(20000);
+                } catch (InterruptedException e) {
+                }
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        _ConnectingLayout.setVisibility(View.INVISIBLE);
+                    }
+                });
+            }
+        };
+        /*try {
+            wait(2000);
+        }
+        catch(Exception e)
+        {
+            Log.i("MainActivity", "Exception! " + e.getMessage());
+        }*/
+
+
 
     }
 

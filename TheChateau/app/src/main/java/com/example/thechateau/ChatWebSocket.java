@@ -20,20 +20,20 @@ import org.java_websocket.handshake.ServerHandshake;
 
 public class ChatWebSocket extends WebSocketClient {
 
-    private boolean _openCalled = false;
+    //private boolean _openCalled = false;
     private Context _MainContext;
-    private Activity _MainActivity;
+    private MainActivity _MainActivity;
 
 
-    public boolean isOpen()
+    /*public boolean isOpen()
     {
         return _openCalled;
-    }
+    }*/
 
 
     private String              _WSTAG = "WebSocket";
 
-    public ChatWebSocket(URI serverUri, Activity activity) {
+    public ChatWebSocket(URI serverUri, MainActivity activity) {
         super(serverUri);
 
         _MainActivity = activity;
@@ -50,10 +50,12 @@ public class ChatWebSocket extends WebSocketClient {
 
     @Override
     public void onOpen(ServerHandshake handshakedata) {
-        send("Hello, it is me. Mario :)");
+        //send("Hello, it is me. Mario :)");
 
         Log.i(_WSTAG, "new connection opened");
-        _openCalled = true;
+        //_openCalled = true;
+
+        _MainActivity.onConnectedToServer();
     }
 
     @Override
@@ -65,7 +67,7 @@ public class ChatWebSocket extends WebSocketClient {
     public void onMessage(String message) {
         Log.i(_WSTAG, "received message: " + message);
 
-        ((MainActivity)_MainActivity).onChatServerMessageReceived(message);
+        _MainActivity.onChatServerMessageReceived(message);
     }
 
     @Override
