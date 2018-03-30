@@ -372,41 +372,57 @@ public class MainActivity extends AppCompatActivity
     public void onConnectedToServer() {
         // Update text view that says connecting or not
 
+        Log.i("OnConnectedToServer", "In function");
+
         // Register current user with the client
         registerCurrentUser();
 
-        _ConnectingLayout = findViewById(R.id.ConnectingLayout);
-        _ConnectingText = findViewById(R.id.ConnectingText);
 
-        _ConnectingText.setText("Connected!");
+        Runnable setConnectedText = new Runnable() {
+            @Override
+            public void run() {
+                _ConnectingLayout = findViewById(R.id.ConnectingLayout);
+                _ConnectingText = findViewById(R.id.ConnectingText);
 
+                _ConnectingText.setText("Connected!");
+            }
+        };
+
+        // Set the Text in the connected layout to connected
+        runOnUiThread(setConnectedText);
 
         Thread waiter = new Thread() {
             @Override
-            public void run() {
+            public void run()
+            {
+
                 try {
-                    Thread.sleep(20000);
-                } catch (InterruptedException e) {
+                    Thread.sleep(5000);
+                }
+                catch (InterruptedException e)
+                {
+                    Log.i("WaiterThread", "Exception! " + e.getMessage());
                 }
 
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+
+                        Log.i("WaiterThread", "Setting ConnecctingLayout to Invisible");
                         _ConnectingLayout.setVisibility(View.INVISIBLE);
                     }
                 });
             }
         };
-        /*try {
-            wait(2000);
-        }
-        catch(Exception e)
-        {
-            Log.i("MainActivity", "Exception! " + e.getMessage());
-        }*/
 
+        // Wait for a few seconds and then make the connecting layout view disappear
+        waiter.run();
 
+    }
 
+    public void onServerDisconnect()
+    {
+        
     }
 
     // Called when a message is received by the user

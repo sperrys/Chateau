@@ -61,6 +61,8 @@ public class ChatWebSocket extends WebSocketClient {
     @Override
     public void onClose(int code, String reason, boolean remote) {
         Log.i(_WSTAG,"closed with exit code " + code + " additional info: " + reason);
+
+        _MainActivity.onServerDisconnect();
     }
 
     @Override
@@ -80,8 +82,8 @@ public class ChatWebSocket extends WebSocketClient {
         Log.i(_WSTAG, "an error occurred:" + ex);
     }
 
-    public static void main(String[] args) throws URISyntaxException {
+    /*public static void main(String[] args) throws URISyntaxException {
         WebSocketClient client = new ChatWebSocket(new URI("ws://localhost:8887"));
         client.connect();
-    }
+    }*/
 }
