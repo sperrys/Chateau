@@ -21,6 +21,7 @@ import android.widget.ListView;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -29,8 +30,10 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import org.json.simple.parser.JSONParser;
 
 public class MainActivity extends AppCompatActivity
                           implements ChatWindowFragment.OnFragmentInteractionListener{
@@ -43,6 +46,8 @@ public class MainActivity extends AppCompatActivity
     private final String[]                          _SampleChatListStrings = {"Spencer", "Russ", "Fahad", "Joe"};
     private LinkedList<String>                      _ChatListEntries;
     private static Hashtable<String, List<Message>> _ChatHistories = new Hashtable<>();
+
+    private ArrayList<String>   _ContactList = new ArrayList<>();
 
     private ArrayAdapter        _ChatListAdapter;
 
@@ -168,11 +173,12 @@ public class MainActivity extends AppCompatActivity
 
         // Connect to web server
         Log.i("MainActivity", "Calling SetupWS()");
-        _WSClient = new ChatWebSocket(uri);
+        _WSClient = new ChatWebSocket(uri, this);
 
         Log.i("MainActivity", "Calling WSConnect()");
         _WSClient.connect();
 
+        // Wait to connect
         while(_WSClient == null || !_WSClient.isOpen())
         {
 
@@ -182,7 +188,14 @@ public class MainActivity extends AppCompatActivity
         }
 
 
-        // Register current client in web server
+        registerCurrentUser();
+
+    }
+
+    // Register current client in chat server
+    private void registerCurrentUser()
+    {
+
         JSONObject json = new JSONObject();
 
         try {
@@ -199,7 +212,37 @@ public class MainActivity extends AppCompatActivity
 
         Log.i("MainActivity", "Sending registration message(): " + message);
         _WSClient.send(message);
+    }
 
+    // Request a contact list until it gets populated, then returns populated contact list
+    private ArrayList<String> getContactList()
+    {
+        while (_ContactList == null || _ContactList.size() > 1)
+        {
+            requestContactList();
+        }
+
+        return _ContactList;
+    }
+
+    // Request a contact list from the chat server
+    private void requestContactList()
+    {
+        JSONObject json = new JSONObject();
+
+        try
+        {
+            json.put("type",     _GetClientsListType);
+        }
+        catch (JSONException e)
+        {
+            e.printStackTrace();
+        }
+
+        String message = json.toString();
+
+        Log.i("MainActivity", "Sending getClientMessage(): " + message);
+        _WSClient.send(message);
 
     }
 
@@ -306,6 +349,33 @@ public class MainActivity extends AppCompatActivity
         // Make the activity's components visible again
         findViewById(R.id.nonFragmentStuff).setVisibility(View.VISIBLE);
     }
+
+    // Called when a message is received from the chat server (called in ChatWebSocket)
+    public void onChatServerMessageReceived(String message)
+    {
+        org.json.simple.JSONObject  jsonObject;
+        JSONParser parser = new JSONParser();
+        int type;
+
+        Log.i("OnChatServerMsgReceived", "New Message Received: " + message);
+
+        try
+        {
+            jsonObject = (org.json.simple.JSONObject)parser.parse(message);
+            // jsonObject.keySet();
+
+            for (Object key: jsonObject.keySet())
+            {
+                Log.i("OnChatSeverMsgReceived", "Key: " + key.toString() + ", Value: " + jsonObject.get(key).toString());
+            }
+
+        }
+        catch (Exception e)
+        {
+            Log.i("Parsing", "Error " + e.getMessage());
+        }
+    }
+
 
     // Called when a message is received by the user
     private void onMessageReceived(Message message, String chatName)

@@ -1,5 +1,7 @@
 package com.example.thechateau;
 
+import android.app.Activity;
+import android.content.Context;
 import android.util.Log;
 
 import org.java_websocket.client.WebSocketClient;
@@ -19,6 +21,9 @@ import org.java_websocket.handshake.ServerHandshake;
 public class ChatWebSocket extends WebSocketClient {
 
     private boolean _openCalled = false;
+    private Context _MainContext;
+    private Activity _MainActivity;
+
 
     public boolean isOpen()
     {
@@ -27,6 +32,12 @@ public class ChatWebSocket extends WebSocketClient {
 
 
     private String              _WSTAG = "WebSocket";
+
+    public ChatWebSocket(URI serverUri, Activity activity) {
+        super(serverUri);
+
+        _MainActivity = activity;
+    }
 
     public ChatWebSocket(URI serverUri, Draft draft) {
         super(serverUri, draft);
@@ -53,6 +64,8 @@ public class ChatWebSocket extends WebSocketClient {
     @Override
     public void onMessage(String message) {
         Log.i(_WSTAG, "received message: " + message);
+
+        ((MainActivity)_MainActivity).onChatServerMessageReceived(message);
     }
 
     @Override
