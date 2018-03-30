@@ -21,62 +21,91 @@ This is a Repository for networks project 1.
 
 **Register Client:** 
 
-type: 1 
+"type": "RegisterRequest"
 
 Arguments
 	- `"username"`
 
 Response:
-	- If successful, `"status": 200`
-	- if generic failure, `"status": 400` 
-	- if no socket (this shouldn't happen), `"status": 300` 
-	- if user is already registered, `"status": 302` 
+	- If successful, `"type": "RegisterResponse", "status": 200`
+	- if generic failure, `"type": "ErrorResponse", status": 400` 
+	- if no socket (this shouldn't happen), `"type": "ErrorResponse", status": 300` 
+	- if user is already registered, `"type": "ErrorResponse", status": 302` 
 
 
-**Message Client:**
+**Start a New Group Message**
 
-type: 3
+"type": "GroupMessageInitRequest"
 
 Arguments:
-	- `"clients"` usernames for who the message is going to
-	- `"content"` content of the actual message body
+	- `"recipients" username of those to be in the chat
+	- `"content"`  content of the actual message body
+	- `"chatname"` unique chatname
 
 Response:
-	- If successful, `"status": 200`
-	- if failure, `"status": 400` 
+	- If successful, `"type": "GroupMessageInitResponse", "status": 200`
+	- if failure, `"type": "ErrorResponse", status": 400` 
+	- If the chat exists, send the message to the
+	  respective clients in the chat as a "GroupMessageRecv" type
+
+**Send a Message to a pre-existing Chat**
+
+"type": "GroupMessageRequest"
+
+Arguments: 
+	- "chatname"
+	- "content"
+
+Response:
+	- If sucessful, "type": "GroupMessageResponse" and "status":200 
+	- If sucessful, all clients in chat will get a GroupMessageRecv
+	- If failure, "type": "ErrorResponse", "status": 400
+
+
+**Message From Other Person in Group Chat**
+
+"type" : "GroupMessageRecv"
+
+arguments: 
+	"status": 201 (if chat was newly created), 200 if afterthat
+	"sender": username of the person who sent the message
+	"content": the actual content of the new message in the chat
+
+
 
 
 **Clients List:** 
 
-type: 4 
+"type": "ClientListRequest"
 
 Arguments
 	- None
 Response:
-	- If successful, `"status": 200` and an array of `"clients"` usernames. 
-	- if failure, `"status": 400` 
+	- If successful, `"type": "ClientListResponse", "status": 200` and an array of `"clients"` usernames who are online. 
+	- if failure, `"type": "ErrorResponse", "status": 400` 
 
 
 **Random Message:** 
 
-type: 5
+"type" : "RandomMessageRequest"
 
 Arguments
 	- `"content"`
 Response:
-	- If successful, `"status": 200` and a random `"clients"` username. 
-	- if failure, `"status": 400` 
+	- If successful, `"type": "RandomMessageResponse", "status": 200` and a random `"clients"` username. 
+	- if failure, `"type": "ErrorResponse", "status": 400` 
 
 **Initiate Single Conversation**
 
-type: 6
+"type": "SingleMessageRequest"
 
 Arguments
 	- `"recipient"`
 	- `"content"`
 
 Response:
-	- If successful, `"status": 200`
+	- If successful, `"type": "SingleMessageResponse", "status": 200`
+	- If failure, `"type": ErrorResponse, "status": 200`
 
 
 

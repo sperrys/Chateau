@@ -80,58 +80,37 @@ def MessageHandler(sock, msg):
         msgType = msg["type"]
         print ("Server Got Message Type: ", msgType)
 
-        if msgType == 1:
+        if msgType == "RegisterRequest":
             RegisterRequestHandler(sock, msg)
-        elif msgType == 2:
-            InitiateGroupChatHandler(sock, msg)
-        elif msgType == 3:
+        elif msgType == "GroupMessageInitRequest":
+            GroupMessageInitHandler(sock, msg)
+        elif msgType == "GroupMessageRequest":
             GroupMessageRequestHandler(sock, msg)
-        elif msgType == 4:
+        elif msgType == "ClientListRequest":
             ClientListRequestHandler(sock, msg)
-        elif msgType == 5:
+        elif msgType == "RandomMessageRequest":
             RandomMessageRequestHandler(sock, msg)
-        elif msgType == 6:
+        elif msgType == "SingleMessageRequest":
             SingleMessageRequestHandler(sock, msg)
         else: 
             print("Not a valid Message Type")
             print("Sending Error Response...")
 
-            response = { "status": 400 }
+            response = { 
+                         "type" : "ErrorResponse",
+                         "status": 400
+                       }
             sock.write_message(json.dumps(response))
 
     except Exception as e: 
         print(e)
         print("Sending Error Response...")
-        response = { "status": 400 }
+        response = { 
+                     "type" : "ErrorResponse", 
+                     "status": 400 
+                   }
+
         sock.write_message(json.dumps(response))
-
-
-def IniitiateGroupChatHandler(sock, msg):
-    print("InitiateGroupChat Request")
-
-    c = GetClientWSock(sock)
-
-    if c.registered:
-        print("Client Who Sent Message: ", c.username)
-
-        # If the client isn't registered, remove them from the list
-        if c.registered:
-            name = msg["chatname"]
-            recipients = msg["recipients"]
-            content = msg["content"]
-
-        chat_recipients = [c]
-
-        for r in recipients:
-            new_r  = GetClientWName(r)
-            chat_recipients.append(new_r)
-
-        c = Chat(name, recipients)
-        chats.append(c)
-        c.SendMessage(content, c)
-
-    else: 
-        RemoveClientWSock(sock)
 
 
 
@@ -142,7 +121,10 @@ def RegisterRequestHandler(sock, msg):
     # Make Sure Unique Username
     for l in clients:
         if name == l.username:
-            response = { "status": 302 }
+            response = { 
+                        "type"  : "RegisterResponse",
+                        "status": 302 
+                        }
             sock.write_message(json.dumps(response))
             return 
 
@@ -163,12 +145,19 @@ def RegisterRequestHandler(sock, msg):
             else:
                 print("Client is already Registered: ", c.username)
                 print("Sending Error Response...")
-                response = { "status": 302 }
+                response = { 
+                            "type"  : "ErrorResponse",
+                            "status": 302 
+                            }
                 sock.write_message(json.dumps(response))
                 return 
 
+    
     # If the client cannot be found, send an error
-    response = { "status": 301 }
+    response = { 
+                "type"  : "ErrorResponse", 
+                "status": 301 
+                }
     sock.write_message(json.dumps(response))
 
 
@@ -186,7 +175,7 @@ def GetClientWName(name):
     return None
     
 
-def SingMessageRequestHandler(sock, msg):
+def SingleMessageRequestHandler(sock, msg):
     print("Single Message Request")
 
     c = GetClientWSock(sock)
@@ -200,15 +189,52 @@ def SingMessageRequestHandler(sock, msg):
 
         if r != None:
             response = {
+                "type"  : "SingleMessageResponse",
                 "status": 200,
                 "sender": c.username,
                 "content": content
             }
             r.sock.write_message(json.dumps(response))
-            c.sock.write_message(json.dumps({"status": 200})) 
+            c.sock.write_message(json.dumps({"type": "SingleMessageResponse", 
+                                             "status": 200})) 
     else:
         RemoveClientWSock(c)
 
+
+def GroupMessageInitHandler(sock, msg):
+    print("GroupMessageInitRequest")
+
+    c = GetClientWSock(sock)
+
+     # If the client isn't registered, remove them from the list
+    if c.registered:
+        print("Client Who Sent Message: ", c.username)
+
+        name = msg["chatname"]
+        recipients = msg["recipients"]
+        content = msg["content"]
+        chat_recipients = [c]
+
+        for r in recipients:
+            new_r  = GetClientWName(r)
+            chat_recipients.append(new_r)
+
+        new_chat = Chat(name, recipients)
+        chats.append(new_chat)
+        response = {
+                    "type": "GroupMessageRecv", 
+                    "status": 201, 
+                    "sender": c.username, 
+                    "content": content
+                    }
+        new_chat.SendMessage(response, c)
+        c.sock.write_message(json.dumps({
+                                "type": "GroupMessageInitResponse",
+                                "status": 201
+                            }))
+
+    else: 
+        RemoveClientWSock(sock)
 
 
 
@@ -225,6 +251,7 @@ def GroupMessageRequestHandler(sock, msg):
         content = msg["content"]
 
         response =  { 
+                      "type"   : "GroupMessageRecv",
                       "chatname": chatname,
                       "status" : 200, 
                       "type" : 3,
@@ -235,8 +262,13 @@ def GroupMessageRequestHandler(sock, msg):
         chat = GetChat(chatname)
         if chat != None:
             print("Sending Response...")
-            c.SendMessage(response, c)
-    
+            chat.SendMessage(response, c)
+            c.sock.write_message(json.dumps({ 
+                                    "type": "GroupMessageResponse",
+                                    "status": 200
+                                }))
+            chatname = msg["chatname"]
+        content = msg["content"]
     else: 
         RemoveClientWSock(sock)
 
@@ -253,7 +285,9 @@ def ClientListRequestHandler(sock, msg):
             if c.username != "":
                 usernames.append(c.username)
 
-        response = { "status": 200, 
+        response = { 
+                     "type"  : "ClientListResponse",
+                     "status": 200, 
                      "clients": usernames
                    }
         print("Sending Response...")
@@ -261,7 +295,10 @@ def ClientListRequestHandler(sock, msg):
 
     else: 
         print("Sending Error Response...")
-        response = { "status": 302 }
+        response = { 
+                    "type"  : "ErrorResponse",
+                    "status": 302 
+                    }
         sock.write_message(json.dumps(response))
         RemoveClientWSock(sock)
 
@@ -278,17 +315,28 @@ def RandomMessageRequestHandler(sock, msg):
             new_friend = sample(clients, 1)
 
         response = {
+                    "type" : "RandomMessageIntiation",
                     "status" : 200,
+                    "sender" : c.username,
                     "content": msg["content"]
                    }
 
         print("Sending Response...")
         new_friend.sock.write_message(json.dumps(response))
-        c.write_message(json.dumps({"client": new_friend.username}))
+        c.write_message(json.dumps(
+                                    {
+                                        "type" : "RandomMessageResponse",
+                                        "status": 200,
+                                        "client": new_friend.username
+                                    }))
 
     except Exception as e:
         print("Sending Error Response")
-        response = { "status": 400 }
+        response = { 
+                    "Error Response"
+                    "status": 400 
+
+                    }
         sock.write_message(json.dumps(response)) 
 
 
