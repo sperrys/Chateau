@@ -376,6 +376,11 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    // Called by WebSocketClient when it has connected to the server
+    public void onConnected()
+    {
+
+    }
 
     // Called when a message is received by the user
     private void onMessageReceived(Message message, String chatName)

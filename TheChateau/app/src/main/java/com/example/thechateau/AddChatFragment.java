@@ -8,7 +8,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Adapter;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,7 +16,6 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
 
 public class AddChatFragment extends Fragment {
 
@@ -40,6 +38,8 @@ public class AddChatFragment extends Fragment {
     private ArrayList<String>     _AvailableContactList;
     private ArrayAdapter          _ContactListAdapter;
     private ListView              _ContactListView;
+
+    private String _Tag = "AddChatFragment";
 
 
 
@@ -183,7 +183,7 @@ public class AddChatFragment extends Fragment {
             // -Update the ContactsAdded View on the UI
             if (_ContactsToAddList.size() > 1)
             {
-                _ContactsAddedString += ", Lexie";
+                _ContactsAddedString += ", ";
             }
 
             _ContactsAddedString += contact;
@@ -249,9 +249,17 @@ public class AddChatFragment extends Fragment {
         }
 
 
-        // todo Check if chat name already exists for that user
+        Log.i(_Tag, "_ContactList size is: " + _ContactsToAddList.size());
+        Log.i(_Tag, "_ChatNameText is "      + chatName);
 
 
+        // Give error if user tries to name a 1 on 1 chat
+        if (_ContactsToAddList.size() == 1 && !chatName.equals(""))
+        {
+            _ErrorText.setText("ERROR: You can't name 1 on 1 chats ");
+            _ChatNameText.getText().clear();
+            return false;
+        }
 
         // Attempt to register the new chat with the server and send the result
         return sendSubmissionToServer(chatName);
