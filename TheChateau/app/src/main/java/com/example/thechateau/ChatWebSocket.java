@@ -38,16 +38,7 @@ public class ChatWebSocket extends WebSocketClient {
 
         _MainActivity = activity;
     }
-
-    public ChatWebSocket(URI serverUri, Draft draft) {
-        super(serverUri, draft);
-    }
-
-
-    public ChatWebSocket(URI serverURI) {
-        super(serverURI);
-    }
-
+    
     @Override
     public void onOpen(ServerHandshake handshakedata) {
         //send("Hello, it is me. Mario :)");

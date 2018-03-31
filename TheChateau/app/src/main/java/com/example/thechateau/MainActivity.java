@@ -43,6 +43,8 @@ public class MainActivity extends AppCompatActivity
     private ChatWebSocket       _WSClient;
     private String              _WSHOST      = "ws://10.0.2.2:5000/ws";
     private String              _HerokuHost  = "ws://chateautufts.herokuapp.com:80/ws";
+    URI                         _ServerURI;
+
 
     private ListView                                _ChatListView;
     private final String[]                          _SampleChatListStrings = {"Spencer", "Russ", "Fahad", "Joe"};
@@ -53,10 +55,27 @@ public class MainActivity extends AppCompatActivity
 
     private ArrayAdapter        _ChatListAdapter;
 
-    private boolean             _enteredUsername = false;
+    private boolean             _RegisteredUser = false; // True if user has been registered
 
-    private TextView      _ConnectingText;
+    private TextView       _ConnectingText;
     private RelativeLayout _ConnectingLayout;
+
+    private Runnable _SetConnectedText = new Runnable() {
+        @Override
+        public void run() {
+
+            _ConnectingText.setText("Connected!");
+        }
+    };
+
+    private Runnable _SetConnectingText = new Runnable() {
+        @Override
+        public void run() {
+
+            _ConnectingText.setText("Connecting...");
+        }
+    };
+
 
 
     private Button              _AddNewChatButton;
@@ -90,6 +109,11 @@ public class MainActivity extends AppCompatActivity
         //you can leave it empty
     }
 
+
+
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,6 +121,11 @@ public class MainActivity extends AppCompatActivity
 
         // Set current user
         _CurrentUser = "User1";
+
+
+
+        _ConnectingText   = findViewById(R.id.ConnectingText);
+        _ConnectingLayout = findViewById(R.id.ConnectingLayout);
 
         /******************************/
         /* Set up Add New Chat Button */
@@ -165,10 +194,10 @@ public class MainActivity extends AppCompatActivity
         /**Set up WebSocket*/
         /*******************/
 
-        // Make a URI to connect to the server
-        URI uri;
+        // Set up URI to connect to the server
+
         try {
-            uri = new URI(_HerokuHost);
+            _ServerURI = new URI(_HerokuHost);
         } catch (URISyntaxException e) {
             e.printStackTrace();
             return;
@@ -176,12 +205,17 @@ public class MainActivity extends AppCompatActivity
 
         // Connect to web server
         Log.i("MainActivity", "Calling SetupWS()");
-        _WSClient = new ChatWebSocket(uri, this);
+        _WSClient = new ChatWebSocket(_ServerURI, this);
 
+        callWSConnect();
+
+
+    }
+
+    private void callWSConnect()
+    {
         Log.i("MainActivity", "Calling WSConnect()");
         _WSClient.connect();
-
-
     }
 
     // Register current client in chat server
@@ -374,23 +408,13 @@ public class MainActivity extends AppCompatActivity
 
         Log.i("OnConnectedToServer", "In function");
 
-        // Register current user with the client
-        registerCurrentUser();
+        // Register current user with the server if necessary
+        if(!_RegisteredUser) registerCurrentUser();
 
+        // Set the text in the connected layout to "connected!"
+        runOnUiThread(_SetConnectedText);
 
-        Runnable setConnectedText = new Runnable() {
-            @Override
-            public void run() {
-                _ConnectingLayout = findViewById(R.id.ConnectingLayout);
-                _ConnectingText = findViewById(R.id.ConnectingText);
-
-                _ConnectingText.setText("Connected!");
-            }
-        };
-
-        // Set the Text in the connected layout to connected
-        runOnUiThread(setConnectedText);
-
+        // Wait for a few seconds and then make the connecting layout view disappear
         Thread waiter = new Thread() {
             @Override
             public void run()
@@ -414,15 +438,24 @@ public class MainActivity extends AppCompatActivity
                 });
             }
         };
-
-        // Wait for a few seconds and then make the connecting layout view disappear
         waiter.run();
 
     }
 
+
+
+
     public void onServerDisconnect()
     {
-        
+        Log.i("MainActivity", "Called OnServerDisconnect");
+
+        _WSClient = new ChatWebSocket(_ServerURI, this);
+
+        callWSConnect();
+
+        // Set connected attribute to "connecting"
+        runOnUiThread(_SetConnectingText);
+
     }
 
     // Called when a message is received by the user
