@@ -22,11 +22,13 @@ class IndexHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
         self.render("index.html")
+        self.finish()
 
 class CertRequestHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
         self.write('1QlF3D5IA75MWoluzAMJt4fx3Nd0PP-opB3VuQZ92T4')
+        self.finish()
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
