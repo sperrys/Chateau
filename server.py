@@ -1,6 +1,7 @@
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
+import tornado.httpserver
 import json
 import os
 
@@ -25,7 +26,7 @@ class IndexHandler(tornado.web.RequestHandler):
 class CertRequestHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
-        self.write('ORMxuO5u_VPOpPdHz6KGgl45kCO57ue1MY1foXmGOkI.VC6txwIMOMmKlkjWLi-iG47yPMBGmPSp3-r_5m8IY34')
+        self.write('PBDTmHXtGAQmxvsORxbYZ6cOk81-HmOI8ZNvbWflkfw')
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
@@ -345,11 +346,12 @@ def RandomMessageRequestHandler(sock, msg):
 app = tornado.web.Application([
     (r'/', IndexHandler),
     (r'/ws', WebSocketHandler),
-    (r'/.well-known/acme-challenge/ORMxuO5u_VPOpPdHz6KGgl45kCO57ue1MY1foXmGOkI.VC6txwIMOMmKlkjWLi-iG47yPMBGmPSp3-r_5m8IY34/', CertRequestHandler)
+    (r'/.well-known/acme-challenge/PBDTmHXtGAQmxvsORxbYZ6cOk81-HmOI8ZNvbWflkfw', CertRequestHandler)
 ])
 
 if __name__ == '__main__':
     parse_command_line()
-    app.listen(options.port)
+    http_server = tornado.httpserver.HTTPServer(app)
+    http_server.listen(options.port)
     tornado.ioloop.IOLoop.instance().start()
 
