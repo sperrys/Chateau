@@ -142,7 +142,11 @@ def RegisterRequestHandler(sock, msg):
             if not c.registered:
                 c.username = name
                 c.registered = True
-                ClientListRequestHandler(sock, msg)
+                response = { 
+                        "type"  : "RegisterResponse",
+                        "status": 200 
+                        }
+                sock.write_message(json.dumps(response))
                 return 
             # Otherwise send back Auth Issue 
             else:
