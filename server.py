@@ -27,7 +27,7 @@ class IndexHandler(tornado.web.RequestHandler):
 class CertRequestHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
-        self.write('1QlF3D5IA75MWoluzAMJt4fx3Nd0PP-opB3VuQZ92T4')
+        self.write('JYcn_tukfGzSlJDAeUkqCbWZJEGG02TBV5_QR-08H34.VC6txwIMOMmKlkjWLi-iG47yPMBGmPSp3-r_5m8IY34')
         self.finish()
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
@@ -352,7 +352,7 @@ def RandomMessageRequestHandler(sock, msg):
 app = tornado.web.Application([
     (r'/', IndexHandler),
     (r'/ws', WebSocketHandler),
-    (r'/.well-known/acme-challenge/1QlF3D5IA75MWoluzAMJt4fx3Nd0PP-opB3VuQZ92T4', CertRequestHandler)
+    (r'/.well-known/acme-challenge/JYcn_tukfGzSlJDAeUkqCbWZJEGG02TBV5_QR-08H34', CertRequestHandler)
 ])
 
 if __name__ == '__main__':
