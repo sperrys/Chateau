@@ -183,7 +183,7 @@ def SingleMessageRequestHandler(sock, msg):
             c.sock.write_message(json.dumps({"type": "SingleMessageSendResponse", 
                                              "status": 200})) 
     else:
-        RemoveClientWSock(c)
+        sock.write_message(ErrorResponse(301).jsonify())
 
 
 def GroupMessageInitHandler(sock, msg):
@@ -219,7 +219,7 @@ def GroupMessageInitHandler(sock, msg):
                             }))
 
     else: 
-        RemoveClientWSock(sock)
+        sock.write_message(ErrorResponse(301).jsonify())
 
 
 
@@ -255,7 +255,7 @@ def GroupMessageRequestHandler(sock, msg):
             chatname = msg["chatname"]
         content = msg["content"]
     else: 
-        RemoveClientWSock(sock)
+         sock.write_message(ErrorResponse(301).jsonify())
 
 
 def ClientListRequestHandler(sock, msg):
@@ -279,8 +279,7 @@ def ClientListRequestHandler(sock, msg):
         sock.write_message(json.dumps(response))
 
     else: 
-        sock.write_message(ErrorResponse(400).jsonify())
-        RemoveClientWSock(sock)
+        sock.write_message(ErrorResponse(301).jsonify())
 
 
 
@@ -312,7 +311,6 @@ def RandomMessageRequestHandler(sock, msg):
 
     except Exception as e:
         sock.write_message(ErrorResponse(400).jsonify())
-        RemoveClientWSock(sock)
 
 
 app = tornado.web.Application([

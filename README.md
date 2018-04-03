@@ -25,7 +25,7 @@ This is a Repository for networks project 1.
 
 Arguments
 	- `"username"`
-
+	- `"password"`
 Response:
 	- If successful, `"type": "RegisterResponse", "status": 200`
 	- if generic failure, `"type": "ErrorResponse", status": 400` 
@@ -70,7 +70,6 @@ arguments:
 	"status": 201 (if chat was newly created), 200 if afterthat
 	"sender": username of the person who sent the message
 	"content": the actual content of the new message in the chat
-
 
 
 
