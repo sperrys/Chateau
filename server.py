@@ -8,7 +8,9 @@ import os
 from chatclient import ChatClient
 from chat import Chat
 
+from ldap_client import TuftsAuth
 from tornado.options import define, options, parse_command_line
+from response import ErrorResponse
 
 define("port", default=5000, help="run on the given port", type=int)
 
@@ -22,7 +24,6 @@ class IndexHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
     def get(self):
         self.render("index.html")
-        self.finish()
 
 class CertRequestHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
@@ -49,12 +50,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             MessageHandler(self, msg)
 
         except Exception as e: 
-            print("Poorly formatted Request Message")
-            print("Sending Error Response...")
-
-            response = { "status": 400 }
-            self.write_message(json.dumps(response))
-
+            sock.write_message(ErrorResponse(400).jsonify())
 
     # When a web socket connection has closed,
     # Remove the client from list of clients
@@ -96,76 +92,58 @@ def MessageHandler(sock, msg):
         elif msgType == "SingleMessageRequest":
             SingleMessageRequestHandler(sock, msg)
         else: 
-            print("Not a valid Message Type")
-            print("Sending Error Response...")
-
-            response = { 
-                         "type" : "ErrorResponse",
-                         "status": 400
-                       }
-            sock.write_message(json.dumps(response))
+            sock.write_message(ErrorResponse(400).jsonify())
 
     except Exception as e: 
         print(e)
-        print("Sending Error Response...")
-        response = { 
-                     "type" : "ErrorResponse", 
-                     "status": 400 
-                   }
-
-        sock.write_message(json.dumps(response))
-
+        sock.write_message(ErrorResponse(400).jsonify())
 
 
 def RegisterRequestHandler(sock, msg):
     print("Register Request")
-    name = msg["username"]
 
-    # Make Sure Unique Username
-    for l in clients:
-        if name == l.username:
-            response = { 
-                        "type"  : "RegisterResponse",
-                        "status": 302 
-                        }
-            sock.write_message(json.dumps(response))
-            return 
+    try: 
+        name = msg["username"]
+        pw = msg["password"]
+        
+        # No Tufts Auth for Time Being 
+        auth = True
+        #auth = TuftsAuth(name, pw)
 
-    # Otherwise Try to Register     
-    for c in clients:
-        if c.sock == sock:
-            print("Found Succesful Connection")
-            print("Client Registering...")
-            
-            # If not registered before,
-            # Send back a c lient List
-            if not c.registered:
-                c.username = name
-                c.registered = True
-                response = { 
-                        "type"  : "RegisterResponse",
-                        "status": 200 
-                        }
-                sock.write_message(json.dumps(response))
-                return 
-            # Otherwise send back Auth Issue 
-            else:
-                print("Client is already Registered: ", c.username)
-                print("Sending Error Response...")
-                response = { 
-                            "type"  : "ErrorResponse",
-                            "status": 302 
-                            }
-                sock.write_message(json.dumps(response))
-                return 
+        if auth: 
+        # Make Sure Unique Username
+            for l in clients:
+                if name == l.username:
+                   sock.write_message(ErrorResponse(302).jsonify())
+                   return 
 
-    
-    # If the client cannot be found, send an error
-    response = { 
-                "type"  : "ErrorResponse", 
-                "status": 301 
-                }
-    sock.write_message(json.dumps(response))
+            # Otherwise Try to Register     
+            for c in clients:
+                if c.sock == sock:
+                    print("Found Succesful Connection")
+                    print("Client Registering...")
+                    
+                    # If not registered before,
+                    # Send back a c lient List
+                    if not c.registered:
+                        c.username = name
+                        c.registered = True
+                        response = { 
+                                "type"  : "RegisterResponse",
+                                "status": 200 
+                                }
+                        sock.write_message(json.dumps(response))
+                        return 
+                    # Otherwise send back Auth Issue 
+                    else:
+                        print("Client is already Registered: ", c.username)
+                        sock.write_message(ErrorResponse(302).jsonify())
+                        return 
+        else: 
+           sock.write_message(ErrorResponse(301).jsonify())
+
+    except Exception as e:
+        sock.write_message(ErrorResponse(400).jsonify())
 
 
 def GetChat(chatname):
@@ -196,13 +174,13 @@ def SingleMessageRequestHandler(sock, msg):
 
         if r != None:
             response = {
-                "type"  : "SingleMessageResponse",
+                "type"  : "SingleMessageRecvResponse",
                 "status": 200,
                 "sender": c.username,
                 "content": content
             }
             r.sock.write_message(json.dumps(response))
-            c.sock.write_message(json.dumps({"type": "SingleMessageResponse", 
+            c.sock.write_message(json.dumps({"type": "SingleMessageSendResponse", 
                                              "status": 200})) 
     else:
         RemoveClientWSock(c)
@@ -301,12 +279,7 @@ def ClientListRequestHandler(sock, msg):
         sock.write_message(json.dumps(response))
 
     else: 
-        print("Sending Error Response...")
-        response = { 
-                    "type"  : "ErrorResponse",
-                    "status": 302 
-                    }
-        sock.write_message(json.dumps(response))
+        sock.write_message(ErrorResponse(400).jsonify())
         RemoveClientWSock(sock)
 
 
@@ -338,15 +311,8 @@ def RandomMessageRequestHandler(sock, msg):
                                     }))
 
     except Exception as e:
-        print("Sending Error Response")
-        response = { 
-                    "Error Response"
-                    "status": 400 
-
-                    }
-        sock.write_message(json.dumps(response)) 
-
-
+        sock.write_message(ErrorResponse(400).jsonify())
+        RemoveClientWSock(sock)
 
 
 app = tornado.web.Application([
@@ -360,4 +326,5 @@ if __name__ == '__main__':
     http_server = tornado.httpserver.HTTPServer(app)
     http_server.listen(options.port)
     tornado.ioloop.IOLoop.instance().start()
+    print("Starting Server")
 
