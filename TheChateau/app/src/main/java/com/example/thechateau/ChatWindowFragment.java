@@ -38,6 +38,7 @@ public class ChatWindowFragment extends Fragment {
     private Button   _backButton;
     private EditText _sendMessageText;
     private User     _currentUser;
+    private TextView _InfoMessageTextView;
 
     private View _FragmentView;
     private Fragment thisFragment;
@@ -98,6 +99,7 @@ public class ChatWindowFragment extends Fragment {
 
         // Get sendMessageText view (represents text user wants to send)
         _sendMessageText = _FragmentView.findViewById(R.id.edittext_chatbox);
+        _InfoMessageTextView = _FragmentView.findViewById(R.id.InfoMessageText);
 
         /************************************/
         /*       Set up Send Button       */
@@ -117,15 +119,31 @@ public class ChatWindowFragment extends Fragment {
                 // Make new message object
                 Message newMessage = new Message(sendString, _currentUser, System.currentTimeMillis());
 
-                // Add Message to message list and update
-                _MessageList.add(newMessage);
-                _MessageAdapter.notifyDataSetChanged();
+                boolean isGroupChat = (_MessageList.size() > 1);
 
-                // Clear the text box
-                _sendMessageText.getText().clear();
+                boolean messageSent = ((MainActivity) getActivity()).sendChatMessageToServer(_ChatName, sendString, isGroupChat);
 
-                // Move the current chat to most recently sent in Main's chat list
-                ((MainActivity)getActivity()).moveChatToTop(_ChatName);
+                if (messageSent)
+                {
+                    // Add Message to message list and update
+                    _MessageList.add(newMessage);
+                    _MessageAdapter.notifyDataSetChanged();
+
+                    // Clear the text box
+                    _sendMessageText.getText().clear();
+
+                    // Move the current chat to most recently sent in Main's chat list
+                    ((MainActivity) getActivity()).moveChatToTop(_ChatName);
+
+                    // ERROR message couldn't be sent
+                    _InfoMessageTextView.setText("Message \"" + sendString + "\" sent successfully");
+                }
+                else {
+
+                    // ERROR message couldn't be sent
+                    _InfoMessageTextView.setText("ERROR \"" + sendString + "\"message couldn't be sent");
+
+                }
             }
         });
 

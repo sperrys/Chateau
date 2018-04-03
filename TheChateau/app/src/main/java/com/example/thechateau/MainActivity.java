@@ -64,6 +64,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void run() {
 
+            _ConnectingText.setVisibility(View.VISIBLE);
             _ConnectingText.setText("Connected!");
         }
     };
@@ -72,6 +73,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void run() {
 
+            _ConnectingText.setVisibility(View.VISIBLE);
             _ConnectingText.setText("Connecting...");
         }
     };
@@ -83,12 +85,29 @@ public class MainActivity extends AppCompatActivity
     private int                 _newChatCounter       = 0;
     private String              _CurrentUser;
 
-    private final int _RegisterType             = 1;
-    //private final String _RegisterType = "2";
-    private final int _SendMessageToClientsType = 3;
+    private final String _RegisterRequest    = "RegisterRequest";
+    private final String _RegisterResponse   = "RegisterResponse";
+
+    private final String _SendSingleMessage         = "SingleMessageRequest";
+    private final String _SingleMessageResponse     = "SingleMessageResponse";
+    private final String _SingleMessageRecvResposne = "SingleMessageRecvResponse";
+
+    private final String _GroupMessageInitRequest   = "GroupMessageInitRequest";
+    private final String _GroupMessageInitResponse  = "GroupMessageInitResponse";
+
+    private final String _SendGroupMessage          = "GroupMessageRequest";
+    private final String _GroupMessageResponse      = "GroupMessageResponse";
+    private final String _GroupMessageRecv          = "GroupMessageRecv";
+
     private final int _GetClientsListType       = 4;
     private final int _GetRandomContactType     = 5;
     private final int _SendSingleMessageType    = 6;
+
+    // Response Strings
+
+    private final String _ClientListResponse        = "ClientListResponse";
+    private final String _RandomMessageResponse     = "RandomMessageResponse";
+
 
 
     private FragmentManager _FragmentManager;
@@ -225,7 +244,7 @@ public class MainActivity extends AppCompatActivity
         JSONObject json = new JSONObject();
 
         try {
-            json.put("type",     _RegisterType);
+            json.put("type",     _RegisterRequest);
             json.put("username", _CurrentUser);
 
 
@@ -258,7 +277,7 @@ public class MainActivity extends AppCompatActivity
 
         try
         {
-            json.put("type",     _GetClientsListType);
+            json.put("type", _GetClientsListType);
         }
         catch (JSONException e)
         {
@@ -381,7 +400,7 @@ public class MainActivity extends AppCompatActivity
     {
         org.json.simple.JSONObject  jsonObject;
         JSONParser parser = new JSONParser();
-        int type;
+        //int type;
 
         Log.i("OnChatServerMsgReceived", "New Message Received: " + message);
 
@@ -390,16 +409,114 @@ public class MainActivity extends AppCompatActivity
             jsonObject = (org.json.simple.JSONObject)parser.parse(message);
             // jsonObject.keySet();
 
-            for (Object key: jsonObject.keySet())
+            /*for (Object key: jsonObject.keySet())
             {
                 Log.i("OnChatSeverMsgReceived", "Key: " + key.toString() + ", Value: " + jsonObject.get(key).toString());
-            }
+            }*/
 
+            String type = (String)jsonObject.get("type");
+            long status = (long)jsonObject.get("status");
+            Log.i("OnChatSeverMsgReceived", "Received type: " + type);
+
+            switch (type)
+            {
+                case _RegisterResponse:
+                {
+                    // If user was successfully registered
+                    if (status == 200 ) {
+                        Log.i("OnChatServerMsgReceived", "Registration successful");
+                        _RegisteredUser = true;
+                    }
+
+                    // If user is already registered
+                    else if (status == 302)
+                    {
+                        Log.i("OnChatServerMsgReceived", "Error, username was already registered");
+                        // Tell user to pick a new username
+                    }
+
+                    else {
+                        Log.i("OnChatServerMsgReceived", "Error, status is " + status);
+                    }
+                    break;
+                }
+
+                case _GroupMessageInitResponse:
+                {
+
+                    break;
+                }
+
+                case _GroupMessageResponse:
+                {
+
+                    break;
+                }
+
+                case _GroupMessageRecv:
+                {
+
+                    break;
+                }
+
+                case _ClientListResponse:
+                {
+                    break;
+                }
+
+                case _RandomMessageResponse:
+                {
+                    break;
+                }
+
+                case _SingleMessageResponse:
+                {
+                    break;
+                }
+
+
+                default:
+                {
+                    Log.i("OnChatServerMsgReceived", "Error, unknown type " + type);
+                }
+            }
         }
         catch (Exception e)
         {
             Log.i("Parsing", "Error " + e.getMessage());
         }
+    }
+
+    public boolean sendChatMessageToServer(String chatName, String content, boolean isGroupChat)
+    {
+        JSONObject json = new JSONObject();
+
+        try {
+
+            json.put("recipient", chatName);
+            json.put("content"  , content);
+
+            if(isGroupChat)
+            {
+                json.put("type"     , _SendGroupMessage);
+            }
+            else
+            {
+                json.put("type"     , _SendSingleMessage);
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        String message = json.toString();
+
+
+        Log.i("SendChatMessageToServer", "Sending chat message(): " + message);
+        _WSClient.send(message);
+
+        return true;
     }
 
     // Called by WebSocketClient when it has connected to the server
@@ -432,7 +549,7 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void run() {
 
-                        Log.i("WaiterThread", "Setting ConnecctingLayout to Invisible");
+                        Log.i("WaiterThread", "Setting ConnectingLayout to Invisible");
                         _ConnectingLayout.setVisibility(View.INVISIBLE);
                     }
                 });

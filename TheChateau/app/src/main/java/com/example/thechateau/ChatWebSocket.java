@@ -38,7 +38,7 @@ public class ChatWebSocket extends WebSocketClient {
 
         _MainActivity = activity;
     }
-    
+
     @Override
     public void onOpen(ServerHandshake handshakedata) {
         //send("Hello, it is me. Mario :)");
