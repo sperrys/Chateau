@@ -11,6 +11,7 @@ from chat import Chat
 from ldap_client import TuftsAuth
 from tornado.options import define, options, parse_command_line
 from response import ErrorResponse
+from timeoutservice import TimeoutWebSocketService
 
 define("port", default=5000, help="run on the given port", type=int)
 
@@ -32,6 +33,9 @@ class CertRequestHandler(tornado.web.RequestHandler):
         self.finish()
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
+    def prepare(self):
+        self.timeout_service = TimeoutWebSocketService(self, timeout=(1000*60)) 
+        self.timeout_service.refresh_timeout()
 
     # When A Web Socket Connection Has Been Opened 
     def open(self):
@@ -43,6 +47,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
     def on_message(self, message):
         print ("Client Sent: ", message)
+        self.timeout_service.refresh_timeout()
         # Get Message From Socket 
         # Pass Off to Message Handler
         try: 
@@ -57,6 +62,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
     def on_close(self):
         print("WebSocket closed")
         print("Removing Client")
+        self.timeout_service.clean_timeout()
         RemoveClientWSock(self)
 
 
