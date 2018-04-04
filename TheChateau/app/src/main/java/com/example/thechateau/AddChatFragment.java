@@ -32,6 +32,7 @@ public class AddChatFragment extends Fragment {
     private EditText _AddContactText;
     private TextView _ContactsAddedText;
     private TextView _ErrorText;
+    private TextView _ContactTitleText;
     private View     _FragmentView;
 
     private String[]              _SampleAvailableContacts = {"Arnold", "Honnu", "Joey", "Johnny", "Alex", "Fernando", "Alfred", "Hitchcock", "Dennis", "Yorgen"};
@@ -97,7 +98,7 @@ public class AddChatFragment extends Fragment {
                 // Otherwise, continue and attempt to submit the new chat
                 if (_ContactsToAddList.size() < 1)
                 {
-                    // Attempt to add a contact, and
+                    // Attempt to add a contact, assuming one is written on the add contact line
                     if(!AttemptAddContact())
                     {
                         _ErrorText.setText("ERROR: Add at least one contact to create a new chat");
@@ -128,7 +129,11 @@ public class AddChatFragment extends Fragment {
             @Override
             public void onClick(View view) {
 
-                AttemptAddContact();
+                if(AttemptAddContact())
+                {
+                    // Clear the error text if the contact was added succesfully
+                    _ErrorText.setText("");
+                }
 
                 if(_ContactsToAddList.size() > 1)
                 {
@@ -141,7 +146,15 @@ public class AddChatFragment extends Fragment {
             }
         });
 
-        _AvailableContactList = new ArrayList(Arrays.asList(_SampleAvailableContacts));
+        // Get a list of available contacts from the server
+        _AvailableContactList = RetrieveContactList();
+
+        // Show that no contacts are available if the list is empty
+        if (_AvailableContactList.size() < 1)
+        {
+            _ContactTitleText.setText("No Contacts Available");
+        }
+
 
         // Make an adapter for the Chat List view and set it
         _ContactListAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_list_item_1, _AvailableContactList);
@@ -149,6 +162,18 @@ public class AddChatFragment extends Fragment {
         // Set up Contact List View from UI
         _ContactListView = _FragmentView.findViewById(R.id.ContactListView);
         _ContactListView.setAdapter(_ContactListAdapter);
+    }
+
+    // Get a contact list from the server
+    private ArrayList<String> RetrieveContactList()
+    {
+        ArrayList<String> contacts = ((MainActivity)getActivity()).requestContactList();
+
+        String currentUser = ((MainActivity) getActivity()).getCurrentUser();
+        //Log.i("RetrieveContactList", "current user is " + currentUser);
+        //contacts.remove(currentUser);
+
+        return contacts;
     }
 
     @Override
@@ -163,6 +188,7 @@ public class AddChatFragment extends Fragment {
         _AddContactText    = _FragmentView.findViewById(R.id.AddContactTextBox);
         _ContactsAddedText = _FragmentView.findViewById(R.id.ContactsAdded);
         _ErrorText         = _FragmentView.findViewById(R.id.ErrorMessage);
+        _ContactTitleText  = _FragmentView.findViewById(R.id.ContactTitle);
 
         // Inflate the layout for this fragment
         return _FragmentView;

@@ -1,12 +1,8 @@
 package com.example.thechateau;
 
 
-import android.app.Activity;
-import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
@@ -16,13 +12,10 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import org.java_websocket.client.WebSocketClient;
-import org.java_websocket.handshake.ServerHandshake;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -106,7 +99,8 @@ public class MainActivity extends AppCompatActivity
     private final String _GroupMessageRecv          = "GroupMessageRecv";
 
 
-    private final int _GetClientsListType       = 4;
+    private final String _ClientListRequest = "ClientListRequest";
+
     private final int _GetRandomContactType     = 5;
     private final int _SendSingleMessageType    = 6;
 
@@ -274,13 +268,17 @@ public class MainActivity extends AppCompatActivity
         _WSClient.send(message);
 
         // Wait to see if client gets a registration response in 2 seconds, if not return false;
-        if(waitUntilRegistered(2000)) return true;
+        if(waitUntilRegistered(2000))
+        {
+            _CurrentUser = username;
+            return true;
+        }
 
         else return false;
 
     }
 
-    // Request a contact list until it gets populated, then returns populated contact list
+    /*// Request a contact list until it gets populated, then returns populated contact list
     private ArrayList<String> getContactList()
     {
         while (_ContactList == null || _ContactList.size() > 1)
@@ -289,16 +287,16 @@ public class MainActivity extends AppCompatActivity
         }
 
         return _ContactList;
-    }
+    }*/
 
     // Request a contact list from the chat server
-    private void requestContactList()
+    public ArrayList<String> requestContactList()
     {
         JSONObject json = new JSONObject();
 
         try
         {
-            json.put("type", _GetClientsListType);
+            json.put("type", _ClientListRequest);
         }
         catch (JSONException e)
         {
@@ -310,6 +308,41 @@ public class MainActivity extends AppCompatActivity
         Log.i("MainActivity", "Sending getClientMessage(): " + message);
         _WSClient.send(message);
 
+        // Wait a few seconds for contact list to be retrieved, then return contact list
+        waitUntilTimeReached(3000);
+
+        Log.i("requestContactList", "List of current contacts");
+
+        for(String s: _ContactList)
+        {
+            Log.i("requestContactList", "contact:" + s);
+        }
+
+        return _ContactList;
+
+    }
+
+    // Runs until the timeToWaitMS has been reached, then returns
+    private void waitUntilTimeReached(long timeToWaitMS)
+    {
+        // Calc time that we will timeout
+        long timeOutExpiredTimeMS = System.currentTimeMillis() + timeToWaitMS;
+
+        boolean messageConfirmationReceived = false;
+
+        while (1 == 1) {
+            Log.i("waitUntilTimeReached", "Waiting");
+
+            long waitMs = timeOutExpiredTimeMS - System.currentTimeMillis();
+
+            if (waitMs <= 0) {
+
+                Log.i("waitUntilTimeReached", "reached timeout for waiting for message");
+                return;
+            }
+
+
+        }
     }
 
     private void startLoginFragment()
@@ -483,7 +516,8 @@ public class MainActivity extends AppCompatActivity
 
                         _RegisteredUser = true;
 
-                        _CurrentUser    = (String)jsonObject.get("username");
+                        //_CurrentUser    = (String)jsonObject.get("username");
+                        //Log.i("OnChatServerMsgReceived", "current user is now " + _CurrentUser);
                     }
 
                     // If user is already registered
@@ -519,6 +553,27 @@ public class MainActivity extends AppCompatActivity
 
                 case _ClientListResponse:
                 {
+                    Log.i("OnChatServerMsgReceived", "Got ClientListResponse");
+
+                    if(status == 200)
+                    {
+                        org.json.simple.JSONArray jsonArray = (org.json.simple.JSONArray)jsonObject.get("clients");
+
+                        _ContactList = new ArrayList<>();
+
+                        String[] contacts = new String[jsonArray.size()];
+
+                        for(int i = 0; i < jsonArray.size(); i++)
+                        {
+                            if(!contacts[i].equals(_CurrentUser))
+                            {
+                                contacts[i] = (String) jsonArray.get(i);
+                            }
+                        }
+
+                        _ContactList = new ArrayList(Arrays.asList(contacts));
+                    }
+
                     break;
                 }
 
@@ -597,7 +652,7 @@ public class MainActivity extends AppCompatActivity
         Log.i("SendChatMessageToServer", "Sending chat message(): " + message);
         _WSClient.send(message);
 
-        if(waitUntilMessageSent(5000))
+        if(waitUntilMessageSent(3000))
         {
             return true;
         }

@@ -92,13 +92,31 @@
         app:layout_constraintBottom_toTopOf="@id/ContactTitleLayout"
         />
 
+    <!-- Error Message Layout -->
+    <LinearLayout
+        android:id="@+id/ErrorLayout"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+
+        android:gravity="center"
+
+        app:layout_constraintBottom_toTopOf="@id/ChatNameLayout">
+
+        <TextView
+            android:id="@+id/ErrorMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
+
+    </LinearLayout>
+
+
     <!-- Enter ChatName Layout -->
     <LinearLayout
         android:id="@+id/ChatNameLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@id/ErrorLayout">
+        app:layout_constraintBottom_toTopOf="@id/SubmitButtonLayout">
 
         <!-- Spot to Enter Chat Name  -->
         <EditText
@@ -114,22 +132,7 @@
             android:maxLines="1" />
     </LinearLayout>
 
-    <!-- Error Message Layout -->
-    <LinearLayout
-        android:id="@+id/ErrorLayout"
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
 
-        android:gravity="center"
-
-        app:layout_constraintBottom_toTopOf="@id/SubmitButtonLayout">
-
-        <TextView
-            android:id="@+id/ErrorMessage"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent" />
-
-    </LinearLayout>
 
     <!-- Create Chat Button -->
     <LinearLayout
