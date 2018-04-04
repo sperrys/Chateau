@@ -112,7 +112,7 @@
             >
             <TextView
                 android:id="@+id/InfoMessageText"
-                android:text="Please enter your information"
+                android:text="Please Login"
                 android:textSize="10dp"
                 android:layout_height="match_parent"
                 android:layout_width="wrap_content"

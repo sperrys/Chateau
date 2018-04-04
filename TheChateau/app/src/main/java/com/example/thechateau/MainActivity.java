@@ -281,7 +281,11 @@ public class MainActivity extends AppCompatActivity
         Log.i("MainActivity", "Sending registration message(): " + message);
         _WSClient.send(message);
 
-        return true;
+        // Wait to see if client gets a registration response in 2 seconds, if not return false;
+        if(waitUntilRegistered(2000)) return true;
+
+        else return false;
+
     }
 
     // Request a contact list until it gets populated, then returns populated contact list
@@ -461,7 +465,10 @@ public class MainActivity extends AppCompatActivity
                     // If user was successfully registered
                     if (status == 200 ) {
                         Log.i("OnChatServerMsgReceived", "Registration successful");
+
                         _RegisteredUser = true;
+
+                        _CurrentUser    = (String)jsonObject.get("username");
                     }
 
                     // If user is already registered
@@ -602,6 +609,10 @@ public class MainActivity extends AppCompatActivity
     {
         Log.i("MainActivity", "Called OnServerDisconnect");
 
+        removeAllFragments();
+
+        _RegisteredUser = false;
+
         _WSClient = new ChatWebSocket(_ServerURI, this);
 
         callWSConnect();
@@ -609,6 +620,51 @@ public class MainActivity extends AppCompatActivity
         // Set connected attribute to "connecting"
         runOnUiThread(_SetConnectingText);
 
+    }
+
+    // Loops for a given amount of time until the user is registered
+    //
+    private boolean waitUntilRegistered(long timeToWaitMS)
+    {
+        // Calc time that we will timeout
+        long timeOutExpiredTimeMS = System.currentTimeMillis() + timeToWaitMS;
+
+        while (!_RegisteredUser)
+        {
+            Log.i("waitUntilRegistered", "Waiting for register timeout");
+
+            long waitMs = timeOutExpiredTimeMS - System.currentTimeMillis();
+
+            if (waitMs <= 0)
+            {
+                return false;
+            }
+            // we assume we are in a synchronized (object) here
+            //object.wait(waitMs);
+            // we might get improperly awoken here so we loop around to see if we timed out
+        }
+
+        Log.i("waitUntilRegistered", "user became registered");
+        return true;
+    }
+
+    private void removeAllFragments()
+    {
+        Log.i("MainActivity", "Called RemoveAllFragments");
+        for(Fragment fragment:getSupportFragmentManager().getFragments())
+        {
+            /*if(fragment instanceof NavigationDrawerFragment)
+            {
+                continue;
+            }
+            else
+            {*/
+                if(fragment!=null)
+                {
+                    getSupportFragmentManager().beginTransaction().remove(fragment).commit();
+                }
+            //}
+        }
     }
 
     // Called when a message is received by the user
