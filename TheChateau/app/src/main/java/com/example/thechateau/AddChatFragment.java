@@ -80,6 +80,9 @@ public class AddChatFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Set chatName to invisible until we need a group chat
+        _ChatNameText.setVisibility(View.INVISIBLE);
+
         // Make activity view invisible
         getActivity().findViewById(R.id.nonFragmentStuff).setVisibility(View.INVISIBLE);
 
@@ -126,6 +129,12 @@ public class AddChatFragment extends Fragment {
             public void onClick(View view) {
 
                 AttemptAddContact();
+
+                if(_ContactsToAddList.size() > 1)
+                {
+                    _ErrorText.setText("Please Enter a Name For The New Group Chat");
+                    _ChatNameText.setVisibility(View.VISIBLE);
+                }
 
                 // Clear the contact text field
                 _AddContactText.getText().clear();;

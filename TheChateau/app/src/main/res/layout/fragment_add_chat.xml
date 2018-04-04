@@ -5,13 +5,14 @@
     android:layout_height="match_parent"
     tools:context="com.example.thechateau.AddChatFragment">
 
+    <!-- Title Layout -->
     <LinearLayout
         android:id="@+id/titleLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:orientation="horizontal"
-        android:paddingBottom="20dp"
+        android:paddingBottom="10dp"
         app:layout_constraintBottom_toTopOf="@id/AddContactLayout">
 
         <TextView
@@ -21,35 +22,14 @@
             android:text="Create a New Chat" />
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/ChatNameLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintTop_toBottomOf="@id/titleLayout">
-
-        <!-- Spot to Enter Chat Name  -->
-        <EditText
-            android:id="@+id/ChatNameTextBox"
-            android:layout_width="wrap_content"
-            android:layout_height="20dp"
-            android:layout_gravity="center"
-            android:layout_marginLeft="16dp"
-            android:layout_marginRight="16dp"
-            android:layout_weight="1"
-            android:background="@android:color/transparent"
-            android:hint="Enter Chat Name Here"
-            android:maxLines="1" />
-    </LinearLayout>
-
-
+    <!-- Add Contact Layout -->
     <LinearLayout
         android:id="@+id/AddContactLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingTop="30dp"
-        app:layout_constraintTop_toBottomOf="@id/ChatNameLayout">
+
+        app:layout_constraintTop_toBottomOf="@id/titleLayout">
 
         <!-- Spot to Enter Contact Name  -->
         <EditText
@@ -72,13 +52,93 @@
             app:layout_constraintLeft_toRightOf="@id/AddContactTextBox"></Button>
     </LinearLayout>
 
+    <!-- Contacts Title Text -->
+    <LinearLayout
+        android:id="@+id/ContactTitleLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/AddContactLayout"
+        app:layout_constraintBottom_toTopOf="@id/ContactListView">
+        <TextView
+            android:id="@+id/ContactTitle"
+            android:text="Contacts"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            />
+    </LinearLayout>
+
+    <!-- List of Contacts -->
+    <ListView
+        android:id="@+id/ContactListView"
+        android:layout_width="match_parent"
+        android:layout_height="0dip"
+        android:layout_weight="1"
+        app:layout_constraintTop_toBottomOf="@id/AddContactLayout"
+        app:layout_constraintBottom_toTopOf="@id/ContactsAdded"
+        >
+    </ListView>
+
+    <!-- Contacts Added Text -->
+    <TextView
+        android:id="@+id/ContactsAdded"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="16dp"
+        android:text="Contacts Added: None"
+        app:layout_constraintTop_toBottomOf="@id/SubmitButtonLayout"
+        app:layout_constraintBottom_toTopOf="@id/ContactTitleLayout"
+        />
+
+    <!-- Enter ChatName Layout -->
+    <LinearLayout
+        android:id="@+id/ChatNameLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@id/ErrorLayout">
+
+        <!-- Spot to Enter Chat Name  -->
+        <EditText
+            android:id="@+id/ChatNameTextBox"
+            android:layout_width="wrap_content"
+            android:layout_height="20dp"
+            android:gravity="center"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:hint="Enter Chat Name Here"
+            android:maxLines="1" />
+    </LinearLayout>
+
+    <!-- Error Message Layout -->
+    <LinearLayout
+        android:id="@+id/ErrorLayout"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+
+        android:gravity="center"
+
+        app:layout_constraintBottom_toTopOf="@id/SubmitButtonLayout">
+
+        <TextView
+            android:id="@+id/ErrorMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
+
+    </LinearLayout>
+
+    <!-- Create Chat Button -->
     <LinearLayout
         android:id="@+id/SubmitButtonLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="horizontal"
-        app:layout_constraintTop_toBottomOf="@id/AddContactLayout">
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <Button
             android:id="@+id/SubmitButton"
@@ -87,57 +147,7 @@
             android:text="Create Chat" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/ContactsAdded"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingLeft="16dp"
-        android:text="Contacts Added: None"
-        app:layout_constraintTop_toBottomOf="@id/SubmitButtonLayout" />
 
-    <LinearLayout
-        android:id="@+id/ErrorLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:paddingTop="16dp"
-        app:layout_constraintTop_toBottomOf="@id/ContactsAdded">
-
-        <TextView
-            android:id="@+id/ErrorMessage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/ContactTitleLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
-        android:paddingTop="16dp"
-        app:layout_constraintTop_toBottomOf="@id/ErrorLayout"
-        >
-        <TextView
-            android:id="@+id/ContactTitle"
-            android:text="Contacts"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            />
-
-    </LinearLayout>
-
-
-    <ListView
-        android:id="@+id/ContactListView"
-        android:layout_width="match_parent"
-        android:layout_height="0dip"
-        android:layout_weight="1"
-        app:layout_constraintTop_toBottomOf="@id/ContactTitleLayout"
-        app:layout_constraintBottom_toBottomOf="parent"
-        >
-    </ListView>
 
 
 
