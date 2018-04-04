@@ -188,6 +188,9 @@ def SingleMessageRequestHandler(sock, msg):
             r.sock.write_message(json.dumps(response))
             c.sock.write_message(json.dumps({"type": "SingleMessageSendResponse", 
                                              "status": 200})) 
+        else:
+            sock.write_message(ErrorResponse(302).jsonify())
+
     else:
         sock.write_message(ErrorResponse(301).jsonify())
 
