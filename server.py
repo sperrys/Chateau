@@ -1,4 +1,5 @@
 import tornado.ioloop
+from  tornado.ioloop import PeriodicCallback
 import tornado.web
 import tornado.websocket
 import tornado.httpserver
@@ -41,6 +42,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
     def open(self):
         print("WebSocket opened")
         print("New Client Initializing...")
+        PeriodicCallback(self.keep_alive, 30000).start()
 
         c = ChatClient(self)
         clients.append(c)
@@ -48,6 +50,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
     def on_message(self, message):
         print ("Client Sent: ", message)
         self.timeout_service.refresh_timeout()
+
         # Get Message From Socket 
         # Pass Off to Message Handler
         try: 
@@ -56,6 +59,10 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
         except Exception as e: 
             sock.write_message(ErrorResponse(400).jsonify())
+
+    def keep_alive(self):
+        self.ping(json.dumps({"type": "KeepAlive"}))
+
 
     # When a web socket connection has closed,
     # Remove the client from list of clients
