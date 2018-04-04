@@ -237,7 +237,7 @@ public class MainActivity extends AppCompatActivity
         _WSClient.connect();
     }
 
-    // Register current client in chat server
+    /*// Register current client in chat server
     private void registerCurrentUser()
     {
 
@@ -257,6 +257,31 @@ public class MainActivity extends AppCompatActivity
 
         Log.i("MainActivity", "Sending registration message(): " + message);
         _WSClient.send(message);
+    }*/
+
+    // Register current client in chat server
+    public boolean registerUser(String username, String password)
+    {
+
+        JSONObject json = new JSONObject();
+
+        try {
+            json.put("type",     _RegisterRequest);
+            json.put("username", username);
+            json.put("password", password);
+
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        String message = json.toString();
+
+
+        Log.i("MainActivity", "Sending registration message(): " + message);
+        _WSClient.send(message);
+
+        return true;
     }
 
     // Request a contact list until it gets populated, then returns populated contact list
@@ -293,7 +318,18 @@ public class MainActivity extends AppCompatActivity
 
     private void startGetUsernameFragment()
     {
+        _FragmentManager = this.getSupportFragmentManager();
 
+        Log.i("openLoginWindow", "starting Login fragment");
+
+        FragmentTransaction fragmentTransaction = _FragmentManager.beginTransaction();
+
+        LoginFragment loginFragment = new LoginFragment();
+        fragmentTransaction.add(R.id.fragment_container, loginFragment);
+
+        fragmentTransaction.addToBackStack("Adding Login Window");
+
+        fragmentTransaction.commit();
 
     }
 
@@ -526,7 +562,7 @@ public class MainActivity extends AppCompatActivity
         Log.i("OnConnectedToServer", "In function");
 
         // Register current user with the server if necessary
-        if(!_RegisteredUser) registerCurrentUser();
+        if(!_RegisteredUser) startGetUsernameFragment();
 
         // Set the text in the connected layout to "connected!"
         runOnUiThread(_SetConnectedText);

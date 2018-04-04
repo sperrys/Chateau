@@ -148,12 +148,12 @@ public class AddChatFragment extends Fragment {
 
         _FragmentView = inflater.inflate(R.layout.fragment_add_chat, container, false);
 
-        _SubmitButton     = _FragmentView.findViewById(R.id.SubmitButton);
-        _AddContactButton = _FragmentView.findViewById(R.id.AddContactButton);
-        _ChatNameText     = _FragmentView.findViewById(R.id.ChatNameTextBox);
-        _AddContactText   = _FragmentView.findViewById(R.id.AddContactTextBox);
+        _SubmitButton      = _FragmentView.findViewById(R.id.SubmitButton);
+        _AddContactButton  = _FragmentView.findViewById(R.id.AddContactButton);
+        _ChatNameText      = _FragmentView.findViewById(R.id.ChatNameTextBox);
+        _AddContactText    = _FragmentView.findViewById(R.id.AddContactTextBox);
         _ContactsAddedText = _FragmentView.findViewById(R.id.ContactsAdded);
-        _ErrorText        = _FragmentView.findViewById(R.id.ErrorMessage);
+        _ErrorText         = _FragmentView.findViewById(R.id.ErrorMessage);
 
         // Inflate the layout for this fragment
         return _FragmentView;
