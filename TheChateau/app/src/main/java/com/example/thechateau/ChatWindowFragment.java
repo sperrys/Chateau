@@ -15,6 +15,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -49,7 +50,11 @@ public class ChatWindowFragment extends Fragment {
     public ChatWindowFragment() {
         // Required empty public constructor
         _ChatName = "Default chat name";
+
+
     }
+
+
 
     public static ChatWindowFragment newInstance(String chatName) {
 
@@ -116,6 +121,8 @@ public class ChatWindowFragment extends Fragment {
                 // Get string from text box
                 String sendString = _sendMessageText.getText().toString();
 
+                _InfoMessageTextView.setText("Sending \"" + sendString + "\" to recipient(s)");
+
                 // Make new message object
                 Message newMessage = new Message(sendString, _currentUser, System.currentTimeMillis());
 
@@ -135,13 +142,12 @@ public class ChatWindowFragment extends Fragment {
                     // Move the current chat to most recently sent in Main's chat list
                     ((MainActivity) getActivity()).moveChatToTop(_ChatName);
 
-                    // ERROR message couldn't be sent
                     _InfoMessageTextView.setText("Message \"" + sendString + "\" sent successfully");
                 }
                 else {
 
                     // ERROR message couldn't be sent
-                    _InfoMessageTextView.setText("ERROR \"" + sendString + "\"message couldn't be sent");
+                    _InfoMessageTextView.setText("ERROR Message \"" + sendString + "\"couldn't be sent");
 
                 }
             }
@@ -172,6 +178,7 @@ public class ChatWindowFragment extends Fragment {
             }
         });
 
+
         /* Add Sample Messages to List */
         //User    user2    = new User("User2");
         //Message message1 = new Message("First message", _currentUser, System.currentTimeMillis());
@@ -196,8 +203,20 @@ public class ChatWindowFragment extends Fragment {
         // And set it as the recycler view's adapter
         _MessageAdapter  = new MessageListAdapter(this.getContext(), _MessageList, _currentUser.getName());
         _MessageRecycler.setAdapter(_MessageAdapter);
+
+
+
+
+        checkForNewMessages();
     }
 
+    // Checks if there are any new received messages for the chat and updates the view
+    // if any chats were received
+    private void checkForNewMessages()
+    {
+        ((MainActivity)getActivity()).checkForNewMessages(_ChatName);
+        _MessageAdapter.notifyDataSetChanged();
+    }
 
 
 

@@ -45,6 +45,8 @@ public class MainActivity extends AppCompatActivity
     private String              _HerokuHost  = "ws://chateautufts.herokuapp.com:80/ws";
     URI                         _ServerURI;
 
+    private ArrayList<Integer>                      _MessageSentConfirmations = new ArrayList();
+    private ArrayList<Message>                      _SingleMessagesReceived   = new ArrayList<>();
 
     private ListView                                _ChatListView;
     private final String[]                          _SampleChatListStrings = {"Spencer", "Russ", "Fahad", "Joe"};
@@ -79,6 +81,10 @@ public class MainActivity extends AppCompatActivity
     };
 
 
+    public ArrayList<Message> getSingleMessagesReceived()
+    {
+        return _SingleMessagesReceived;
+    }
 
     private Button              _AddNewChatButton;
     private Button              _AddChatToTopButton;
@@ -90,7 +96,7 @@ public class MainActivity extends AppCompatActivity
 
     private final String _SendSingleMessage         = "SingleMessageRequest";
     private final String _SingleMessageResponse     = "SingleMessageResponse";
-    private final String _SingleMessageRecvResposne = "SingleMessageRecvResponse";
+    private final String _SingleMessageRecvResponse = "SingleMessageRecvResponse";
 
     private final String _GroupMessageInitRequest   = "GroupMessageInitRequest";
     private final String _GroupMessageInitResponse  = "GroupMessageInitResponse";
@@ -98,6 +104,7 @@ public class MainActivity extends AppCompatActivity
     private final String _SendGroupMessage          = "GroupMessageRequest";
     private final String _GroupMessageResponse      = "GroupMessageResponse";
     private final String _GroupMessageRecv          = "GroupMessageRecv";
+
 
     private final int _GetClientsListType       = 4;
     private final int _GetRandomContactType     = 5;
@@ -228,38 +235,23 @@ public class MainActivity extends AppCompatActivity
 
         callWSConnect();
 
+        Message m = new Message("Hi Russ", new User("Spencer"), System.currentTimeMillis());
 
+        _SingleMessagesReceived.add(m);
+        _SingleMessagesReceived.add(m);
+        _SingleMessagesReceived.add(m);
     }
 
+    // Prompt WS client to connect to the server
     private void callWSConnect()
     {
         Log.i("MainActivity", "Calling WSConnect()");
         _WSClient.connect();
     }
 
-    /*// Register current client in chat server
-    private void registerCurrentUser()
-    {
-
-        JSONObject json = new JSONObject();
-
-        try {
-            json.put("type",     _RegisterRequest);
-            json.put("username", _CurrentUser);
-
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        String message = json.toString();
-
-
-        Log.i("MainActivity", "Sending registration message(): " + message);
-        _WSClient.send(message);
-    }*/
 
     // Register current client in chat server
+    // Returns true if the user gets registered in a given amount of time, false otherwise
     public boolean registerUser(String username, String password)
     {
 
@@ -320,7 +312,7 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    private void startGetUsernameFragment()
+    private void startLoginFragment()
     {
         _FragmentManager = this.getSupportFragmentManager();
 
@@ -335,6 +327,35 @@ public class MainActivity extends AppCompatActivity
 
         fragmentTransaction.commit();
 
+    }
+
+    // Checks for new messages for this chat using main's singleMessagesReceivedList and
+    // removes them from main and adds them here if it finds any
+    public void checkForNewMessages(String chatName)
+    {
+        Log.i("ChatWindowFragment", "in checkForNewMessages()");
+
+        // Get the chat's chatHistory
+        List<Message> chatHistory = _ChatHistories.get(chatName);
+
+        Iterator<Message> iter = _SingleMessagesReceived.iterator();
+
+
+        // Check if any received messages
+        while (iter.hasNext())
+        {
+            Message m = iter.next();
+            String senderName = m.getSender().getName();
+            Log.i("checkForNewMessages()", "chatname is " + chatName+ "and sender name is " + senderName);
+
+            if (senderName.equals(chatName))
+            {
+                // Add it to our message list and remove it from main's received message list
+                chatHistory.add(m);
+
+                iter.remove();
+            }
+        }
     }
 
     private void startRandomChat()
@@ -447,12 +468,6 @@ public class MainActivity extends AppCompatActivity
         try
         {
             jsonObject = (org.json.simple.JSONObject)parser.parse(message);
-            // jsonObject.keySet();
-
-            /*for (Object key: jsonObject.keySet())
-            {
-                Log.i("OnChatSeverMsgReceived", "Key: " + key.toString() + ", Value: " + jsonObject.get(key).toString());
-            }*/
 
             String type = (String)jsonObject.get("type");
             long status = (long)jsonObject.get("status");
@@ -514,8 +529,31 @@ public class MainActivity extends AppCompatActivity
 
                 case _SingleMessageResponse:
                 {
+                    Log.i("OnChatServerMsgReceived", "Got Single Message response");
+                    if(status == 200)
+                    {
+                        Log.i("OnChatServerMsgReceived", "Adding to message confirmations");
+                        _MessageSentConfirmations.add(1);
+                    }
                     break;
                 }
+                case _SingleMessageRecvResponse:
+                {
+                    Log.i("OnChatServerMsgReceived", "Got Single Message Received");
+
+                    if (status == 200)
+                    {
+                        String content = (String) jsonObject.get("content");
+                        String sender  = (String) jsonObject.get("sender");
+
+
+                        Message newMessage = new Message(content, new User(sender), System.currentTimeMillis());
+
+
+                    }
+                    break;
+                }
+
 
 
                 default:
@@ -559,6 +597,55 @@ public class MainActivity extends AppCompatActivity
         Log.i("SendChatMessageToServer", "Sending chat message(): " + message);
         _WSClient.send(message);
 
+        if(waitUntilMessageSent(5000))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    private boolean waitUntilMessageSent(long timeToWaitMS)
+    {
+        // Calc time that we will timeout
+        long timeOutExpiredTimeMS = System.currentTimeMillis() + timeToWaitMS;
+
+        boolean messageConfirmationReceived = false;
+
+        while (!messageConfirmationReceived)
+        {
+            Log.i("waitUntilMessageSent", "Waiting for message");
+
+            long waitMs = timeOutExpiredTimeMS - System.currentTimeMillis();
+
+            if (waitMs <= 0)
+            {
+                Log.i("waitUntilMessageSent", "reached timeout for waiting for message");
+                return false;
+            }
+
+            if (_MessageSentConfirmations.size() >= 1)
+            {
+                Log.i("waitUntilMessageSent", "found message confirmation");
+                return true;
+            }
+            // Check if the message is in our list of message sent confirmations
+            /*for(Integer m: _MessageSentConfirmations)
+            {
+                if(m.getMessage().equals(content));
+                {
+                    Log.i("waitUntilMessageSent", "message confirmation with content \"" + content + "\"");
+                    _MessageSentConfirmations.remove(m);
+                    return true;
+                }
+
+            }*/
+
+        }
+
+
         return true;
     }
 
@@ -569,7 +656,7 @@ public class MainActivity extends AppCompatActivity
         Log.i("OnConnectedToServer", "In function");
 
         // Register current user with the server if necessary
-        if(!_RegisteredUser) startGetUsernameFragment();
+        if(!_RegisteredUser) startLoginFragment();
 
         // Set the text in the connected layout to "connected!"
         runOnUiThread(_SetConnectedText);
@@ -623,7 +710,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     // Loops for a given amount of time until the user is registered
-    //
+    // Returns true if user was registered in a given amount of time, false otherwise
     private boolean waitUntilRegistered(long timeToWaitMS)
     {
         // Calc time that we will timeout
@@ -637,11 +724,10 @@ public class MainActivity extends AppCompatActivity
 
             if (waitMs <= 0)
             {
+                Log.i("waitUntilRegistered", "Timed out");
                 return false;
             }
-            // we assume we are in a synchronized (object) here
-            //object.wait(waitMs);
-            // we might get improperly awoken here so we loop around to see if we timed out
+
         }
 
         Log.i("waitUntilRegistered", "user became registered");
@@ -693,63 +779,6 @@ public class MainActivity extends AppCompatActivity
             Log.i("OnMessage", "ERROR chatHistory was null");
         }
     }
-
-
-
-
-
-    /*private void setupWebSocket()
-    {
-        // Make a URI to connect to the server
-        URI uri;
-        try {
-            uri = new URI(_WSHOST);
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        _WSClient = new WebSocketClient(uri, a) {
-
-
-            // Called when client first successfully connects with server
-            @Override
-            public void onOpen(ServerHandshake serverHandshake) {
-
-                Log.i(_WSTAG, "Opened");
-                //_WSClient.send("Hello from " + Build.MANUFACTURER + " " + Build.MODEL);
-
-            }
-
-            // Called when the client receives a message
-            @Override
-            public void onMessage(String s) {
-
-                final String message = s;
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-
-                        //TextView textView = (TextView) findViewById(R.id.messages);
-
-                        //textView.setText(textView.getText() + "\n" + message);
-                    }
-                });
-            }
-
-            @Override
-            public void onClose(int i, String s, boolean b) {
-                Log.i(_WSTAG, "Closed " + s);
-            }
-
-            @Override
-            public void onError(Exception e) {
-                Log.i(_WSTAG, "Error " + e.getMessage());
-            }
-        };
-    }*/
-
 
 
 }
