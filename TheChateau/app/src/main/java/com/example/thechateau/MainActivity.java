@@ -116,6 +116,14 @@ public class MainActivity extends AppCompatActivity
         }
     };
 
+    private Runnable UpdateChatList = new Runnable() {
+        @Override
+        public void run() {
+
+            _ChatListAdapter.notifyDataSetChanged();
+        }
+    };
+
     public boolean getGroupChatBool(String chatName)
     {
         return _ChatHistories.get(chatName).IsGroupChat();
@@ -326,7 +334,7 @@ public class MainActivity extends AppCompatActivity
         _ChatListEntries.add(chatName);
 
         // Notify Adapter that data has changed
-        _ChatListAdapter.notifyDataSetChanged();
+        runOnUiThread(UpdateChatList);//_ChatListAdapter.notifyDataSetChanged();
 
         // Add a chat history for the chat name if necessary
         Chat newChat = _ChatHistories.get(chatName);
@@ -861,10 +869,12 @@ public class MainActivity extends AppCompatActivity
                             AddChat(sender, false);
                         }
 
+
                         // Add the new message to our list of received messages
                         Message newMessage = new Message(content, new User(sender), System.currentTimeMillis());
                         ChatMessagePair newPair = new ChatMessagePair(sender, newMessage);
                         _MessagesReceived.add(newPair);
+
                     }
                     break;
                 }
