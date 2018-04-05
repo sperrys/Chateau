@@ -49,7 +49,7 @@ public class LoginFragment extends Fragment {
         _LoginButton      = _FragmentView.findViewById(R.id.LoginButton);
         _UsernameEditText = _FragmentView.findViewById(R.id.UsernameEditText);
         _PasswordEditText = _FragmentView.findViewById(R.id.PasswordEditText);
-        _InfoMessageText  = _FragmentView.findViewById(R.id.InfoMessageText);
+        _InfoMessageText  = _FragmentView.findViewById(R.id.LoginInfoMessage);
 
         getActivity().findViewById(R.id.nonFragmentStuff).setVisibility(View.INVISIBLE);
         //_MainActivity.findViewById(R.id.nonFragmentStuff).setVisibility(View.INVISIBLE);
@@ -66,11 +66,13 @@ public class LoginFragment extends Fragment {
 
                 if (((MainActivity)getActivity()).registerUser(username, password))
                 {
+                    Log.i("LoginFragment", "Registration success");
                     _InfoMessageText.setText("Registration successful");
                     getActivity().onBackPressed();
                 }
                 else
                 {
+                    Log.i("LoginFragment", "Registration failed");
                     _InfoMessageText.setText("ERROR, registration failed");
 
                     // Clear text info

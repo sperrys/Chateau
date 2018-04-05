@@ -156,12 +156,13 @@ public class AddChatFragment extends Fragment {
         _ContactListView.setAdapter(_ContactListAdapter);
     }
 
-    // Get a contact list from the server
+    // Update the contact list by getting the server's contact list
+    // also updates the UI to show contacts that changed
     private void UpdateContactList()
     {
         // Get a list of available contacts from the server
-        //_AvailableContactList = new ArrayList<>(Arrays.asList(_SampleAvailableContacts));
-        _AvailableContactList = ((MainActivity)getActivity()).requestContactList();
+        _AvailableContactList = new ArrayList<>(Arrays.asList(_SampleAvailableContacts));
+        //_AvailableContactList = ((MainActivity)getActivity()).requestContactList();
 
         // Show that no contacts are available if the list is empty
         if (_AvailableContactList.size() < 1)
@@ -172,6 +173,8 @@ public class AddChatFragment extends Fragment {
         {
             _ContactTitleText.setText("Contacts");
         }
+
+        updateListView();
     }
 
     @Override
@@ -203,38 +206,75 @@ public class AddChatFragment extends Fragment {
             return false;
         }
 
-        // Check if contact exists
-        if (contactExists(contact))
-        {
-            // Add contacts to our contactList
-            _ContactsToAddList.add(contact);
-
-
-            // Update the UI to show all contacts added
-            // -Added a comma if necessary
-            // -Add contacts's name to list
-            // -Update the ContactsAdded View on the UI
-            if (_ContactsToAddList.size() > 1)
-            {
-                _ContactsAddedString += ", ";
-            }
-
-            _ContactsAddedString += contact;
-
-            _ContactsAddedText.setText(_ContactsAddedString);
-
-            return true;
-        }
-        else
+        // Check if contact is registered with the server
+        if (!contactExists(contact))
         {
             Log.i("AddChatFragment","ERROR: contact is not registered in our database");
-            _ErrorText.setText("ERROR: contact is not registered in our database");
+            _ErrorText.setText("ERROR: contact \"" + contact + "\" is not registered in our database");
             return false;
         }
+
+        // Check contact isn't already set to be added our list of contacts to add
+        if(contactAlreadyAdded(contact))
+        {
+            Log.i("AddChatFragment","ERROR: contact is already set to be added");
+            _ErrorText.setText("ERROR: contact \"" + contact + "\" is already set to be added");
+            return false;
+        }
+
+        // Add contacts to our contactList
+        _ContactsToAddList.add(contact);
+
+        // Update added list of contacts displayed to the user
+        updateContactsAddedView(contact);
+
+        // Remove all contacts in the added list from the available contacts list
+        removeAddedFromContactList();
+
+        return true;
 
 
     }
 
+    // Remove all contacts in the added list from the contact list displayed to the user
+    private void removeAddedFromContactList()
+    {
+        for(String contact: _ContactsToAddList)
+        {
+            Log.i("removedAddedContactList", "Removing " + contact);
+            _AvailableContactList.remove(contact);
+        }
+
+        updateListView();
+    }
+
+    private void updateListView()
+    {
+        _ContactListAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_list_item_1, _AvailableContactList);
+        _ContactListView.setAdapter(_ContactListAdapter);
+    }
+
+    // Update the UI to show all contacts added
+    // -Added a comma if necessary
+    // -Add contacts's name to list
+    // -Update the ContactsAdded View on the UI
+    private void updateContactsAddedView(String contact)
+    {
+
+        if (_ContactsToAddList.size() > 1) {
+            _ContactsAddedString += ", ";
+        }
+
+        _ContactsAddedString += contact;
+
+        _ContactsAddedText.setText(_ContactsAddedString);
+    }
+
+    // Returns true if the contact is already set to be added to our database
+    private boolean contactAlreadyAdded(String contact)
+    {
+        return _ContactsToAddList.contains(contact);
+    }
 
     // Returns true if the contact is registered in the server's contact list
     private boolean contactExists(String contact)
