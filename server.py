@@ -49,7 +49,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
     def on_message(self, message):
         print ("Server Got Message")
-        self.timeout_service.refresh_timeout()
+        #self.timeout_service.refresh_timeout()
 
         # Get Message From Socket 
         # Pass Off to Message Handler
