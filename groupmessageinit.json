@@ -1,0 +1,5 @@
+{
+  "type" : "GroupMessageInitRequest",
+  "chatname" : "comp112",
+  "recipients": ["mgomez05"]
+}

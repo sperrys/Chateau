@@ -1,6 +1,5 @@
 {
   "type" : "GroupMessageRequest",
-  "chat" : "comp112",
+  "chatname" : "comp112",
   "content": "hey"
-
 }

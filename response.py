@@ -1,15 +1,20 @@
 import json
 
 class ErrorResponse():
-	msg_type = "ErrorResponse"
-	
-	def __init__(self, status_code):
-		self.status = status_code
+    msg_type = "ErrorResponse"
+    
+    def __init__(self, status_code):
+        self.pairs = []
+        self.status = status_code
 
-	def jsonify(self):
-		response = {  
-					  "type"  : self.msg_type,
-                      "status": self.status
-                   }
+        self.pairs.append(("type", self.msg_type))
+        self.pairs.append(("status", status_code))
+
+    def jsonify(self):
+        print (self.pairs)
+        return json.dumps(dict(self.pairs))
+
+    def add_pair(self, key, value):
+        self.pairs.append((key, value))
+        return self.jsonify()
                    
-		return json.dumps(response)

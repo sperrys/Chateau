@@ -221,24 +221,40 @@ def GroupMessageInitHandler(sock, msg):
 
             name = msg["chatname"]
             recipients = msg["recipients"]
+            print(recipients)
 
             # Initialize Chat wit person who made request
             chat_recipients = [c]
 
             # Create New Chat, add all recipients to it.
             for r in recipients:
+                print("Looking for ", r)
                 new_r  = GetClientWName(r)
-                chat_recipients.append(new_r)
-
-            new_chat = Chat(name, recipients)
+                if new_r == None:
+                    err = ErrorResponse(404)
+                    c.sock.write_message(err.add_pair("message", "At least one client doesn't exist"))
+                    return
+                else:
+                    chat_recipients.append(new_r)
+            
+            # After Looping through all recipients, create chat
+            new_chat = Chat(name, chat_recipients)
             chats.append(new_chat)
+
+            # Send ACK back to group chat creator
             c.sock.write_message(json.dumps({
-                                    "type": "GroupMessageInitResponse",
-                                    "status": 201
-                                }))
+                            "type": "GroupMessageInitResponse",
+                            "status": 200
+                        }))
+            # Send notification of creation to all others in chat
+            new_chat.SendMessage(json.dumps({
+                            "type": "GroupMessageInitResponse",
+                            "status": 201
+                        }), c)
         else: 
             sock.write_message(ErrorResponse(301).jsonify())
     except Exception as e:
+        print (e)
         sock.write_message(ErrorResponse(400).jsonify())
 
 
@@ -260,7 +276,6 @@ def GroupMessageRequestHandler(sock, msg):
                       "type"   : "GroupMessageRecv",
                       "chatname": chatname,
                       "status" : 200, 
-                      "type" : 3,
                       "sender" : c.username,
                       "content": content 
                     }
@@ -273,8 +288,6 @@ def GroupMessageRequestHandler(sock, msg):
                                     "type": "GroupMessageResponse",
                                     "status": 200
                                 }))
-            chatname = msg["chatname"]
-        content = msg["content"]
     else: 
          sock.write_message(ErrorResponse(301).jsonify())
 

@@ -25,7 +25,7 @@ class Client(object):
         self.ws = None
         self.connect()
 
-        PeriodicCallback(self.keep_alive, 30000).start()
+        #PeriodicCallback(self.keep_alive, 30000).start()
         self.ioloop.start()
 
     @gen.coroutine
