@@ -43,40 +43,15 @@ public class AddChatFragment extends Fragment {
 
     private String _Tag = "AddChatFragment";
 
-
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
     private OnFragmentInteractionListener mListener;
 
     public AddChatFragment() {
         // Required empty public constructor
     }
 
-    // TODO: Rename and change types and number of parameters
-    public static AddChatFragment newInstance(String param1, String param2) {
-
-        AddChatFragment fragment = new AddChatFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
 
 
 
-    }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
@@ -255,8 +230,6 @@ public class AddChatFragment extends Fragment {
         removeAddedFromContactList();
 
         return true;
-
-
     }
 
     // Remove all contacts in the added list from the contact list displayed to the user

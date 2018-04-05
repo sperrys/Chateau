@@ -130,10 +130,6 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-
-
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -141,7 +137,6 @@ public class MainActivity extends AppCompatActivity
 
         // Set current user
         _CurrentUser = "User1";
-
 
 
         _ConnectingText   = findViewById(R.id.ConnectingText);
@@ -178,7 +173,7 @@ public class MainActivity extends AppCompatActivity
 
         // Set up Chat List View from UI
         // If a chat list item is clicked, it opens a chat window activity
-        _ChatListView = (ListView) findViewById(R.id.chat_list_view);
+        _ChatListView = findViewById(R.id.chat_list_view);
         _ChatListView.setAdapter(_ChatListAdapter);
         _ChatListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
             {
@@ -209,10 +204,9 @@ public class MainActivity extends AppCompatActivity
         }
 
 
-
-        /*******************/
-        /**Set up WebSocket*/
-        /*******************/
+        /********************/
+        /* Set up WebSocket */
+        /********************/
 
         // Set up URI to connect to the server
 
@@ -229,6 +223,7 @@ public class MainActivity extends AppCompatActivity
 
         callWSConnect();
 
+        // Sample Code to check if Spencer chat reads its pending messages when opening
         Message m = new Message("Hi Russ", new User("Spencer"), System.currentTimeMillis());
 
         _SingleMessagesReceived.add(m);
@@ -236,47 +231,7 @@ public class MainActivity extends AppCompatActivity
         _SingleMessagesReceived.add(m);
     }
 
-    // Prompt WS client to connect to the server
-    private void callWSConnect()
-    {
-        Log.i("MainActivity", "Calling WSConnect()");
-        _WSClient.connect();
-    }
 
-
-    // Register current client in chat server
-    // Returns true if the user gets registered in a given amount of time, false otherwise
-    public boolean registerUser(String username, String password)
-    {
-
-        JSONObject json = new JSONObject();
-
-        try {
-            json.put("type",     _RegisterRequest);
-            json.put("username", username);
-            json.put("password", password);
-
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        String message = json.toString();
-
-
-        Log.i("MainActivity", "Sending registration message(): " + message);
-        _WSClient.send(message);
-
-        // Wait to see if client gets a registration response in 2 seconds, if not return false;
-        if(waitUntilRegistered(2000))
-        {
-            _CurrentUser = username;
-            return true;
-        }
-
-        else return false;
-
-    }
 
     /*// Request a contact list until it gets populated, then returns populated contact list
     private ArrayList<String> getContactList()
@@ -289,107 +244,11 @@ public class MainActivity extends AppCompatActivity
         return _ContactList;
     }*/
 
-    // Request a contact list from the chat server
-    public ArrayList<String> requestContactList()
-    {
-        JSONObject json = new JSONObject();
-
-        try
-        {
-            json.put("type", _ClientListRequest);
-        }
-        catch (JSONException e)
-        {
-            e.printStackTrace();
-        }
-
-        String message = json.toString();
-
-        Log.i("MainActivity", "Sending getClientMessage(): " + message);
-        _WSClient.send(message);
-
-        // Wait a few seconds for contact list to be retrieved, then return contact list
-        waitUntilTimeReached(2000);
-
-        Log.i("requestContactList", "List of current contacts");
-
-        for(String s: _ContactList)
-        {
-            Log.i("requestContactList", "contact:" + s);
-        }
-
-        return _ContactList;
-
-    }
-
-    // Runs until the timeToWaitMS has been reached, then returns
-    private void waitUntilTimeReached(long timeToWaitMS)
-    {
-        // Calc time that we will timeout
-        long timeOutExpiredTimeMS = System.currentTimeMillis() + timeToWaitMS;
-
-        boolean messageConfirmationReceived = false;
-
-        while (1 == 1) {
-            Log.i("waitUntilTimeReached", "Waiting");
-
-            long waitMs = timeOutExpiredTimeMS - System.currentTimeMillis();
-
-            if (waitMs <= 0) {
-
-                Log.i("waitUntilTimeReached", "reached timeout for waiting for message");
-                return;
-            }
 
 
-        }
-    }
-
-    private void startLoginFragment()
-    {
-        _FragmentManager = this.getSupportFragmentManager();
-
-        Log.i("openLoginWindow", "starting Login fragment");
-
-        FragmentTransaction fragmentTransaction = _FragmentManager.beginTransaction();
-
-        LoginFragment loginFragment = new LoginFragment();
-        fragmentTransaction.add(R.id.fragment_container, loginFragment);
-
-        fragmentTransaction.addToBackStack("Adding Login Window");
-
-        fragmentTransaction.commit();
-
-    }
-
-    // Checks for new messages for this chat using main's singleMessagesReceivedList and
-    // removes them from main and adds them here if it finds any
-    public void checkForNewMessages(String chatName)
-    {
-        Log.i("ChatWindowFragment", "in checkForNewMessages()");
-
-        // Get the chat's chatHistory
-        List<Message> chatHistory = _ChatHistories.get(chatName);
-
-        Iterator<Message> iter = _SingleMessagesReceived.iterator();
-
-
-        // Check if any received messages
-        while (iter.hasNext())
-        {
-            Message m = iter.next();
-            String senderName = m.getSender().getName();
-            Log.i("checkForNewMessages()", "chatname is " + chatName+ "and sender name is " + senderName);
-
-            if (senderName.equals(chatName))
-            {
-                // Add it to our message list and remove it from main's received message list
-                chatHistory.add(m);
-
-                iter.remove();
-            }
-        }
-    }
+    /**********************************************************************************************/
+    /*                                  Add Chat Functions                                        */
+    /**********************************************************************************************/
 
     private void startRandomChat()
     {
@@ -447,6 +306,10 @@ public class MainActivity extends AppCompatActivity
         };
     }
 
+    /**********************************************************************************************/
+    /*                                  Fragment Functions                                        */
+    /**********************************************************************************************/
+
     // Opens a new fragment with the chat window for the given chat name
     private void openChatWindow(String chatName)
     {
@@ -480,6 +343,44 @@ public class MainActivity extends AppCompatActivity
         fragmentTransaction.commit();
     }
 
+
+    private void startLoginFragment()
+    {
+        _FragmentManager = this.getSupportFragmentManager();
+
+        Log.i("openLoginWindow", "starting Login fragment");
+
+        FragmentTransaction fragmentTransaction = _FragmentManager.beginTransaction();
+
+        LoginFragment loginFragment = new LoginFragment();
+        fragmentTransaction.add(R.id.fragment_container, loginFragment);
+
+        fragmentTransaction.addToBackStack("Adding Login Window");
+
+        fragmentTransaction.commit();
+
+    }
+
+
+    private void removeAllFragments()
+    {
+        Log.i("MainActivity", "Called RemoveAllFragments");
+        for(Fragment fragment:getSupportFragmentManager().getFragments())
+        {
+            /*if(fragment instanceof NavigationDrawerFragment)
+            {
+                continue;
+            }
+            else
+            {*/
+            if(fragment!=null)
+            {
+                getSupportFragmentManager().beginTransaction().remove(fragment).commit();
+            }
+            //}
+        }
+    }
+
     // Have to override this so returning fragments don't leave main activity blank
     @Override
     public void onBackPressed() {
@@ -488,6 +389,268 @@ public class MainActivity extends AppCompatActivity
         // Make the activity's components visible again
         findViewById(R.id.nonFragmentStuff).setVisibility(View.VISIBLE);
     }
+
+
+    /**********************************************************************************************/
+    /*                                  Chat Message Functions                                    */
+    /**********************************************************************************************/
+
+    // Sends a chat message to the server
+    // Returns true if the messsage was sent successfully
+    // Returns false if the message couldn't be sent
+    public boolean sendChatMessageToServer(String chatName, String content, boolean isGroupChat)
+    {
+        JSONObject json = new JSONObject();
+
+        try {
+
+            json.put("recipient", chatName);
+            json.put("content"  , content);
+
+            if(isGroupChat)
+            {
+                json.put("type"     , _SendGroupMessage);
+            }
+            else
+            {
+                json.put("type"     , _SendSingleMessage);
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        String message = json.toString();
+
+
+        Log.i("SendChatMessageToServer", "Sending chat message(): " + message);
+        _WSClient.send(message);
+
+        if(waitUntilMessageSent(3000))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    // Waits for timetoWaitMS milliseconds for a message confirmation to be received
+    // If it receives a message confirmation in that time, it returns true
+    // Else, returns false
+    private boolean waitUntilMessageSent(long timeToWaitMS)
+    {
+        // Calc time that we will timeout
+        long timeOutExpiredTimeMS = System.currentTimeMillis() + timeToWaitMS;
+
+        boolean messageConfirmationReceived = false;
+
+        while (!messageConfirmationReceived)
+        {
+            Log.i("waitUntilMessageSent", "Waiting for message");
+
+            long waitMs = timeOutExpiredTimeMS - System.currentTimeMillis();
+
+            if (waitMs <= 0)
+            {
+                Log.i("waitUntilMessageSent", "reached timeout for waiting for message");
+                return false;
+            }
+
+            if (_MessageSentConfirmations.size() >= 1)
+            {
+                Log.i("waitUntilMessageSent", "found message confirmation");
+                return true;
+            }
+            // Check if the message is in our list of message sent confirmations
+            /*for(Integer m: _MessageSentConfirmations)
+            {
+                if(m.getMessage().equals(content));
+                {
+                    Log.i("waitUntilMessageSent", "message confirmation with content \"" + content + "\"");
+                    _MessageSentConfirmations.remove(m);
+                    return true;
+                }
+
+            }*/
+
+        }
+
+
+        return true;
+    }
+
+
+
+    /**********************************************************************************************/
+    /*                           Server Connection Functions                                      */
+    /**********************************************************************************************/
+
+    // Prompt WS client to connect to the server
+    private void callWSConnect()
+    {
+        Log.i("MainActivity", "Calling WSConnect()");
+        _WSClient.connect();
+    }
+
+    // Called by WebSocketClient when it has connected to the server
+    public void onConnectedToServer() {
+        // Update text view that says connecting or not
+
+        Log.i("OnConnectedToServer", "In function");
+
+        // Register current user with the server if necessary
+        if(!_RegisteredUser) startLoginFragment();
+
+        // Set the text in the connected layout to "connected!"
+        runOnUiThread(_SetConnectedText);
+
+        // Wait for a few seconds and then make the connecting layout view disappear
+        Thread waiter = new Thread() {
+            @Override
+            public void run()
+            {
+
+                try {
+                    Thread.sleep(5000);
+                }
+                catch (InterruptedException e)
+                {
+                    Log.i("WaiterThread", "Exception! " + e.getMessage());
+                }
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        Log.i("WaiterThread", "Setting ConnectingLayout to Invisible");
+                        _ConnectingLayout.setVisibility(View.INVISIBLE);
+                    }
+                });
+            }
+        };
+        waiter.run();
+
+    }
+
+    // Called by the websocket client when the server disconnects
+    public void onServerDisconnect()
+    {
+        Log.i("MainActivity", "Called OnServerDisconnect");
+
+        removeAllFragments();
+
+        _RegisteredUser = false;
+
+        _WSClient = new ChatWebSocket(_ServerURI, this);
+
+        callWSConnect();
+
+        // Set connected attribute to "connecting"
+        runOnUiThread(_SetConnectingText);
+
+    }
+
+
+    /**********************************************************************************************/
+    /*                           User Registration Functions                                      */
+    /**********************************************************************************************/
+
+    // Register current client in chat server
+    // Returns true if the user gets registered in a given amount of time, false otherwise
+    public boolean registerUser(String username, String password)
+    {
+
+        JSONObject json = new JSONObject();
+
+        try {
+            json.put("type",     _RegisterRequest);
+            json.put("username", username);
+            json.put("password", password);
+
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        String message = json.toString();
+
+
+        Log.i("MainActivity", "Sending registration message(): " + message);
+        _WSClient.send(message);
+
+        // Wait to see if client gets a registration response in 2 seconds, if not return false;
+        if(waitUntilRegistered(2000))
+        {
+            _CurrentUser = username;
+            return true;
+        }
+
+        else
+        {
+            return false;
+        }
+
+    }
+
+    // Loops for a given amount of time until the user is registered
+    // Returns true if user was registered in a given amount of time, false otherwise
+    private boolean waitUntilRegistered(long timeToWaitMS)
+    {
+        // Calc time that we will timeout
+        long timeOutExpiredTimeMS = System.currentTimeMillis() + timeToWaitMS;
+
+        while (!_RegisteredUser)
+        {
+            Log.i("waitUntilRegistered", "Waiting for register timeout");
+
+            long waitMs = timeOutExpiredTimeMS - System.currentTimeMillis();
+
+            if (waitMs <= 0)
+            {
+                Log.i("waitUntilRegistered", "Timed out");
+                return false;
+            }
+
+        }
+
+        Log.i("waitUntilRegistered", "user became registered");
+        return true;
+    }
+
+    /**********************************************************************************************/
+    /*                           Miscellaneous Functions                                          */
+    /**********************************************************************************************/
+
+    /*// Called when a message is received by the user
+    private void onMessageReceived(Message message, String chatName)
+    {
+
+        // Initialize a chat for the sender if necessary
+        if(!_ChatListEntries.contains(chatName))
+        {
+            AddChat(chatName);
+        }
+
+        List<Message> chatHistory = getChatHistory(chatName);
+
+        // Initialize a chat history for the person if necessary
+        if (chatHistory != null)
+        {
+            Log.i("OnMessage", "Adding message to chatHistory");
+            chatHistory.add(message);
+
+            // Move the chat to the top of the list of chats
+            moveChatToTop(chatName);
+        }
+        else
+        {
+            Log.i("OnMessage", "ERROR chatHistory was null");
+        }
+    }*/
+
 
     // Called when a message is received from the chat server (called in ChatWebSocket)
     public void onChatServerMessageReceived(String message)
@@ -609,8 +772,6 @@ public class MainActivity extends AppCompatActivity
                     break;
                 }
 
-
-
                 default:
                 {
                     Log.i("OnChatServerMsgReceived", "Error, unknown type " + type);
@@ -621,219 +782,92 @@ public class MainActivity extends AppCompatActivity
         {
             Log.i("Parsing", "Error " + e.getMessage());
         }
+
     }
 
-    public boolean sendChatMessageToServer(String chatName, String content, boolean isGroupChat)
+    // Request a contact list from the chat server
+    public ArrayList<String> requestContactList()
     {
         JSONObject json = new JSONObject();
 
-        try {
-
-            json.put("recipient", chatName);
-            json.put("content"  , content);
-
-            if(isGroupChat)
-            {
-                json.put("type"     , _SendGroupMessage);
-            }
-            else
-            {
-                json.put("type"     , _SendSingleMessage);
-            }
-
-        } catch (JSONException e) {
+        try
+        {
+            json.put("type", _ClientListRequest);
+        }
+        catch (JSONException e)
+        {
             e.printStackTrace();
-            return false;
         }
 
         String message = json.toString();
 
-
-        Log.i("SendChatMessageToServer", "Sending chat message(): " + message);
+        Log.i("MainActivity", "Sending getClientMessage(): " + message);
         _WSClient.send(message);
 
-        if(waitUntilMessageSent(3000))
+        // Wait a few seconds for contact list to be retrieved, then return contact list
+        waitUntilTimeReached(2000);
+
+        Log.i("requestContactList", "List of current contacts");
+
+        for(String s: _ContactList)
         {
-            return true;
+            Log.i("requestContactList", "contact:" + s);
         }
-        else
-        {
-            return false;
-        }
+
+        return _ContactList;
+
     }
 
-    private boolean waitUntilMessageSent(long timeToWaitMS)
+    // Runs until the timeToWaitMS has been reached, then returns
+    private void waitUntilTimeReached(long timeToWaitMS)
     {
         // Calc time that we will timeout
         long timeOutExpiredTimeMS = System.currentTimeMillis() + timeToWaitMS;
 
         boolean messageConfirmationReceived = false;
 
-        while (!messageConfirmationReceived)
-        {
-            Log.i("waitUntilMessageSent", "Waiting for message");
+        while (1 == 1) {
+            Log.i("waitUntilTimeReached", "Waiting");
 
             long waitMs = timeOutExpiredTimeMS - System.currentTimeMillis();
 
-            if (waitMs <= 0)
-            {
-                Log.i("waitUntilMessageSent", "reached timeout for waiting for message");
-                return false;
+            if (waitMs <= 0) {
+
+                Log.i("waitUntilTimeReached", "reached timeout for waiting for message");
+                return;
             }
 
-            if (_MessageSentConfirmations.size() >= 1)
-            {
-                Log.i("waitUntilMessageSent", "found message confirmation");
-                return true;
-            }
-            // Check if the message is in our list of message sent confirmations
-            /*for(Integer m: _MessageSentConfirmations)
-            {
-                if(m.getMessage().equals(content));
-                {
-                    Log.i("waitUntilMessageSent", "message confirmation with content \"" + content + "\"");
-                    _MessageSentConfirmations.remove(m);
-                    return true;
-                }
-
-            }*/
 
         }
-
-
-        return true;
     }
 
-    // Called by WebSocketClient when it has connected to the server
-    public void onConnectedToServer() {
-        // Update text view that says connecting or not
-
-        Log.i("OnConnectedToServer", "In function");
-
-        // Register current user with the server if necessary
-        if(!_RegisteredUser) startLoginFragment();
-
-        // Set the text in the connected layout to "connected!"
-        runOnUiThread(_SetConnectedText);
-
-        // Wait for a few seconds and then make the connecting layout view disappear
-        Thread waiter = new Thread() {
-            @Override
-            public void run()
-            {
-
-                try {
-                    Thread.sleep(5000);
-                }
-                catch (InterruptedException e)
-                {
-                    Log.i("WaiterThread", "Exception! " + e.getMessage());
-                }
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-
-                        Log.i("WaiterThread", "Setting ConnectingLayout to Invisible");
-                        _ConnectingLayout.setVisibility(View.INVISIBLE);
-                    }
-                });
-            }
-        };
-        waiter.run();
-
-    }
-
-
-
-
-    public void onServerDisconnect()
+    // Checks for new messages for this chat using main's singleMessagesReceivedList and
+    // removes them from main and adds them here if it finds any
+    public void checkForNewMessages(String chatName)
     {
-        Log.i("MainActivity", "Called OnServerDisconnect");
+        Log.i("ChatWindowFragment", "in checkForNewMessages()");
 
-        removeAllFragments();
+        // Get the chat's chatHistory
+        List<Message> chatHistory = _ChatHistories.get(chatName);
 
-        _RegisteredUser = false;
+        Iterator<Message> iter = _SingleMessagesReceived.iterator();
 
-        _WSClient = new ChatWebSocket(_ServerURI, this);
 
-        callWSConnect();
-
-        // Set connected attribute to "connecting"
-        runOnUiThread(_SetConnectingText);
-
-    }
-
-    // Loops for a given amount of time until the user is registered
-    // Returns true if user was registered in a given amount of time, false otherwise
-    private boolean waitUntilRegistered(long timeToWaitMS)
-    {
-        // Calc time that we will timeout
-        long timeOutExpiredTimeMS = System.currentTimeMillis() + timeToWaitMS;
-
-        while (!_RegisteredUser)
+        // Check if any received messages
+        while (iter.hasNext())
         {
-            Log.i("waitUntilRegistered", "Waiting for register timeout");
+            Message m = iter.next();
+            String senderName = m.getSender().getName();
+            Log.i("checkForNewMessages()", "chatname is " + chatName+ "and sender name is " + senderName);
 
-            long waitMs = timeOutExpiredTimeMS - System.currentTimeMillis();
-
-            if (waitMs <= 0)
+            if (senderName.equals(chatName))
             {
-                Log.i("waitUntilRegistered", "Timed out");
-                return false;
+                // Add it to our message list and remove it from main's received message list
+                chatHistory.add(m);
+
+                iter.remove();
             }
-
-        }
-
-        Log.i("waitUntilRegistered", "user became registered");
-        return true;
-    }
-
-    private void removeAllFragments()
-    {
-        Log.i("MainActivity", "Called RemoveAllFragments");
-        for(Fragment fragment:getSupportFragmentManager().getFragments())
-        {
-            /*if(fragment instanceof NavigationDrawerFragment)
-            {
-                continue;
-            }
-            else
-            {*/
-                if(fragment!=null)
-                {
-                    getSupportFragmentManager().beginTransaction().remove(fragment).commit();
-                }
-            //}
         }
     }
-
-    // Called when a message is received by the user
-    private void onMessageReceived(Message message, String chatName)
-    {
-
-        // Initialize a chat for the sender if necessary
-        if(!_ChatListEntries.contains(chatName))
-        {
-            AddChat(chatName);
-        }
-
-        List<Message> chatHistory = getChatHistory(chatName);
-
-        // Initialize a chat history for the person if necessary
-        if (chatHistory != null)
-        {
-            Log.i("OnMessage", "Adding message to chatHistory");
-            chatHistory.add(message);
-
-            // Move the chat to the top of the list of chats
-            moveChatToTop(chatName);
-        }
-        else
-        {
-            Log.i("OnMessage", "ERROR chatHistory was null");
-        }
-    }
-
 
 }
