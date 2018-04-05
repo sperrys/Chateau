@@ -39,14 +39,12 @@ Response:
 
 Arguments:
 	- `"recipients" username of those to be in the chat
-	- `"content"`  content of the actual message body
 	- `"chatname"` unique chatname
 
 Response:
 	- If successful, `"type": "GroupMessageInitResponse", "status": 200`
-	- if failure, `"type": "ErrorResponse", status": 400` 
-	- If the chat exists, send the message to the
-	  respective clients in the chat as a "GroupMessageRecv" type
+	- if generic failure, `"type": "ErrorResponse", status": 400` 
+	- if failure is that the client making the request is not registered, `"type": "ErrorResponse", status": 301`
 
 **Send a Message to a pre-existing Chat**
 

@@ -172,66 +172,66 @@ def GetClientWName(name):
 def SingleMessageRequestHandler(sock, msg):
     print("Single Message Request")
 
-    c = GetClientWSock(sock)
-    print("Client who sent Message: ", c.username)
+    try:
+        c = GetClientWSock(sock)
+        print("Client who sent Message: ", c.username)
 
-    if c.registered:
-        recipient = msg["recipient"]
-        content = msg["content"]
+        if c.registered:
+            recipient = msg["recipient"]
+            content = msg["content"]
 
-        r = GetClientWName(recipient)
+            r = GetClientWName(recipient)
 
-        if r != None:
-            response = {
-                "type"  : "SingleMessageRecvResponse",
-                "status": 200,
-                "sender": c.username,
-                "content": content
-            }
-            r.sock.write_message(json.dumps(response))
-            c.sock.write_message(json.dumps({"type": "SingleMessageSendResponse", 
-                                             "status": 200})) 
+            if r != None:
+                response = {
+                    "type"  : "SingleMessageRecvResponse",
+                    "status": 200,
+                    "sender": c.username,
+                    "content": content
+                }
+                r.sock.write_message(json.dumps(response))
+                c.sock.write_message(json.dumps({"type": "SingleMessageSendResponse", 
+                                                 "status": 200})) 
+            else:
+                c.sock.write_message(ErrorResponse(302).jsonify())
         else:
-            sock.write_message(ErrorResponse(302).jsonify())
-
-    else:
-        sock.write_message(ErrorResponse(301).jsonify())
+            c.sock.write_message(ErrorResponse(301).jsonify())
+    except Exception as e: 
+        c.sock.write_message(ErrorResponse(400).jsonify())
 
 
 def GroupMessageInitHandler(sock, msg):
     print("GroupMessageInitRequest")
 
-    c = GetClientWSock(sock)
+    try: 
+        c = GetClientWSock(sock)
 
-     # If the client isn't registered, remove them from the list
-    if c.registered:
-        print("Client Who Sent Message: ", c.username)
+        # If the client isn't registered, remove them from the list
+        if c.registered:
+            print("Client Who Sent Message: ", c.username)
 
-        name = msg["chatname"]
-        recipients = msg["recipients"]
-        content = msg["content"]
-        chat_recipients = [c]
+            name = msg["chatname"]
+            recipients = msg["recipients"]
 
-        for r in recipients:
-            new_r  = GetClientWName(r)
-            chat_recipients.append(new_r)
+            # Initialize Chat wit person who made request
+            chat_recipients = [c]
 
-        new_chat = Chat(name, recipients)
-        chats.append(new_chat)
-        response = {
-                    "type": "GroupMessageRecv", 
-                    "status": 201, 
-                    "sender": c.username, 
-                    "content": content
-                    }
-        new_chat.SendMessage(response, c)
-        c.sock.write_message(json.dumps({
-                                "type": "GroupMessageInitResponse",
-                                "status": 201
-                            }))
+            # Create New Chat, add all recipients to it.
+            for r in recipients:
+                new_r  = GetClientWName(r)
+                chat_recipients.append(new_r)
 
-    else: 
-        sock.write_message(ErrorResponse(301).jsonify())
+            new_chat = Chat(name, recipients)
+            chats.append(new_chat)
+            c.sock.write_message(json.dumps({
+                                    "type": "GroupMessageInitResponse",
+                                    "status": 201
+                                }))
+        else: 
+            sock.write_message(ErrorResponse(301).jsonify())
+    except Exception as e:
+        sock.write_message(ErrorResponse(400).jsonify())
+
 
 
 
