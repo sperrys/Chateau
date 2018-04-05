@@ -34,9 +34,9 @@ class CertRequestHandler(tornado.web.RequestHandler):
         self.finish()
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
-    def prepare(self):
-        self.timeout_service = TimeoutWebSocketService(self, timeout=(1000*60)) 
-        self.timeout_service.refresh_timeout()
+    #def prepare(self):
+    #    self.timeout_service = TimeoutWebSocketService(self, timeout=(1000*60)) 
+    #    self.timeout_service.refresh_timeout()
 
     # When A Web Socket Connection Has Been Opened 
     def open(self):
@@ -155,13 +155,14 @@ def RegisterRequestHandler(sock, msg):
         sock.write_message(ErrorResponse(400).jsonify())
 
 
+# Return Chat Based On Chat Name
 def GetChat(chatname):
     for c in chats:
         if (c.chatname == chatname):
             return c
     return None
 
-
+# Return Client Based on Client Name
 def GetClientWName(name):
     for c in clients: 
         if c.username == name:
@@ -189,6 +190,8 @@ def SingleMessageRequestHandler(sock, msg):
                     "sender": c.username,
                     "content": content
                 }
+
+                # Write Message to Recipient and ACK the Sender
                 r.sock.write_message(json.dumps(response))
                 c.sock.write_message(json.dumps({"type": "SingleMessageSendResponse", 
                                                  "status": 200})) 
