@@ -17,6 +17,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class AddChatFragment extends Fragment {
 
@@ -194,6 +195,11 @@ public class AddChatFragment extends Fragment {
         return _FragmentView;
     }
 
+    // Adds a contact to the contact list
+    // If the contact name is empty, or the contact does not exist in the server,
+    // or the contact has already been added to our contactsToAddList, the contact
+    // isn't added and the function returns false
+    // Otherwise adds the contact and returns true
     private boolean AttemptAddContact(String contact)
     {
 
@@ -243,7 +249,7 @@ public class AddChatFragment extends Fragment {
 
         updateListView();
     }
-
+    // Updates the listview with the current available contacts
     private void updateListView()
     {
         _ContactListAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_list_item_1, _AvailableContactList);
@@ -290,6 +296,7 @@ public class AddChatFragment extends Fragment {
 
     }
 
+    // Attempts to register a chat with the server
     private boolean AttemptSubmission()
     {
         String chatName = _ChatNameText.getText().toString();
@@ -315,7 +322,6 @@ public class AddChatFragment extends Fragment {
             }
         }
 
-
         Log.i(_Tag, "_ContactList size is: " + _ContactsToAddList.size());
         Log.i(_Tag, "_ChatNameText is "      + chatName);
 
@@ -328,32 +334,52 @@ public class AddChatFragment extends Fragment {
             return false;
         }
 
+        if (chatNameAlreadyExists(chatName))
+        {
+            _ErrorText.setText("ERROR: Chat name already exists");
+            _ChatNameText.getText().clear();
+            return false;
+        }
+
         // Attempt to register the new chat with the server and send the result
-        return sendSubmissionToServer(chatName);
+        boolean chatRegisteredWithServer = sendSubmissionToServer(chatName);
 
+        return chatRegisteredWithServer;
+    }
 
+    // Returns true if chatName already exists in the list of the user's chatnames
+    private boolean chatNameAlreadyExists(String chatName)
+    {
+        List<String> chatNames = ((MainActivity)getActivity()).getChatList();
 
+        boolean containsName = chatNames.contains("chatName");
+
+        return containsName;
     }
 
 
     private boolean sendSubmissionToServer(String chatName)
     {
-        // Put chatName in json object
 
-        // Put contacts in json objects
-
-        // Put starting message in json object
+        boolean success = ((MainActivity)getActivity()).sendChatRegistrationToServer(_ContactsToAddList, chatName);
 
 
-        // Send json message to server
+        if (success)
+        {
+            Log.i(_Tag, "chat registration successful");
 
-        // Let client know if chat was created or not
+            // Return true if we successfully registered new chat
+            _newChatName = chatName;
 
+            return true;
+        }
+        else
+        {
+            Log.i(_Tag, "chat registration failed");
 
-
-        // Return true if we successfully registered new chat
-        _newChatName = chatName;
-        return true;
+            _ErrorText.setText("ERROR, chat name " + chatName + "could not be registered");
+            return false;
+        }
     }
 
     // TODO: Rename method, update argument and hook method into UI event

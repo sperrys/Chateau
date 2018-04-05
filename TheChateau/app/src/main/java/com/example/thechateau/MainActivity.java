@@ -38,8 +38,9 @@ public class MainActivity extends AppCompatActivity
     private String              _HerokuHost  = "ws://chateautufts.herokuapp.com:80/ws";
     URI                         _ServerURI;
 
-    private ArrayList<Integer>                      _MessageSentConfirmations = new ArrayList();
-    private ArrayList<Message>                      _SingleMessagesReceived   = new ArrayList<>();
+    private ArrayList<String>                      _MessageSentConfirmations = new ArrayList();
+    private ArrayList<String>                      _GroupInitConfirmations   = new ArrayList<>();
+    private ArrayList<Message>                     _SingleMessagesReceived   = new ArrayList<>();
 
     private ListView                                _ChatListView;
     private final String[]                          _SampleChatListStrings = {"Spencer", "Russ", "Fahad", "Joe"};
@@ -90,9 +91,12 @@ public class MainActivity extends AppCompatActivity
     private final String _SendSingleMessage         = "SingleMessageRequest";
     private final String _SingleMessageResponse     = "SingleMessageResponse";
     private final String _SingleMessageRecvResponse = "SingleMessageRecvResponse";
+    private final String _SingleMessageResponseExample = "GroupExample";
 
     private final String _GroupMessageInitRequest   = "GroupMessageInitRequest";
     private final String _GroupMessageInitResponse  = "GroupMessageInitResponse";
+    private final String _GroupInitExample          = "GroupExample";
+    private final String _GroupMessageInitialMessage     = "Hello, I've started a group chat with you all";
 
     private final String _SendGroupMessage          = "GroupMessageRequest";
     private final String _GroupMessageResponse      = "GroupMessageResponse";
@@ -122,6 +126,10 @@ public class MainActivity extends AppCompatActivity
     public static List<Message> getChatHistory(String chatName)
     {
         return _ChatHistories.get(chatName);
+    }
+
+    public List<String> getChatList() {
+        return _ChatListEntries;
     }
 
     @Override
@@ -462,20 +470,10 @@ public class MainActivity extends AppCompatActivity
             if (_MessageSentConfirmations.size() >= 1)
             {
                 Log.i("waitUntilMessageSent", "found message confirmation");
+                _MessageSentConfirmations.remove(_SingleMessageResponseExample);
+
                 return true;
             }
-            // Check if the message is in our list of message sent confirmations
-            /*for(Integer m: _MessageSentConfirmations)
-            {
-                if(m.getMessage().equals(content));
-                {
-                    Log.i("waitUntilMessageSent", "message confirmation with content \"" + content + "\"");
-                    _MessageSentConfirmations.remove(m);
-                    return true;
-                }
-
-            }*/
-
         }
 
 
@@ -698,6 +696,17 @@ public class MainActivity extends AppCompatActivity
 
                 case _GroupMessageInitResponse:
                 {
+                    Log.i("OnChatSeverMsgReceived", "Received groupMessageInitResponse");
+
+                    if(status == 200)
+                    {
+                        Log.i("OnChatServerMsgReceived", "Success, status is " + status);
+                        _GroupInitConfirmations.add(_GroupInitExample);
+                    }
+                    else
+                    {
+                        Log.i("OnChatServerMsgReceived", "Error, status is " + status);
+                    }
 
                     break;
                 }
@@ -751,7 +760,7 @@ public class MainActivity extends AppCompatActivity
                     if(status == 200)
                     {
                         Log.i("OnChatServerMsgReceived", "Adding to message confirmations");
-                        _MessageSentConfirmations.add(1);
+                        _MessageSentConfirmations.add(_SingleMessageResponseExample);
                     }
                     break;
                 }
@@ -868,6 +877,82 @@ public class MainActivity extends AppCompatActivity
                 iter.remove();
             }
         }
+
+    }
+    public boolean sendChatRegistrationToServer(List<String> contactsToAdd, String chatName)
+    {
+        // Single chats don't need to be registered to the server
+        if (contactsToAdd.size() == 1)
+        {
+            return true;
+        }
+
+        // Otherwise, send a group chat
+        JSONObject json = new JSONObject();
+
+        try {
+
+            JSONArray jsonArray = new JSONArray(Arrays.asList(contactsToAdd));
+
+            json.put("type"     , _GroupMessageInitRequest);
+            json.put("recipients", jsonArray);
+            //json.put("content"  , _GroupMessageInitialMessage);
+            json.put("chatname" , chatName);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        String message = json.toString();
+
+        Log.i("SendChatRegisToServer", "Sending group init message(): " + message);
+        _WSClient.send(message);
+
+        if(waitUntilGroupMessageInitResponseReceived(3000))
+        {
+            Log.i("SendChatRegisToServer", "Received init response");
+            return true;
+        }
+        else
+        {
+            Log.i("SendChatRegisToServer", "Did not receive init response");
+            return false;
+        }
+    }
+
+    // Waits for timetoWaitMS milliseconds for a GroupInitResponse to be received
+    // If we receives a confirmation in that time, return true
+    // Else, returns false
+    private boolean waitUntilGroupMessageInitResponseReceived(long timeToWaitMS)
+    {
+        // Calc time that we will timeout
+        long timeOutExpiredTimeMS = System.currentTimeMillis() + timeToWaitMS;
+
+        boolean initConfirmationReceived = false;
+
+        while (!initConfirmationReceived)
+        {
+            Log.i("waitUntilMessageSent", "Waiting for message");
+
+            long waitMs = timeOutExpiredTimeMS - System.currentTimeMillis();
+
+            if (waitMs <= 0)
+            {
+                Log.i("waitUntilMessageSent", "reached timeout for waiting for message");
+                return false;
+            }
+
+            if (_GroupInitConfirmations.size() >= 1)
+            {
+                Log.i("waitUntilMessageSent", "found message confirmation");
+                _GroupInitConfirmations.remove(_GroupInitExample);
+
+                return true;
+            }
+        }
+
+        return true;
     }
 
 }

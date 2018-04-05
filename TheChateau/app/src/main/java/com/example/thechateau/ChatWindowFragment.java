@@ -126,12 +126,14 @@ public class ChatWindowFragment extends Fragment {
                 // Make new message object
                 Message newMessage = new Message(sendString, _currentUser, System.currentTimeMillis());
 
-                boolean isGroupChat = (_MessageList.size() > 1);
+                boolean isGroupChat = false; //(_MessageList.size() > 1);
 
                 boolean messageSent = ((MainActivity) getActivity()).sendChatMessageToServer(_ChatName, sendString, isGroupChat);
 
                 if (messageSent)
                 {
+                    Log.i(_tag, "Message sent through server");
+
                     // Add Message to message list and update
                     _MessageList.add(newMessage);
                     _MessageAdapter.notifyDataSetChanged();
@@ -145,6 +147,7 @@ public class ChatWindowFragment extends Fragment {
                     _InfoMessageTextView.setText("Message \"" + sendString + "\" sent successfully");
                 }
                 else {
+                    Log.i(_tag, "Message not sent through server");
 
                     // ERROR message couldn't be sent
                     _InfoMessageTextView.setText("ERROR Message \"" + sendString + "\"couldn't be sent");
@@ -204,9 +207,7 @@ public class ChatWindowFragment extends Fragment {
         _MessageAdapter  = new MessageListAdapter(this.getContext(), _MessageList, _currentUser.getName());
         _MessageRecycler.setAdapter(_MessageAdapter);
 
-
-
-
+        // Check if there are pending messages sent to this chat from other users
         checkForNewMessages();
     }
 
