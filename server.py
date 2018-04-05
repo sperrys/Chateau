@@ -122,8 +122,9 @@ def RegisterRequestHandler(sock, msg):
         print(name)
         print(pw)
         
-        auth = TuftsAuth(name, pw)
-
+        #auth = TuftsAuth(name, pw)
+        auth = True
+        
         if auth: 
             # Make Sure Unique Username
             for l in clients:
