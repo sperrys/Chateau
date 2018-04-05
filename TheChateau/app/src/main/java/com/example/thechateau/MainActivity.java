@@ -768,16 +768,20 @@ public class MainActivity extends AppCompatActivity
                     {
                         org.json.simple.JSONArray jsonArray = (org.json.simple.JSONArray)jsonObject.get("clients");
 
-                        _ContactList = new ArrayList<>();
+                        //_ContactList = new ArrayList<>();
 
                         String[] contacts = new String[jsonArray.size()];
 
                         for(int i = 0; i < jsonArray.size(); i++)
                         {
-                            if(!contacts[i].equals(_CurrentUser))
-                            {
+                            //String contact = (String)jsonArray.get(i);
+
+                            //Log.i("OnChatServerMsgReceived", "current contact:" + contact);
+
+                            //if(!contact.equals(_CurrentUser))
+                            //{
                                 contacts[i] = (String) jsonArray.get(i);
-                            }
+                            //}
                         }
 
                         _ContactList = new ArrayList(Arrays.asList(contacts));
