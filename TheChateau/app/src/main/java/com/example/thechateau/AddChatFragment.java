@@ -107,8 +107,7 @@ public class AddChatFragment extends Fragment {
 
                 }
 
-                boolean success = false;
-                success = AttemptSubmission();
+                boolean success = AttemptSubmission();
 
                 if(success)
                 {
@@ -146,15 +145,8 @@ public class AddChatFragment extends Fragment {
             }
         });
 
-        // Get a list of available contacts from the server
-        _AvailableContactList = RetrieveContactList();
-
-        // Show that no contacts are available if the list is empty
-        if (_AvailableContactList.size() < 1)
-        {
-            _ContactTitleText.setText("No Contacts Available");
-        }
-
+        // Update our list of available contacts by asking the server
+        UpdateContactList();
 
         // Make an adapter for the Chat List view and set it
         _ContactListAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_list_item_1, _AvailableContactList);
@@ -165,15 +157,21 @@ public class AddChatFragment extends Fragment {
     }
 
     // Get a contact list from the server
-    private ArrayList<String> RetrieveContactList()
+    private void UpdateContactList()
     {
-        ArrayList<String> contacts = ((MainActivity)getActivity()).requestContactList();
+        // Get a list of available contacts from the server
+        //_AvailableContactList = new ArrayList<>(Arrays.asList(_SampleAvailableContacts));
+        _AvailableContactList = ((MainActivity)getActivity()).requestContactList();
 
-        String currentUser = ((MainActivity) getActivity()).getCurrentUser();
-        //Log.i("RetrieveContactList", "current user is " + currentUser);
-        //contacts.remove(currentUser);
-
-        return contacts;
+        // Show that no contacts are available if the list is empty
+        if (_AvailableContactList.size() < 1)
+        {
+            _ContactTitleText.setText("No Contacts Available");
+        }
+        else
+        {
+            _ContactTitleText.setText("Contacts");
+        }
     }
 
     @Override
@@ -238,24 +236,22 @@ public class AddChatFragment extends Fragment {
     }
 
 
+    // Returns true if the contact is registered in the server's contact list
     private boolean contactExists(String contact)
     {
         // Request contact list from server
-
-        // Update UI's list of contacts with server's contact list
+        UpdateContactList();
 
         // Look through server's contact list and check if contact exists
-        /*for (String serverContact: contactList)
+        if (_AvailableContactList.contains(contact))
         {
-            if (serverContact.equals(contact))
-            {
-                return true;
-            }
-        }*/
+            return true;
+        }
+        else
+        {
+            return false;
+        }
 
-        // Return true for testing for now
-        //return false;
-        return true;
     }
 
     private boolean AttemptSubmission()

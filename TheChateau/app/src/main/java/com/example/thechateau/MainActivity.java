@@ -309,7 +309,7 @@ public class MainActivity extends AppCompatActivity
         _WSClient.send(message);
 
         // Wait a few seconds for contact list to be retrieved, then return contact list
-        waitUntilTimeReached(3000);
+        waitUntilTimeReached(2000);
 
         Log.i("requestContactList", "List of current contacts");
 
