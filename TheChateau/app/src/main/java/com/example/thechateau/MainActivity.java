@@ -33,6 +33,27 @@ import org.json.simple.parser.JSONParser;
 public class MainActivity extends AppCompatActivity
                           implements ChatWindowFragment.OnFragmentInteractionListener{
 
+    private class ChatMessagePair{
+        private String  _chatname;
+        private Message _message;
+
+        ChatMessagePair(String chatname, Message message)
+        {
+            _chatname = chatname;
+            _message  = message;
+        }
+
+        public Message getMessage() {
+            return _message;
+        }
+
+        public String getChatname()
+        {
+            return _chatname;
+        }
+
+    }
+
     private ChatWebSocket       _WSClient;
     private String              _WSHOST      = "ws://10.0.2.2:5000/ws";
     private String              _HerokuHost  = "ws://chateautufts.herokuapp.com:80/ws";
@@ -40,7 +61,7 @@ public class MainActivity extends AppCompatActivity
 
     private ArrayList<String>                      _MessageSentConfirmations = new ArrayList();
     private ArrayList<String>                      _GroupInitConfirmations   = new ArrayList<>();
-    private ArrayList<Message>                     _SingleMessagesReceived   = new ArrayList<>();
+    private ArrayList<ChatMessagePair>             _MessagesReceived   = new ArrayList<>();
 
     private ListView                                _ChatListView;
     private final String[]                          _SampleChatListStrings = {"Spencer", "Russ", "Fahad", "Joe"};
@@ -75,10 +96,10 @@ public class MainActivity extends AppCompatActivity
     };
 
 
-    public ArrayList<Message> getSingleMessagesReceived()
+    /*public ArrayList<Message> getSingleMessagesReceived()
     {
-        return _SingleMessagesReceived;
-    }
+        return _MessagesReceived;
+    }*/
 
     private Button              _AddNewChatButton;
     private Button              _AddChatToTopButton;
@@ -233,10 +254,10 @@ public class MainActivity extends AppCompatActivity
 
         // Sample Code to check if Spencer chat reads its pending messages when opening
         Message m = new Message("Hi Russ", new User("Spencer"), System.currentTimeMillis());
-
-        _SingleMessagesReceived.add(m);
-        _SingleMessagesReceived.add(m);
-        _SingleMessagesReceived.add(m);
+        ChatMessagePair newPair = new ChatMessagePair("Spencer", m);
+        _MessagesReceived.add(newPair);
+        _MessagesReceived.add(newPair);
+        _MessagesReceived.add(newPair);
     }
 
 
@@ -719,7 +740,23 @@ public class MainActivity extends AppCompatActivity
 
                 case _GroupMessageRecv:
                 {
+                    String content  = (String) jsonObject.get("content");
+                    String sender   = (String) jsonObject.get("sender");
+                    String chatname = (String) jsonObject.get("chatname");
 
+                    if(status == 200)
+                    {
+                        // Add the new message to our list of received messages
+                        Message newMessage = new Message(content, new User(sender), System.currentTimeMillis());
+
+                        ChatMessagePair newPair = new ChatMessagePair(chatname, newMessage);
+                        _MessagesReceived.add(newPair);
+                    }
+                    else if (status == 201)
+                    {
+                        // Create a new group chat
+                        AddChat(chatname);
+                    }
                     break;
                 }
 
@@ -774,9 +811,11 @@ public class MainActivity extends AppCompatActivity
                         String sender  = (String) jsonObject.get("sender");
 
 
+                        // Add the new message to our list of received messages
                         Message newMessage = new Message(content, new User(sender), System.currentTimeMillis());
 
-
+                        ChatMessagePair newPair = new ChatMessagePair(sender, newMessage);
+                        _MessagesReceived.add(newPair);
                     }
                     break;
                 }
@@ -850,7 +889,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    // Checks for new messages for this chat using main's singleMessagesReceivedList and
+    // Checks for new messages for this chat using main's MessagesReceivedList and
     // removes them from main and adds them here if it finds any
     public void checkForNewMessages(String chatName)
     {
@@ -859,21 +898,28 @@ public class MainActivity extends AppCompatActivity
         // Get the chat's chatHistory
         List<Message> chatHistory = _ChatHistories.get(chatName);
 
-        Iterator<Message> iter = _SingleMessagesReceived.iterator();
+        if (chatHistory == null)
+        {
+            Log.i("ChatWindowFragment", "Error chat history for " + chatName + " is null");
+        }
 
+        Iterator<ChatMessagePair> iter = _MessagesReceived.iterator();
 
-        // Check if any received messages
+        // Check if we've any received messages for this chat
         while (iter.hasNext())
         {
-            Message m = iter.next();
-            String senderName = m.getSender().getName();
-            Log.i("checkForNewMessages()", "chatname is " + chatName+ "and sender name is " + senderName);
+            ChatMessagePair m = iter.next();
 
-            if (senderName.equals(chatName))
+            String messageChatName = m.getChatname();
+
+            Log.i("checkForNewMessages()", "requested chatname is " + chatName+ "and current chatname is " + messageChatName);
+
+            // If we found a message for this chat
+            // -Add it to the chat history for that chat
+            // -Remove from main's received message list
+            if (messageChatName.equals(chatName))
             {
-                // Add it to our message list and remove it from main's received message list
-                chatHistory.add(m);
-
+                chatHistory.add(m.getMessage());
                 iter.remove();
             }
         }

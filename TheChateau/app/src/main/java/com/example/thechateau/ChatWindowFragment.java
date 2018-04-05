@@ -103,7 +103,8 @@ public class ChatWindowFragment extends Fragment {
         _MessageList = MainActivity.getChatHistory(_ChatName);
 
         // Get sendMessageText view (represents text user wants to send)
-        _sendMessageText = _FragmentView.findViewById(R.id.edittext_chatbox);
+        _sendMessageText     = _FragmentView.findViewById(R.id.edittext_chatbox);
+
         _InfoMessageTextView = _FragmentView.findViewById(R.id.InfoMessageText);
 
         /************************************/
@@ -121,7 +122,9 @@ public class ChatWindowFragment extends Fragment {
                 // Get string from text box
                 String sendString = _sendMessageText.getText().toString();
 
-                _InfoMessageTextView.setText("Sending \"" + sendString + "\" to recipient(s)");
+                String infoString = "Sending \"" + sendString + "\" to recipient(s)";
+
+                _InfoMessageTextView.setText(infoString);
 
                 // Make new message object
                 Message newMessage = new Message(sendString, _currentUser, System.currentTimeMillis());

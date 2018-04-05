@@ -160,8 +160,8 @@ public class AddChatFragment extends Fragment {
     private void UpdateContactList()
     {
         // Get a list of available contacts from the server
-        _AvailableContactList = new ArrayList<>(Arrays.asList(_SampleAvailableContacts));
-        //_AvailableContactList = ((MainActivity)getActivity()).requestContactList();
+        //_AvailableContactList = new ArrayList<>(Arrays.asList(_SampleAvailableContacts));
+        _AvailableContactList = ((MainActivity)getActivity()).requestContactList();
 
         // Show that no contacts are available if the list is empty
         if (_AvailableContactList.size() < 1)
