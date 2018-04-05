@@ -329,13 +329,13 @@ public class MainActivity extends AppCompatActivity
         _ChatListAdapter.notifyDataSetChanged();
 
         // Add a chat history for the chat name if necessary
-        List <Message> chatHistory = _ChatHistories.get(chatName).getChatHistory();
+        Chat newChat = _ChatHistories.get(chatName);
 
-        if (chatHistory == null)
+        if (newChat == null)
         {
-            chatHistory = new ArrayList<Message>();
+            List<Message> chatHistory = new ArrayList<Message>();
 
-            Chat newChat = new Chat(chatHistory, isGroupChat);
+            newChat = new Chat(chatHistory, isGroupChat);
 
             _ChatHistories.put(chatName, newChat);
         }
