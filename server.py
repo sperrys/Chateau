@@ -68,7 +68,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
     def on_close(self):
         print("WebSocket closed")
         print("Removing Client")
-        self.timeout_service.clean_timeout()
+        #self.timeout_service.clean_timeout()
         RemoveClientWSock(self)
 
 
