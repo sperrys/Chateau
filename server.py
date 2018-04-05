@@ -192,6 +192,7 @@ def SingleMessageRequestHandler(sock, msg):
                 }
 
                 # Write Message to Recipient and ACK the Sender
+                print("Forwarding Single Message, Sending ACK")
                 r.sock.write_message(json.dumps(response))
                 c.sock.write_message(json.dumps({"type": "SingleMessageSendResponse", 
                                                  "status": 200})) 

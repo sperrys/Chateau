@@ -101,9 +101,8 @@ Arguments
 	- `"content"`
 
 Response:
-	- If successful, `"type": "SingleMessageRecvResponse", "status": 200`, and `"sender"` and `"content"` goes to whoever gets the message. "SingleMessageSendRespinse" with "status" to whoever sent the message.
-
-	- If failure, `"type": ErrorResponse, "status": 200`
+	- If successful, `"type": "SingleMessageRecvResponse", "status": 200`, and `"sender"` and `"content"` goes to whoever gets the message. A "SingleMessageSendResponse" with `"status": 200` is sent to whoever sent the original single message request.
+	- If failure, `"type": ErrorResponse, "status": 400`
 
 
 
