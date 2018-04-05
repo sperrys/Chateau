@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity
     private final String _RegisterResponse   = "RegisterResponse";
 
     private final String _SendSingleMessage         = "SingleMessageRequest";
-    private final String _SingleMessageResponse     = "SingleMessageResponse";
+    private final String _SingleMessageResponse     = "SingleMessageSendResponse";
     private final String _SingleMessageRecvResponse = "SingleMessageRecvResponse";
     private final String _SingleMessageResponseExample = "GroupExample";
 
