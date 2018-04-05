@@ -69,7 +69,8 @@ public class ChatWebSocket extends WebSocketClient {
     }
 
     @Override
-    public void onError(Exception ex) {
+    public void onError(Exception ex)
+    {
         Log.i(_WSTAG, "an error occurred:" + ex);
     }
 

@@ -106,14 +106,14 @@
         <LinearLayout
             android:id="@+id/LoginButtonSpacer"
             android:layout_width="match_parent"
-            android:layout_height="20dp"
+            android:layout_height="30dp"
             android:gravity="center"
             app:layout_constraintTop_toBottomOf="@+id/PasswordLayout"
             >
             <TextView
                 android:id="@+id/LoginInfoMessage"
                 android:text="Please Login"
-                android:textSize="10dp"
+                android:gravity="center_vertical"
                 android:layout_height="match_parent"
                 android:layout_width="wrap_content"
 

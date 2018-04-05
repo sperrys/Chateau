@@ -73,7 +73,7 @@ public class LoginFragment extends Fragment {
                 else
                 {
                     Log.i("LoginFragment", "Registration failed");
-                    _InfoMessageText.setText("ERROR, registration failed");
+                    _InfoMessageText.setText("Error: login failed. Please try again");
 
                     // Clear text info
                     _UsernameEditText.getText().clear();
