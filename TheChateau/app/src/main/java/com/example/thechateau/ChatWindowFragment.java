@@ -25,6 +25,8 @@ public class ChatWindowFragment extends Fragment {
     private static final String ARG_CHATNAME = "chatName";
     //private static final String ARG_PARAM2 = "param2";
 
+    private boolean _isGroupChat;
+
     private String _ChatName;
     private RecyclerView       _MessageRecycler;
     private MessageListAdapter _MessageAdapter;
@@ -83,6 +85,8 @@ public class ChatWindowFragment extends Fragment {
             _ChatName = getArguments().getString(ARG_CHATNAME);
         }
 
+        _isGroupChat = ((MainActivity)getActivity()).getGroupChatBool(_ChatName);
+
         Log.i(_tag, "Got chatName: " + _ChatName);
 
         // Get current user
@@ -129,9 +133,9 @@ public class ChatWindowFragment extends Fragment {
                 // Make new message object
                 Message newMessage = new Message(sendString, _currentUser, System.currentTimeMillis());
 
-                boolean isGroupChat = false; //(_MessageList.size() > 1);
+                //boolean isGroupChat = false; //(_MessageList.size() > 1);
 
-                boolean messageSent = ((MainActivity) getActivity()).sendChatMessageToServer(_ChatName, sendString, isGroupChat);
+                boolean messageSent = ((MainActivity) getActivity()).sendChatMessageToServer(_ChatName, sendString, _isGroupChat);
 
                 if (messageSent)
                 {

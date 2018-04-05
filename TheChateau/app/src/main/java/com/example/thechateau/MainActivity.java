@@ -33,7 +33,7 @@ import org.json.simple.parser.JSONParser;
 public class MainActivity extends AppCompatActivity
                           implements ChatWindowFragment.OnFragmentInteractionListener{
 
-    private class ChatMessagePair{
+    private class ChatMessagePair {
         private String  _chatname;
         private Message _message;
 
@@ -54,6 +54,27 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    private class Chat {
+        List<Message> _chatHistory;
+        boolean _isGroupChat;
+
+        Chat(List<Message> chatHistory, boolean isGroupChat)
+        {
+            _chatHistory = chatHistory;
+            _isGroupChat = isGroupChat;
+        }
+
+        List<Message> getChatHistory()
+        {
+            return _chatHistory;
+        }
+
+        boolean IsGroupChat()
+        {
+            return _isGroupChat;
+        }
+    }
+
     private ChatWebSocket       _WSClient;
     private String              _WSHOST      = "ws://10.0.2.2:5000/ws";
     private String              _HerokuHost  = "ws://chateautufts.herokuapp.com:80/ws";
@@ -66,7 +87,7 @@ public class MainActivity extends AppCompatActivity
     private ListView                                _ChatListView;
     private final String[]                          _SampleChatListStrings = {"Spencer", "Russ", "Fahad", "Joe"};
     private LinkedList<String>                      _ChatListEntries;
-    private static Hashtable<String, List<Message>> _ChatHistories = new Hashtable<>();
+    private static Hashtable<String, Chat>          _ChatHistories = new Hashtable<>();
 
     private ArrayList<String>   _ContactList = new ArrayList<>();
 
@@ -94,6 +115,11 @@ public class MainActivity extends AppCompatActivity
             _ConnectingText.setText("Connecting...");
         }
     };
+
+    public boolean getGroupChatBool(String chatName)
+    {
+        return _ChatHistories.get(chatName).IsGroupChat();
+    }
 
 
     /*public ArrayList<Message> getSingleMessagesReceived()
@@ -146,7 +172,7 @@ public class MainActivity extends AppCompatActivity
     // Returns a chat history with the given name
     public static List<Message> getChatHistory(String chatName)
     {
-        return _ChatHistories.get(chatName);
+        return _ChatHistories.get(chatName).getChatHistory();
     }
 
     public List<String> getChatList() {
@@ -229,7 +255,9 @@ public class MainActivity extends AppCompatActivity
         {
             List <Message> chatHistory = new ArrayList<Message>();
 
-            _ChatHistories.put(chatName, chatHistory);
+            Chat newChat = new Chat(chatHistory, false);
+
+            _ChatHistories.put(chatName, newChat);
         }
 
 
@@ -292,7 +320,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     // Adds a new chat name to the list view
-    public void AddChat(String chatName) {
+    public void AddChat(String chatName, boolean isGroupChat) {
 
         // Add item to list of entries
         _ChatListEntries.add(chatName);
@@ -301,12 +329,15 @@ public class MainActivity extends AppCompatActivity
         _ChatListAdapter.notifyDataSetChanged();
 
         // Add a chat history for the chat name if necessary
-        List <Message> chatHistory = _ChatHistories.get(chatName);
+        List <Message> chatHistory = _ChatHistories.get(chatName).getChatHistory();
 
         if (chatHistory == null)
         {
             chatHistory = new ArrayList<Message>();
-            _ChatHistories.put(chatName, chatHistory);
+
+            Chat newChat = new Chat(chatHistory, isGroupChat);
+
+            _ChatHistories.put(chatName, newChat);
         }
         else
         {
@@ -735,7 +766,15 @@ public class MainActivity extends AppCompatActivity
                 case _GroupMessageResponse:
                 {
 
+                    Log.i("OnChatServerMsgReceived", "Got Group Message response");
+
+                    if (status == 200)
+                    {
+                        Log.i("OnChatServerMsgReceived", "Adding to message confirmations");
+                        _MessageSentConfirmations.add(_SingleMessageResponseExample);
+                    }
                     break;
+
                 }
 
                 case _GroupMessageRecv:
@@ -755,7 +794,7 @@ public class MainActivity extends AppCompatActivity
                     else if (status == 201)
                     {
                         // Create a new group chat
-                        AddChat(chatname);
+                        AddChat(chatname, true);
                     }
                     break;
                 }
@@ -802,6 +841,8 @@ public class MainActivity extends AppCompatActivity
                     {
                         Log.i("OnChatServerMsgReceived", "Adding to message confirmations");
                         _MessageSentConfirmations.add(_SingleMessageResponseExample);
+
+
                     }
                     break;
                 }
@@ -814,10 +855,14 @@ public class MainActivity extends AppCompatActivity
                         String content = (String) jsonObject.get("content");
                         String sender  = (String) jsonObject.get("sender");
 
+                        // Add a new chat for this chat
+                        if(_ChatHistories.get(sender) == null)
+                        {
+                            AddChat(sender, false);
+                        }
 
                         // Add the new message to our list of received messages
                         Message newMessage = new Message(content, new User(sender), System.currentTimeMillis());
-
                         ChatMessagePair newPair = new ChatMessagePair(sender, newMessage);
                         _MessagesReceived.add(newPair);
                     }
@@ -900,7 +945,7 @@ public class MainActivity extends AppCompatActivity
         Log.i("ChatWindowFragment", "in checkForNewMessages()");
 
         // Get the chat's chatHistory
-        List<Message> chatHistory = _ChatHistories.get(chatName);
+        List<Message> chatHistory = _ChatHistories.get(chatName).getChatHistory();
 
         if (chatHistory == null)
         {
