@@ -249,8 +249,8 @@ def GroupMessageInitHandler(sock, msg):
             # Send notification of creation to all others in chat
             new_chat.SendMessage(json.dumps({
                             "type": "GroupMessageInitResponse",
-                            "status": 201
-                            "chatname": name
+                            "status": 201,
+                            "chatname" : name
                         }), c)
         else: 
             sock.write_message(ErrorResponse(301).jsonify())
@@ -275,10 +275,10 @@ def GroupMessageRequestHandler(sock, msg):
 
         response =  { 
                       "type"   : "GroupMessageRecv",
-                      "chatname": chatname,
+                      "chatname" : chatname,
                       "status" : 200, 
                       "sender" : c.username,
-                      "content": content 
+                      "content" : content 
                     }
 
         chat = GetChat(chatname)
