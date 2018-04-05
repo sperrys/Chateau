@@ -250,6 +250,7 @@ def GroupMessageInitHandler(sock, msg):
             new_chat.SendMessage(json.dumps({
                             "type": "GroupMessageInitResponse",
                             "status": 201
+                            "chatname": name
                         }), c)
         else: 
             sock.write_message(ErrorResponse(301).jsonify())
