@@ -328,12 +328,12 @@ public class AddChatFragment extends Fragment {
 
 
         // Give error if user tries to name a 1 on 1 chat
-        if (_ContactsToAddList.size() == 1 && !chatName.equals(""))
+        /*if (_ContactsToAddList.size() == 1 && !chatName.equals(""))
         {
             _ErrorText.setText("ERROR: You can't name 1 on 1 chats ");
             _ChatNameText.getText().clear();
             return false;
-        }
+        }*/
 
         if (chatNameAlreadyExists(chatName))
         {
