@@ -57,7 +57,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             msg = json.loads(message)
             MessageHandler(self, msg)
         except Exception as e: 
-            sock.write_message(ErrorResponse(400).jsonify())
+            self.write_message(ErrorResponse(400).jsonify())
 
     def keep_alive(self):
         self.ping(json.dumps({"type": "KeepAlive"}))
