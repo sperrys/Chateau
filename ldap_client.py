@@ -14,6 +14,7 @@ def TuftsAuth(username, pw):
   # your uuid
   try:    
       res = l.search_s(base, searchScope, searchFilter, attrlist=['dn'])
+      print (res)
       dn = res[0][0]
      
   except ldap.LDAPError as e:

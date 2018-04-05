@@ -48,7 +48,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         clients.append(c)
 
     def on_message(self, message):
-        print ("Server Got Message")
+        print ("Server Got Message: ", message)
         #self.timeout_service.refresh_timeout()
 
         # Get Message From Socket 
@@ -56,7 +56,8 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         try: 
             msg = json.loads(message)
             MessageHandler(self, msg)
-        except Exception as e: 
+        except Exception as e:
+            print(e) 
             self.write_message(ErrorResponse(400).jsonify())
 
     def keep_alive(self):
@@ -117,6 +118,9 @@ def RegisterRequestHandler(sock, msg):
     try: 
         name = msg["username"]
         pw = msg["password"]
+
+        print(name)
+        print(pw)
         
         auth = TuftsAuth(name, pw)
 
@@ -124,8 +128,8 @@ def RegisterRequestHandler(sock, msg):
             # Make Sure Unique Username
             for l in clients:
                 if name == l.username:
-                   sock.write_message(ErrorResponse(302).jsonify())
-                   return 
+                    sock.write_message(ErrorResponse(302).jsonify())
+                    return 
             # Otherwise Try to Register     
             for c in clients:
                 if c.sock == sock:
@@ -149,9 +153,10 @@ def RegisterRequestHandler(sock, msg):
                         sock.write_message(ErrorResponse(302).jsonify())
                         return 
         else: 
-           sock.write_message(ErrorResponse(301).jsonify())
+            sock.write_message(ErrorResponse(301).jsonify())
 
     except Exception as e:
+        print(e)
         sock.write_message(ErrorResponse(400).jsonify())
 
 

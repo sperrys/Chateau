@@ -3,7 +3,7 @@ import json
 class ErrorResponse():
 	msg_type = "ErrorResponse"
 	
-	def init(self, status_code):
+	def __init__(self, status_code):
 		self.status = status_code
 
 	def jsonify(self):
