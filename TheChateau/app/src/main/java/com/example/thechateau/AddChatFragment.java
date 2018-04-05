@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -98,13 +99,14 @@ public class AddChatFragment extends Fragment {
                 // Otherwise, continue and attempt to submit the new chat
                 if (_ContactsToAddList.size() < 1)
                 {
+                    String contact = _AddContactText.getText().toString();
+
                     // Attempt to add a contact, assuming one is written on the add contact line
-                    if(!AttemptAddContact())
+                    if(!AttemptAddContact(contact))
                     {
                         _ErrorText.setText("ERROR: Add at least one contact to create a new chat");
                         return;
                     }
-
                 }
 
                 boolean success = AttemptSubmission();
@@ -128,20 +130,23 @@ public class AddChatFragment extends Fragment {
             @Override
             public void onClick(View view) {
 
-                if(AttemptAddContact())
-                {
-                    // Clear the error text if the contact was added succesfully
-                    _ErrorText.setText("");
-                }
+                String contact = _AddContactText.getText().toString();
 
-                if(_ContactsToAddList.size() > 1)
-                {
-                    _ErrorText.setText("Please Enter a Name For The New Group Chat");
-                    _ChatNameText.setVisibility(View.VISIBLE);
-                }
+                // Run process for trying to add a contact
+                onAddContactPrompted(contact);
 
-                // Clear the contact text field
-                _AddContactText.getText().clear();;
+            }
+        });
+
+        // Set up List view so that clicking on an item in the list prompts adding the contact
+        _ContactListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        {
+            @Override
+            public void onItemClick(AdapterView<?> parentView, View childView, int position, long id) {
+
+                String contact = (String)_ContactListView.getItemAtPosition(position);
+
+                onAddContactPrompted(contact);
             }
         });
 
@@ -152,8 +157,26 @@ public class AddChatFragment extends Fragment {
         _ContactListAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_list_item_1, _AvailableContactList);
 
         // Set up Contact List View from UI
-        _ContactListView = _FragmentView.findViewById(R.id.ContactListView);
         _ContactListView.setAdapter(_ContactListAdapter);
+    }
+    // Called whenever the add contact button or the list view is clicked to add a contact
+    private void onAddContactPrompted(String contact)
+    {
+
+        if(AttemptAddContact(contact))
+        {
+            // Clear the error text if the contact was added succesfully
+            _ErrorText.setText("");
+        }
+
+        if(_ContactsToAddList.size() > 1)
+        {
+            _ErrorText.setText("Please Enter a Name For The New Group Chat");
+            _ChatNameText.setVisibility(View.VISIBLE);
+        }
+
+        // Clear the contact text field
+        _AddContactText.getText().clear();;
     }
 
     // Update the contact list by getting the server's contact list
@@ -190,14 +213,14 @@ public class AddChatFragment extends Fragment {
         _ContactsAddedText = _FragmentView.findViewById(R.id.ContactsAdded);
         _ErrorText         = _FragmentView.findViewById(R.id.ErrorMessage);
         _ContactTitleText  = _FragmentView.findViewById(R.id.ContactTitle);
+        _ContactListView   = _FragmentView.findViewById(R.id.ContactListView);
 
         // Inflate the layout for this fragment
         return _FragmentView;
     }
 
-    private boolean AttemptAddContact()
+    private boolean AttemptAddContact(String contact)
     {
-        String contact = _AddContactText.getText().toString();
 
         if (contact.equals(""))
         {
