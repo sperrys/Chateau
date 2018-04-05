@@ -42,7 +42,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
     def open(self):
         print("WebSocket opened")
         print("New Client Initializing...")
-        PeriodicCallback(self.keep_alive, 30000).start()
+        #PeriodicCallback(self.keep_alive, 30000).start()
 
         c = ChatClient(self)
         clients.append(c)
