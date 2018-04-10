@@ -162,10 +162,10 @@ def RegisterRequestHandler(sock, msg):
                     # Otherwise send back Auth Issue 
                     else:
                         print("Client is already Registered: ", c.username)
-                        sock.write_message(ErrorResponse(302).jsonify())
+                        sock.write_message(Response("ErrorResponse", 302).jsonify())
                         return 
         else: 
-            sock.write_message(ErrorResponse(301).jsonify())
+            sock.write_message(Response("ErrorResponse", 301).jsonify())
 
     except Exception as e:
         print(e)

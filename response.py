@@ -1,5 +1,7 @@
 import json
 
+valid_types = ["ErrorResponse", "RegisterResponse"]
+
 class Response():
     
     def __init__(self, msg_type, status_code):
@@ -12,10 +14,16 @@ class Response():
         self.pairs.append(("status", status_code))
 
     def jsonify(self):
-        print (self.pairs)
         return json.dumps(dict(self.pairs))
 
     def add_pair(self, key, value):
         self.pairs.append((key, value))
         return self.jsonify()
                    
+    def _validate_type(self):
+        for ty in valid_types:
+            if self.msg_type == ty:
+                return True
+                
+        raise ValueError("Invalid Response Type")
+
