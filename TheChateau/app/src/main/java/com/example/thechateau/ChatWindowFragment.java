@@ -53,7 +53,6 @@ public class ChatWindowFragment extends Fragment {
         // Required empty public constructor
         _ChatName = "Default chat name";
 
-
     }
 
 
@@ -130,36 +129,7 @@ public class ChatWindowFragment extends Fragment {
 
                 _InfoMessageTextView.setText(infoString);
 
-                // Make new message object
-                Message newMessage = new Message(sendString, _currentUser, System.currentTimeMillis());
-
-                //boolean isGroupChat = false; //(_MessageList.size() > 1);
-
-                boolean messageSent = ((MainActivity) getActivity()).sendChatMessageToServer(_ChatName, sendString, _isGroupChat);
-
-                if (messageSent)
-                {
-                    Log.i(_tag, "Message sent through server");
-
-                    // Add Message to message list and update
-                    _MessageList.add(newMessage);
-                    _MessageAdapter.notifyDataSetChanged();
-
-                    // Clear the text box
-                    _sendMessageText.getText().clear();
-
-                    // Move the current chat to most recently sent in Main's chat list
-                    ((MainActivity) getActivity()).moveChatToTop(_ChatName);
-
-                    _InfoMessageTextView.setText("Message \"" + sendString + "\" sent successfully");
-                }
-                else {
-                    Log.i(_tag, "Message not sent through server");
-
-                    // ERROR message couldn't be sent
-                    _InfoMessageTextView.setText("ERROR Message \"" + sendString + "\"couldn't be sent");
-
-                }
+                attemptSendMessage(sendString);
             }
         });
 
@@ -218,6 +188,14 @@ public class ChatWindowFragment extends Fragment {
         checkForNewMessages();
     }
 
+
+    public String getChatName()
+    {
+        return _ChatName;
+    }
+
+
+
     // Checks if there are any new received messages for the chat and updates the view
     // if any chats were received
     private void checkForNewMessages()
@@ -226,6 +204,63 @@ public class ChatWindowFragment extends Fragment {
         _MessageAdapter.notifyDataSetChanged();
     }
 
+    public void updateDisplayedMessages()
+    {
+        checkForNewMessages();
+        Runnable updateMessages = new Runnable() {
+                @Override
+             public void run() {
+
+
+                 _MessageAdapter.notifyDataSetChanged();
+             }
+        };
+
+        (getActivity()).runOnUiThread(updateMessages);
+
+    }
+
+
+    // Attempts to send a message to the server
+    private void attemptSendMessage(String sendString)
+    {
+
+        // Make new message object
+        Message newMessage = new Message(sendString, _currentUser, System.currentTimeMillis());
+
+        // Attempt to send message to server
+        boolean messageSent = ((MainActivity) getActivity()).sendChatMessageToServer(_ChatName, sendString, _isGroupChat);
+
+        // If message was sent successfully
+        //  -Add message to our message list and update it
+        //  -Move chatname to top of chatlist in main
+        //  -Set the info text to "Message Sent"
+        // Else
+        //  -Set info text to "Error sending message"
+        if (messageSent)
+        {
+            Log.i(_tag, "Message sent through server");
+
+            // Add Message to message list and update
+            _MessageList.add(newMessage);
+            _MessageAdapter.notifyDataSetChanged();
+
+            // Move the current chat to most recently sent in Main's chat list
+            ((MainActivity) getActivity()).moveChatToTop(_ChatName);
+
+            _InfoMessageTextView.setText("Message \"" + sendString + "\" sent successfully");
+        }
+        else
+        {
+            Log.i(_tag, "Message not sent through server");
+
+            // ERROR message couldn't be sent
+            _InfoMessageTextView.setText("ERROR Message \"" + sendString + "\"couldn't be sent");
+        }
+
+        // Clear the text box
+        _sendMessageText.getText().clear();
+    }
 
 
     @Override

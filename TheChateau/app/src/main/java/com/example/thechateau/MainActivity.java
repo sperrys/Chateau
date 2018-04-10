@@ -107,6 +107,8 @@ public class MainActivity extends AppCompatActivity
         }
     };
 
+    private String openChatWindowString = "Opening ChatWindow: ";
+
     private Runnable _SetConnectingText = new Runnable() {
         @Override
         public void run() {
@@ -298,19 +300,6 @@ public class MainActivity extends AppCompatActivity
 
 
 
-    /*// Request a contact list until it gets populated, then returns populated contact list
-    private ArrayList<String> getContactList()
-    {
-        while (_ContactList == null || _ContactList.size() > 1)
-        {
-            requestContactList();
-        }
-
-        return _ContactList;
-    }*/
-
-
-
     /**********************************************************************************************/
     /*                                  Add Chat Functions                                        */
     /**********************************************************************************************/
@@ -389,9 +378,10 @@ public class MainActivity extends AppCompatActivity
 
         ChatWindowFragment chatWindowFragment = ChatWindowFragment.newInstance(chatName);
         fragmentTransaction.add(R.id.fragment_container, chatWindowFragment);
-        fragmentTransaction.addToBackStack("Adding chatwindow");
+        fragmentTransaction.addToBackStack(openChatWindowString + chatName);
 
         fragmentTransaction.commit();
+
 
     }
 
@@ -470,8 +460,8 @@ public class MainActivity extends AppCompatActivity
     {
         JSONObject json = new JSONObject();
 
-        try {
-
+        try
+        {
             json.put("recipient", chatName);
             json.put("content"  , content);
 
@@ -484,7 +474,8 @@ public class MainActivity extends AppCompatActivity
                 json.put("type"     , _SendSingleMessage);
             }
 
-        } catch (JSONException e) {
+        } catch (JSONException e)
+        {
             e.printStackTrace();
             return false;
         }
@@ -869,11 +860,20 @@ public class MainActivity extends AppCompatActivity
                             AddChat(sender, false);
                         }
 
-
                         // Add the new message to our list of received messages
                         Message newMessage = new Message(content, new User(sender), System.currentTimeMillis());
                         ChatMessagePair newPair = new ChatMessagePair(sender, newMessage);
                         _MessagesReceived.add(newPair);
+
+                        // Check if the chat window is open for that chat
+                        // If it is, tell the chat to update its message history
+                        ChatWindowFragment chatWindow = getChatWindowFragment(sender);
+
+                        if(chatWindow != null)
+                        {
+                            Log.i("SingleMessageRecv", "Telling chat to update itself");
+                            chatWindow.updateDisplayedMessages();
+                        }
 
                     }
                     break;
@@ -890,6 +890,34 @@ public class MainActivity extends AppCompatActivity
             Log.i("Parsing", "Error " + e.getMessage());
         }
 
+    }
+
+    // Check if the chat window with the name chatName is currently open
+    // Returns the chatwindow fragment with the specified name
+    // Returns null if the fragment isn't found
+    ChatWindowFragment getChatWindowFragment(String chatName)
+    {
+        Log.i("MainActivity", "Called getChatWindowFragment");
+
+        for(Fragment fragment: getSupportFragmentManager().getFragments())
+        {
+
+            if (fragment!=null)
+            {
+                if(fragment.getClass().equals(ChatWindowFragment.class))
+                {
+                    if(((ChatWindowFragment)fragment).getChatName().equals(chatName))
+                    {
+                        Log.i("getChatWindowFragment", "found fragment with name " + chatName);
+                        return (ChatWindowFragment)fragment;
+                    }
+                }
+
+            }
+
+        }
+
+        return null;
     }
 
     // Request a contact list from the chat server

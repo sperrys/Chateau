@@ -67,7 +67,7 @@ public class MessageListAdapter extends RecyclerView.Adapter {
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
-        Log.i("onCreateViewHolder", "Here");
+        Log.i("onCreateViewHolder", "in onCreateViewHolder");
         View view;
 
         if (viewType == VIEW_TYPE_MESSAGE_SENT)
@@ -96,7 +96,7 @@ public class MessageListAdapter extends RecyclerView.Adapter {
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
 
 
-        Log.i("onBindViewHolder", "Here");
+        Log.i("onBindViewHolder", "In onBindViewHolder");
         Message message = _MessageList.get(position);
 
         switch(holder.getItemViewType())
