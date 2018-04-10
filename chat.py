@@ -2,10 +2,11 @@
 import json
 
 
-class Chat():
+class GroupChat():
 	def  __init__(self, chatname, recipients):
 		self.chatname = chatname
 		self.recipients = recipients
+		self.message_id = 0
 
 	def SendMessage(self, content, sender):
 		for r in self.recipients:

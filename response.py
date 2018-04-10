@@ -1,12 +1,13 @@
 import json
 
-class ErrorResponse():
-    msg_type = "ErrorResponse"
+class Response():
     
-    def __init__(self, status_code):
+    def __init__(self, msg_type, status_code):
         self.pairs = []
         self.status = status_code
+        self.msg_type = msg_type
 
+        # add Type and Status
         self.pairs.append(("type", self.msg_type))
         self.pairs.append(("status", status_code))
 

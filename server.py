@@ -1,17 +1,29 @@
+
+
+# server.py 
+# Written by Spencer Perry 
+# 4/10/18
+# Comp 112 Project 
+
+
+import json
+import os
+
 import tornado.ioloop
 from  tornado.ioloop import PeriodicCallback
 import tornado.web
 import tornado.websocket
 import tornado.httpserver
-import json
-import os
 
-from chatclient import ChatClient
+from chatclient import ChatClient, Clients 
 from chat import Chat
+from response import Response
 
 from ldap_client import TuftsAuth
 from tornado.options import define, options, parse_command_line
-from response import ErrorResponse
+
+
+
 from timeoutservice import TimeoutWebSocketService
 
 define("port", default=5000, help="run on the given port", type=int)
@@ -19,7 +31,8 @@ define("port", default=5000, help="run on the given port", type=int)
 
 options.port = int(os.environ.get('PORT', 5000))
 
-clients = []
+clients = Clients()
+
 chats = []
 
 class IndexHandler(tornado.web.RequestHandler):
@@ -45,7 +58,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         #PeriodicCallback(self.keep_alive, 30000).start()
 
         c = ChatClient(self)
-        clients.append(c)
+        clients.add(c)
 
     def on_message(self, message):
         print ("Server Got Message: ", message)
@@ -58,7 +71,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             MessageHandler(self, msg)
         except Exception as e:
             print(e) 
-            self.write_message(ErrorResponse(400).jsonify())
+            self.write_message(Response("ErrorResponse", 400).jsonify())
 
     def keep_alive(self):
         self.ping(json.dumps({"type": "KeepAlive"}))
@@ -83,10 +96,10 @@ def GetClientWSock(sock):
         if c.sock == sock:
             return c
 
-def MessageHandler(sock, msg):
 
-    # Try To Parse Message Type and Handle 
-    # Accordingly, otherwise send back error
+# Try To Parse Message Type and Handle 
+# Accordingly, otherwise send back error
+def MessageHandler(sock, msg):
 
     try: 
         msgType = msg["type"]
@@ -96,20 +109,21 @@ def MessageHandler(sock, msg):
             RegisterRequestHandler(sock, msg)
         elif msgType == "GroupMessageInitRequest":
             GroupMessageInitHandler(sock, msg)
-        elif msgType == "GroupMessageRequest":
+        elif msgType == "MessageRequest":
             GroupMessageRequestHandler(sock, msg)
         elif msgType == "ClientListRequest":
             ClientListRequestHandler(sock, msg)
         elif msgType == "RandomMessageRequest":
             RandomMessageRequestHandler(sock, msg)
-        elif msgType == "SingleMessageRequest":
-            SingleMessageRequestHandler(sock, msg)
+        # TODO, turn this into just message request    
+        #elif msgType == "SingleMessageRequest":
+        #    SingleMessageRequestHandler(sock, msg)
         else: 
-            sock.write_message(ErrorResponse(400).jsonify())
+            sock.write_message(Response(400).jsonify())
 
     except Exception as e: 
         print(e)
-        sock.write_message(ErrorResponse(400).jsonify())
+        sock.write_message(Response(400).jsonify())
 
 
 def RegisterRequestHandler(sock, msg):
@@ -129,7 +143,7 @@ def RegisterRequestHandler(sock, msg):
             # Make Sure Unique Username
             for l in clients:
                 if name == l.username:
-                    sock.write_message(ErrorResponse(302).jsonify())
+                    sock.write_message(Response(302).jsonify())
                     return 
             # Otherwise Try to Register     
             for c in clients:
@@ -142,11 +156,8 @@ def RegisterRequestHandler(sock, msg):
                     if not c.registered:
                         c.username = name
                         c.registered = True
-                        response = { 
-                                "type"  : "RegisterResponse",
-                                "status": 200 
-                                }
-                        sock.write_message(json.dumps(response))
+                        response = Response("RegisterResponse", 200)
+                        sock.write_message(response.jsonify())
                         return 
                     # Otherwise send back Auth Issue 
                     else:
@@ -328,6 +339,7 @@ def RandomMessageRequestHandler(sock, msg):
         new_friend = sample(clients, 1)
         while new_friend.username == c.username:
             new_friend = sample(clients, 1)
+
 
         response = {
                     "type" : "RandomMessageIntiation",
