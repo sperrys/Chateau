@@ -46,6 +46,21 @@ public class ChatWindowFragment extends Fragment {
     private View _FragmentView;
     private Fragment thisFragment;
 
+    private  Runnable _UpdateMessageDisplay = new Runnable() {
+        @Override
+        public void run() {
+
+            _MessageAdapter.notifyDataSetChanged();
+
+            int position = _MessageList.size() - 1;
+
+            if (position < 0) position = 0;
+
+            // Scroll to the last message in the message list
+            _MessageRecycler.smoothScrollToPosition(position);
+        }
+    };
+
 
     private OnFragmentInteractionListener mListener;
 
@@ -185,7 +200,7 @@ public class ChatWindowFragment extends Fragment {
         _MessageRecycler.setAdapter(_MessageAdapter);
 
         // Check if there are pending messages sent to this chat from other users
-        checkForNewMessages();
+        updateMessageHistory();
     }
 
 
@@ -196,28 +211,32 @@ public class ChatWindowFragment extends Fragment {
 
 
 
-    // Checks if there are any new received messages for the chat and updates the view
-    // if any chats were received
-    private void checkForNewMessages()
+    // Updates the message history if necessary by adding
+    // any pending messages for this chat to the message history
+    // and updating the UI to show a new message arrived
+    private void updateMessageHistory()
     {
-        ((MainActivity)getActivity()).checkForNewMessages(_ChatName);
-        _MessageAdapter.notifyDataSetChanged();
+        Log.i("UpdateMessageHistory", "Updating Message History for chat: " + _ChatName);
+
+        checkForNewMessages();
+
+        getActivity().runOnUiThread(_UpdateMessageDisplay);
     }
 
-    public void updateDisplayedMessages()
+    // Checks if there are any new received messages for the chat and updates the view in case chats were received
+    private void checkForNewMessages()
     {
-        checkForNewMessages();
-        Runnable updateMessages = new Runnable() {
-                @Override
-             public void run() {
+        Log.i("checkForNewMessages", "Checking for new messages in chat: " + _ChatName);
 
+        ((MainActivity)getActivity()).checkForNewMessages(_ChatName);
+    }
 
-                 _MessageAdapter.notifyDataSetChanged();
-             }
-        };
+    // Called by Main to indicate that new messages are waiting for this chat
+    public void onReceivedMessage()
+    {
+        Log.i("OnReceivedMesssage", "Main says messages are waiting for this chat: " + _ChatName);
 
-        (getActivity()).runOnUiThread(updateMessages);
-
+        updateMessageHistory();
     }
 
 

@@ -872,7 +872,7 @@ public class MainActivity extends AppCompatActivity
                         if(chatWindow != null)
                         {
                             Log.i("SingleMessageRecv", "Telling chat to update itself");
-                            chatWindow.updateDisplayedMessages();
+                            chatWindow.onReceivedMessage();
                         }
 
                     }
