@@ -29,9 +29,12 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import org.json.simple.parser.JSONParser;
+import com.example.thechateau.R;
 
 public class MainActivity extends AppCompatActivity
                           implements ChatWindowFragment.OnFragmentInteractionListener{
+
+    private String _defaultPreviewMessage = "Preview Message";
 
     private class ChatMessagePair {
         private String  _chatname;
@@ -86,7 +89,7 @@ public class MainActivity extends AppCompatActivity
 
     private ListView                                _ChatListView;
     private final String[]                          _SampleChatListStrings = {"Spencer", "Russ", "Fahad", "Joe"};
-    private LinkedList<String>                      _ChatListEntries;
+    private LinkedList<ChatListItem>                _ChatListEntries;
     private static Hashtable<String, Chat>          _ChatHistories = new Hashtable<>();
 
     private ArrayList<String>   _ContactList = new ArrayList<>();
@@ -185,7 +188,7 @@ public class MainActivity extends AppCompatActivity
         return _ChatHistories.get(chatName).getChatHistory();
     }
 
-    public List<String> getChatList() {
+    public List<ChatListItem> getChatList() {
         return _ChatListEntries;
     }
 
@@ -230,11 +233,20 @@ public class MainActivity extends AppCompatActivity
         /* Set up Chat List View */
         /*************************/
 
+
+
+
         // Make linked list of strings so we can easily add elements to front of list
-        _ChatListEntries = new LinkedList<String>(Arrays.asList(_SampleChatListStrings));
+        _ChatListEntries = new LinkedList<ChatListItem>();
+
+        for (String chatName: _SampleChatListStrings)
+        {
+            _ChatListEntries.add(new ChatListItem(chatName, _defaultPreviewMessage));
+        }
+
 
         // Make an adapter for the Chat List view and set it
-        _ChatListAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, _ChatListEntries);
+        _ChatListAdapter = new ChatListAdapter(this, R.layout.chat_list_item_row, _ChatListEntries);
 
         // Set up Chat List View from UI
         // If a chat list item is clicked, it opens a chat window activity
@@ -245,7 +257,8 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void onItemClick(AdapterView<?> parentView, View childView, int position, long id) {
 
-                    String chatName = (String)_ChatListView.getItemAtPosition(position);
+                    ChatListItem item = (ChatListItem)_ChatListView.getItemAtPosition(position);
+                    String chatName = item.chatName;
 
                     //_AddNewChatButton.setText(chatName);
 
@@ -261,8 +274,9 @@ public class MainActivity extends AppCompatActivity
         /* Initialize Sample Chat Histories                              */
         /* (As if these chats were already present when opening the app) */
         /*****************************************************************/
-        for (String chatName : _ChatListEntries)
+        for (ChatListItem chatListItem : _ChatListEntries)
         {
+            String chatName = chatListItem.chatName;
             List <Message> chatHistory = new ArrayList<Message>();
 
             Chat newChat = new Chat(chatHistory, false);
@@ -320,9 +334,9 @@ public class MainActivity extends AppCompatActivity
     public void AddChat(String chatName, boolean isGroupChat) {
 
         // Add item to list of entries
-        _ChatListEntries.add(chatName);
+        _ChatListEntries.add(new ChatListItem(chatName, _defaultPreviewMessage));
 
-        // Notify Adapter that data has changed
+        // Notify Adapter that chatListItems has changed
         runOnUiThread(UpdateChatList);//_ChatListAdapter.notifyDataSetChanged();
 
         // Add a chat history for the chat name if necessary
@@ -347,20 +361,35 @@ public class MainActivity extends AppCompatActivity
     // If the chat doesn't exist, it does nothing
     public void moveChatToTop(String chatToMoveString)
     {
+        ChatListItem chatToMove = getChatListItemWithChatName(_ChatListEntries, chatToMoveString);
         // Check if string exists in the list
-        if(_ChatListEntries.contains(chatToMoveString))
+        if(chatToMove != null)
         {
-
             // Removes chat from list
-            _ChatListEntries.remove(chatToMoveString);
+            _ChatListEntries.remove(chatToMove);
 
             // Adds chat to top of list
-            _ChatListEntries.addFirst(chatToMoveString);
+            _ChatListEntries.addFirst(chatToMove);
 
             // Tells list to update itself
             _ChatListAdapter.notifyDataSetChanged();
 
         };
+    }
+
+    // Searches through a list of chat names and checks if one of them has a chatName
+    // that matches the chatname argument
+    // Returns the ChatListItem if found, null otherwise
+    public ChatListItem getChatListItemWithChatName(List<ChatListItem> chatListItems, String chatName)
+    {
+        for(ChatListItem item: chatListItems)
+        {
+            if (item.equals(chatName))
+            {
+                return item;
+            }
+        }
+        return null;
     }
 
     /**********************************************************************************************/

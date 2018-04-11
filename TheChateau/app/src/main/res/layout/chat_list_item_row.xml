@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="60dp"
+    android:orientation="horizontal"
+    android:padding="10dp">
+
+    <!-- Vertical Layout with Chat Name and History Preview -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/chatNameTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Spencer"
+            android:gravity="center"
+            android:textColor="#000000"
+            android:textSize="15sp"
+            android:textStyle="bold">
+        </TextView>
+
+        <TextView
+            android:text="SampleChatMessage"
+            android:id="@+id/chatHistoryPreview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="#000000"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <!-- Notification View -->
+    <TextView
+        android:id="@+id/chatNotificationView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        >
+    </TextView>
+
+
+
+</LinearLayout>

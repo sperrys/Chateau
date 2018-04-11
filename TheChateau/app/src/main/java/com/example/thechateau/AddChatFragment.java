@@ -351,9 +351,11 @@ public class AddChatFragment extends Fragment {
     // Returns true if chatName already exists in the list of the user's chatnames
     private boolean chatNameAlreadyExists(String chatName)
     {
-        List<String> chatNames = ((MainActivity)getActivity()).getChatList();
+        List<ChatListItem> chatNames = ((MainActivity)getActivity()).getChatList();
 
-        boolean containsName = chatNames.contains("chatName");
+        ChatListItem item = ((MainActivity) getActivity()).getChatListItemWithChatName(chatNames, chatName);
+
+        boolean containsName = item != null;
 
         return containsName;
     }
