@@ -279,6 +279,8 @@ public class ChatWindowFragment extends Fragment {
 
         // Clear the text box
         _sendMessageText.getText().clear();
+
+        getActivity().runOnUiThread(_UpdateMessageDisplay);
     }
 
 
