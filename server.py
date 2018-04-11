@@ -133,38 +133,30 @@ def RegisterRequestHandler(sock, msg):
         name = msg["username"]
         pw = msg["password"]
 
-        print(name)
-        print(pw)
-        
         #auth = TuftsAuth(name, pw)
         auth = True
         
         if auth: 
             # Make Sure Unique Username
-            for l in clients:
-                if name == l.username:
-                    sock.write_message(Response(302).jsonify())
-                    return 
-            # Otherwise Try to Register     
-            for c in clients:
-                if c.sock == sock:
-                    print("Found Succesful Connection")
-                    print("Client Registering...")
-                    
-                    # If not registered before,
-                    # Send back a c lient List
-                    if not c.registered:
-                        c.username = name
-                        c.registered = True
-                        response = Response("RegisterResponse", 200)
-                        sock.write_message(response.jsonify())
-                        return 
-                    # Otherwise send back Auth Issue 
+            if  clients.unique_username(name):
+                  
+                # Otherwise Try to Register     
+                c = clients.find_w_sock(sock)
+                if c != None:
+                    if c.registered:
+
                     else:
-                        print("Client is already Registered: ", c.username)
-                        sock.write_message(Response("ErrorResponse", 302).jsonify())
-                        return 
+                        c.register(name)    
+                
+                    # Otherwise send back Auth Issue 
+                else:
+                     print("Client is already Registered: ", c.username)
+                     sock.write_message(Response("ErrorResponse", 302).jsonify())
+            else: 
+                 # Send Error For Non Unique UserName
+                 sock.write_message(Response("ErrorResponse", 302).jsonify())
         else: 
+            # Send Error For Bad Auth
             sock.write_message(Response("ErrorResponse", 301).jsonify())
 
     except Exception as e:
@@ -225,7 +217,7 @@ def GroupMessageInitHandler(sock, msg):
     print("GroupMessageInitRequest")
 
     try: 
-        c = GetClientWSock(sock)
+        c = clients.find_w_sock(sock)
 
         # If the client isn't registered, remove them from the list
         if c.registered:
@@ -235,64 +227,60 @@ def GroupMessageInitHandler(sock, msg):
             recipients = msg["recipients"]
             print(recipients)
 
-            # Initialize Chat wit person who made request
+            # Initialize Chat with person who made request
             chat_recipients = [c]
 
-            # Create New Chat, add all recipients to it.
+            # Create New Chat, add all recipients to it, this can probably get moved to dif file
             for r in recipients:
-                print("Looking for ", r)
-                new_r  = GetClientWName(r)
+                new_r  = clients.find_w_username(r)
+
+                # If client is not found, send error
                 if new_r == None:
-                    err = ErrorResponse(404)
-                    c.sock.write_message(err.add_pair("message", "At least one client doesn't exist"))
+                    err_res = Response("ErrorResponse", 404)
+                    err_res.add_pair("message", "At least one client doesn't exist")
+                    c.sock.write_message(err.jsonify())
                     return
                 else:
                     chat_recipients.append(new_r)
             
             # After Looping through all recipients, create chat
-            new_chat = Chat(name, chat_recipients)
-            chats.append(new_chat)
+            new_chat = GroupChat(name, chat_recipients)
+            chats.add(new_chat)
 
             # Send ACK back to group chat creator
-            c.sock.write_message(json.dumps({
-                            "type": "GroupMessageInitResponse",
-                            "status": 200
-                        }))
+            ack_res = Response("GroupMessageInitResponse", 200)
+            c.send(ack_res.jsonify())
+
             # Send notification of creation to all others in chat
-            new_chat.SendMessage(json.dumps({
-                            "type": "GroupMessageInitResponse",
-                            "status": 201,
-                            "chatname" : name
-                        }), c)
+            chat_res = Response("GroupMessageInitResponse", 201)
+            chat_res.add_pair("chatname", name)
+            new_chat.SendMessage(chat_res.jsonify())
+
         else: 
-            sock.write_message(ErrorResponse(301).jsonify())
+            c.send(Response("ErrorResponse", 301).jsonify())
+
     except Exception as e:
         print (e)
-        sock.write_message(ErrorResponse(400).jsonify())
-
+        sock.write_message(Response("ErroResponse", 400).jsonify())
 
 
 
 # Currently Fails Silently on Whether A Person was Found or Not
-def GroupMessageRequestHandler(sock, msg):
-    print("Group Message Request")
+def MessageRequestHandler(sock, msg):
+    print("Message Request")
 
     c = GetClientWSock(sock)
     print("Client Who Sent Message: ", c.username)
 
     # If the client isn't registered, remove them from the list
     if c.registered:
-        chatname = msg["chatname"]
+        chatname = msg["recipient"]
         content = msg["content"]
 
-        response =  { 
-                      "type"   : "GroupMessageRecv",
-                      "chatname" : chatname,
-                      "status" : 200, 
-                      "sender" : c.username,
-                      "content" : content 
-                    }
-
+        response = Response("MessageRecv", 200)
+        response.add_pair("content", content)
+        response.add_pair("sender", c.username)
+       
         chat = GetChat(chatname)
         if chat != None:
             print("Sending Response...")
@@ -301,32 +289,29 @@ def GroupMessageRequestHandler(sock, msg):
                                     "type": "GroupMessageResponse",
                                     "status": 200
                                 }))
+        else: 
+
     else: 
-         sock.write_message(ErrorResponse(301).jsonify())
+         sock.write_message(Response("ErrorResponse", 301).jsonify())
 
 
 def ClientListRequestHandler(sock, msg):
     print("Client List Request")
 
+    usernames = []
     c = GetClientWSock(sock)
 
     if c.registered:
-        # Make List of usernames for clients
-        usernames = []
         for c in clients: 
             if c.username != "":
                 usernames.append(c.username)
 
-        response = { 
-                     "type"  : "ClientListResponse",
-                     "status": 200, 
-                     "clients": usernames
-                   }
-        print("Sending Response...")
-        sock.write_message(json.dumps(response))
+        response = Response("ClientListResponse", 200)
+        response.add_pair("clients", usernames)
+        sock.write_message(response.jsonify())
 
     else: 
-        sock.write_message(ErrorResponse(301).jsonify())
+        sock.write_message(Response("ErrorResponse", 301).jsonify())
 
 
 
@@ -336,26 +321,22 @@ def RandomMessageRequestHandler(sock, msg):
     try:
         c = GetClientWSock(sock)
         
+        # Make Sure Not to Send Usernaame to Self 
         new_friend = sample(clients, 1)
         while new_friend.username == c.username:
             new_friend = sample(clients, 1)
 
+        # Send Message to Random Client
+        response = Response("RandomMessageRecvResponse", 200)
+        response.add_pair("sender", c.username)
+        response.add_pair("content", msg["content"])
 
-        response = {
-                    "type" : "RandomMessageIntiation",
-                    "status" : 200,
-                    "sender" : c.username,
-                    "content": msg["content"]
-                   }
+        new_friend.sock.write_message(response.jsonify())
 
-        print("Sending Response...")
-        new_friend.sock.write_message(json.dumps(response))
-        c.write_message(json.dumps(
-                                    {
-                                        "type" : "RandomMessageResponse",
-                                        "status": 200,
-                                        "client": new_friend.username
-                                    }))
+        # Send Ack Back to Sender 
+        send_response = Response("RandomMessageSendResponse", 200)
+        send_response.add_pair("recipient", new_friend.username)
+        c.write_message(send_response.jsonify())
 
     except Exception as e:
         sock.write_message(ErrorResponse(400).jsonify())

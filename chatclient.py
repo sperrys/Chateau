@@ -3,6 +3,7 @@
 import time
 import sys
 
+from response import Response
 
 class Clients():
 	def __init__(self):
@@ -13,12 +14,19 @@ class Clients():
 	def add(self, ChatClient):
 		self.clients.append(ChatClient)
 
-
-	# Finds client based on username returns 
+	# Finds client based on socket returns 
 	# client if found, None if not
-	def find(self, ChatClient):
+	def find_w_sock(self, sock):
 		for c in self.clients:
-			if c.username == username:
+			if c.sock == sock:
+				return c
+		return None
+
+	# Finds a client based upon username
+	# returns client if found, None if not
+	def find_w_username(self, username):
+		for c in self.client:
+			if c.username = username:
 				return c
 		return None
 
@@ -46,8 +54,24 @@ class ChatClient():
         self.username = ""
         self.registered = False
 
-    def set_username(username):
+    def set_username(self, username):
         self.username = username
 
-    def get_username():
+    def get_username(self):
         return self.username
+
+   	def register(self, username):
+   		self.username = username
+   		self.registered = True
+   		
+   		# Send Response Back to Client
+   		response = Response("RegisterResponse", 200)             
+   		self.send(response.jsonify())   		
+
+    def send(self, content):
+    	self.sock.write_message(content)
+
+
+
+
+

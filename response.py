@@ -1,6 +1,12 @@
 import json
 
-valid_types = ["ErrorResponse", "RegisterResponse"]
+valid_types = [
+               "ErrorResponse", 
+               "RegisterResponse", 
+               "GroupMessageInitResponse", 
+               "GroupMessageResponse", 
+               "ClientListResponse"
+               ]
 
 class Response():
     
