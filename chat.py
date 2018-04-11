@@ -3,7 +3,6 @@ import json
 
 from response import Response
 
-
 class GroupChats():
 	def __init__(self):
 		self.chats = []
@@ -30,14 +29,33 @@ class GroupChats():
 		return True
 
 class GroupChat():
-	def  __init__(self, chatname, recipients):
+	def  __init__(self, creator, chatname, clients, recipients):
 		self.chatname = chatname
-		self.recipients = recipients
 		self.message_id = 0
 
-	def SendMessage(self, content, sender):
+	# Send Message Content to everyone except sender
+	def send(self, content, sender):
 		for r in self.recipients:
 			if r != sender:
-				r.send(json.dumps(content))
+				r.send(content)
+
+		# Increment Message ID 		
+		self.message_id += 1
+
+	# Make sure that all recipients are valid clients
+	def validate_recipients():
+		for r in self.recipients:
+			c = self.clients.find_w_username(r) 
+
+			# If can't find recipent send error to creator,
+			# stop creation of the chat
+			if c == None:
+				err_res = Response("ErrorResponse", 404)
+                err_res.add_pair("message", "At least one client doesn't exist")
+                self.creator.send(err.jsonify())
+                return False
+			else: 
+				self.recipients.append(c)
+		return True
 
 
