@@ -17,7 +17,7 @@ import time
 import sys
 
 
-class Client(object):
+class TestClient(object):
     def __init__(self, url, timeout):
         self.url = url
         self.timeout = timeout
@@ -26,54 +26,32 @@ class Client(object):
         self.connect()
 
         #PeriodicCallback(self.keep_alive, 30000).start()
-        self.ioloop.start()
+        #elf.ioloop.start()
 
     @gen.coroutine
     def connect(self):
         print("trying to connect")
         try:
+            print(self.ws)
             self.ws = yield websocket_connect(self.url)
+            print(self.ws)
         except Exception as e:
             print("connection error")
-        else:
-            print("connected")
-            self.run()
+        
+        print("connected")
 
     @gen.coroutine
-    def run(self):
-        while True:
-            message = ""
+    def read(self):
+        try:
+            msg = yield self.ws.read_message()
+            return msg
+        except Exception as e:
+            print (e) 
 
-            # Prompt User for Message 
-            stdin = input("Message File or Read for read input (r): ")
+    @gen.coroutine
+    def send(self, message):
+        self.ws.write_message(message)
 
-            # Open File, Read and Format Nicely
-            try:
-
-                if stdin != 'r':
-                    with open(stdin) as fp:
-                      for line in fp:
-                        message += line
-
-                    # Send Message to Server
-                    print("Sending Message: ", message)
-                    self.ws.write_message(message)
-
-                # Read Response from Serve
-                msg = yield self.ws.read_message()
-                print(msg)
-            
-                # Sleep Because Tired 
-                time.sleep(1)
-
-                # If the connection was closed by Server
-                if msg is None:
-                    print("connection closed")
-                    self.ws = None
-                    break
-
-            except Exception as e:
-                print("Server Caught Exception:", e)
 
     def keep_alive(self):
         if self.ws is None:
@@ -82,5 +60,5 @@ class Client(object):
             self.ws.write_message("keep alive")
 
 
-if __name__ == "__main__":
-    client = Client("ws://chateautufts.herokuapp.com:80/ws", 5)
+#if __name__ == "__main__":
+#    client = Client("ws://chateautufts.herokuapp.com:80/ws", 5)

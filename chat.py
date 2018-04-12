@@ -4,58 +4,60 @@ import json
 from response import Response
 
 class GroupChats():
-	def __init__(self):
-		self.chats = []
+    def __init__(self):
+        self.chats = []
 
-	def add(self, GroupChat):
-		if self._unique_name(GroupChat):
-			self.chats.append(GroupChat)
-		else:
-			raise ValueError("GroupChat with %s already exists", GroupChat.chatname)
+    def add(self, GroupChat):
+        if self._unique_name(GroupChat):
+            self.chats.append(GroupChat)
+        else:
+            raise ValueError("GroupChat with %s already exists", GroupChat.chatname)
 
-	def remove(self, GroupChat):
-		self.chats.remove(GroupChat)
+    def remove(self, GroupChat):
+        self.chats.remove(GroupChat)
 
-	def find(self, chatname):
-		for c in self.chats:
-			if c.chatname == chatname:
-				return c
-		return None 
+    def find(self, chatname):
+        for c in self.chats:
+            if c.chatname == chatname:
+                return c
+        return None 
 
-	def _unique_name(groupchat): 
-		for c in self.chats:
-			if c.chatname == groupchat.chatname:
-				return False
-		return True
+    def _unique_name(groupchat): 
+        for c in self.chats:
+            if c.chatname == groupchat.chatname:
+                return False
+        return True
 
 class GroupChat():
-	def  __init__(self, creator, chatname, clients, recipients):
-		self.chatname = chatname
-		self.message_id = 0
+    def  __init__(self, creator, chatname, recipients):
+        self.chatname = chatname
+        self.message_id = 0
+        self.recipients = recipients
+        self.creator = creator
 
-	# Send Message Content to everyone except sender
-	def send(self, content, sender):
-		for r in self.recipients:
-			if r != sender:
-				r.send(content)
+    # Send Message Content to everyone except sender
+    def send(self, content, sender):
+        for r in self.recipients:
+            if r != sender:
+                r.send(content)
 
-		# Increment Message ID 		
-		self.message_id += 1
+        # Increment Message ID      
+        self.message_id += 1
 
-	# Make sure that all recipients are valid clients
-	def validate_recipients():
-		for r in self.recipients:
-			c = self.clients.find_w_username(r) 
+    # Make sure that all recipients are valid clients
+    def validate_recipients(self, clients):
+        for r in self.recipients:
+            c = clients.find_w_username(r) 
 
-			# If can't find recipent send error to creator,
-			# stop creation of the chat
-			if c == None:
-				err_res = Response("ErrorResponse", 404)
+            # If can't find recipent send error to creator,
+            # stop creation of the chat
+            if c == None:
+                err_res = Response("ErrorResponse", 404)
                 err_res.add_pair("message", "At least one client doesn't exist")
-                self.creator.send(err.jsonify())
+                self.creator.send(err_res.jsonify())
                 return False
-			else: 
-				self.recipients.append(c)
-		return True
+            else: 
+                self.recipients.append(c)
+        return True
 
 

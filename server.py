@@ -8,6 +8,7 @@
 
 import json
 import os
+import traceback
 
 import tornado.ioloop
 from  tornado.ioloop import PeriodicCallback
@@ -16,7 +17,7 @@ import tornado.websocket
 import tornado.httpserver
 
 from chatclient import ChatClient, Clients 
-from chat import Chat, GroupChats
+from chat import GroupChat, GroupChats
 from response import Response
 from ldap_client import TuftsAuth
 
@@ -79,7 +80,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         print("WebSocket closed")
         print("Removing Client")
         #self.timeout_service.clean_timeout()
-        RemoveClientWSock(self)
+        clients.remove_w_sock(self)
 
 
 # Try To Parse Message Type and Handle 
@@ -95,7 +96,7 @@ def MessageHandler(sock, msg):
         elif msgType == "GroupMessageInitRequest":
             GroupMessageInitHandler(sock, msg)
         elif msgType == "MessageRequest":
-            GroupMessageRequestHandler(sock, msg)
+            MessageRequestHandler(sock, msg)
         elif msgType == "ClientListRequest":
             ClientListRequestHandler(sock, msg)
         elif msgType == "RandomMessageRequest":
@@ -105,6 +106,7 @@ def MessageHandler(sock, msg):
 
     except Exception as e: 
         print(e)
+        print(traceback.format_exc())
         sock.write_message(Response(400).jsonify())
 
 
@@ -118,7 +120,7 @@ def RegisterRequestHandler(sock, msg):
         c = clients.find_w_sock(sock) 
         auth = True
 
-        #if auth_type = "tufts":     
+        #if auth_type = "false":     
             #auth = TuftsAuth(name, pw)
         #else:
             #auth = True
@@ -133,7 +135,8 @@ def RegisterRequestHandler(sock, msg):
     # Handle Generic Exception
     except Exception as e:
         print(e)
-        sock.write_message(ErrorResponse(400).jsonify())
+        print(traceback.format_exc())
+        sock.write_message(Response("ErrorResponse", 400).jsonify())
 
     
 
@@ -152,10 +155,10 @@ def GroupMessageInitHandler(sock, msg):
             recipients.append(c.username)
 
             # Create new group chat, add recipients
-            new_chat = GroupChat(c, name, clients, recipients)
+            new_chat = GroupChat(c, name, recipients)
 
             # Validate the chat's recipients, send error if not valid
-            if new_chat.validate_recipients():
+            if new_chat.validate_recipients(clients):
 
                 # Send ACK back to group chat creator
                 ack_res = Response("GroupMessageInitResponse", 200)
@@ -172,8 +175,9 @@ def GroupMessageInitHandler(sock, msg):
 
     # Handle Other Exceptions
     except Exception as e:
-        print (e)
-        sock.write_message(Response("ErroResponse", 400).jsonify())
+        print(e)
+        print(traceback.format_exc())
+        sock.write_message(Response("ErrorResponse", 400).jsonify())
 
 
 # Look for a valid message recipient
@@ -209,7 +213,7 @@ def MessageRequestHandler(sock, msg):
             content = msg["content"]
             recipient = find_recipient(msg["recipient"], c)
 
-            if recipient != None
+            if recipient != None:
                 if recipient[1] == "Group":
                     chatname = r
 
@@ -226,8 +230,9 @@ def MessageRequestHandler(sock, msg):
                 # Send Response either group chat or single client 
                 recipient[0].send(response.jsonify())
 
-                # Send Ack back to sender 
-                c.send(Response("MessageSendResponse", 200))
+                # Send Ack back to sender
+                ack = Response("MessageSendResponse", 200) 
+                c.send(ack.jsonify())
          
         # Catch Exception if the client is not registered.  
         else: 
@@ -236,6 +241,7 @@ def MessageRequestHandler(sock, msg):
     # Catch Generic Exception
     except Exception as e:
         print(e)
+        print(traceback.format_exc())
         sock.write_message(Response("ErroResponse", 400).jsonify())
 
 
@@ -247,6 +253,7 @@ def ClientListRequestHandler(sock, msg):
 
         if c.registered:
             usernames = clients.usernames()
+            usernames.remove(c.username)
 
             response = Response("ClientListResponse", 200)
             response.add_pair("clients", usernames)
@@ -259,6 +266,7 @@ def ClientListRequestHandler(sock, msg):
     # Handle Generic Error, or no client with Sock
     except Exception as e:
         print (e)
+        print(traceback.format_exc())
         sock.write_message(Response("ErrorResponse", 400).jsonify())
 
 
@@ -270,7 +278,7 @@ def RandomMessageRequestHandler(sock, msg):
         c = clients.find_w_sock(sock)
     
         if c.registered:
-           usernames = clients.usernames()
+            usernames = clients.usernames()
 
             # Make Sure Not to Send Usernaame to Self 
             new_friend = sample(usernames, 1)
@@ -296,6 +304,7 @@ def RandomMessageRequestHandler(sock, msg):
     # Handle Generic Error
     except Exception as e:
         print (e)
+        print(traceback.format_exc())
         sock.write_message(ErrorResponse(400).jsonify())
 
 
