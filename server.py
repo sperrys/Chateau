@@ -229,6 +229,7 @@ def MessageRequestHandler(sock, msg):
 
             if recipient != None:
                 if recipient[1] == "Group":
+                    response.add_pair("groupchat", True)
                     response.add_pair("chatname", msg["recipient"])
                     recipient[0].send(response.jsonify(), c)
 
@@ -236,6 +237,7 @@ def MessageRequestHandler(sock, msg):
                 # for single messages
                 else:
                     response.add_pair("chatname", c.username)
+                    response.add_pair("groupchat", False)
                     recipient[0].send(response.jsonify())
 
                 # Send Ack back to sender

@@ -146,7 +146,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         self.assertEqual(data["status"], 200)
         self.assertEqual(data["sender"], "russ3")
         self.assertEqual(data["chatname"], "russ3")
-
+        self.assertEqual(data["groupchat"], False)
 
 
     @testing.gen_test
