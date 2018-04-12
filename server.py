@@ -102,12 +102,12 @@ def MessageHandler(sock, msg):
         elif msgType == "RandomMessageRequest":
             RandomMessageRequestHandler(sock, msg)
         else: 
-            sock.write_message(Response(400).jsonify())
+            sock.write_message(Response("ErrorResponse", 400).jsonify())
 
     except Exception as e: 
         print(e)
         print(traceback.format_exc())
-        sock.write_message(Response(400).jsonify())
+        sock.write_message(Response("ErrorResponse", 400).jsonify())
 
 
 def RegisterRequestHandler(sock, msg):
@@ -160,14 +160,24 @@ def GroupMessageInitHandler(sock, msg):
             # Validate the chat's recipients, send error if not valid
             if new_chat.validate_recipients(clients):
 
-                # Send ACK back to group chat creator
-                ack_res = Response("GroupMessageInitResponse", 200)
-                c.send(ack_res.jsonify())
+                print(chats)
+                # Add chat to list of chats, check chatname uniqueness
+                if chats.add(new_chat):
+                    # Send ACK back to group chat creator
+                    ack_res = Response("GroupMessageInitResponse", 200)
+                    c.send(ack_res.jsonify())
 
-                # Send notification of creation to all others in chat
-                chat_res = Response("GroupMessageInitResponse", 201)
-                chat_res.add_pair("chatname", name)
-                new_chat.send(chat_res.jsonify())
+                    # Send notification of creation to all others in chat
+                    chat_res = Response("GroupMessageInitResponse", 201)
+                    chat_res.add_pair("chatname", name)
+                    new_chat.send(chat_res.jsonify(), c)
+                
+                else: 
+                    err = Response("ErrorResponse", 303)
+                    err.add_pair("detail", "chatname already taken")
+                    c.send(err.jsonify())
+
+
 
         # Handle if Client is Not Registered
         else:
@@ -213,22 +223,20 @@ def MessageRequestHandler(sock, msg):
             content = msg["content"]
             recipient = find_recipient(msg["recipient"], c)
 
+            response = Response("MessageRecv", 200)
+            response.add_pair("content", content)
+            response.add_pair("sender", c.username)
+
             if recipient != None:
                 if recipient[1] == "Group":
-                    chatname = r
+                    response.add_pair("chatname", msg["recipient"])
+                    recipient[0].send(response.jsonify(), c)
 
                 # chatname becomes person who sent
                 # for single messages
                 else:
-                    chatname = c.username
-
-                response = Response("MessageRecv", 200)
-                response.add_pair("content", content)
-                response.add_pair("sender", c.username)
-                response.add_pair("chatname", chatname)
-
-                # Send Response either group chat or single client 
-                recipient[0].send(response.jsonify())
+                    response.add_pair("chatname", c.username)
+                    recipient[0].send(response.jsonify())
 
                 # Send Ack back to sender
                 ack = Response("MessageSendResponse", 200) 

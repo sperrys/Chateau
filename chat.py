@@ -10,7 +10,9 @@ class GroupChats():
     def add(self, GroupChat):
         if self._unique_name(GroupChat):
             self.chats.append(GroupChat)
+            return True
         else:
+            return False
             raise ValueError("GroupChat with %s already exists", GroupChat.chatname)
 
     def remove(self, GroupChat):
@@ -22,8 +24,9 @@ class GroupChats():
                 return c
         return None 
 
-    def _unique_name(groupchat): 
+    def _unique_name(self, groupchat): 
         for c in self.chats:
+            print (c.chatname)
             if c.chatname == groupchat.chatname:
                 return False
         return True
@@ -34,10 +37,11 @@ class GroupChat():
         self.message_id = 0
         self.recipients = recipients
         self.creator = creator
+        self.valid_clients = []
 
     # Send Message Content to everyone except sender
     def send(self, content, sender):
-        for r in self.recipients:
+        for r in self.valid_clients:
             if r != sender:
                 r.send(content)
 
@@ -46,9 +50,10 @@ class GroupChat():
 
     # Make sure that all recipients are valid clients
     def validate_recipients(self, clients):
+        print("Recipients: ", self.recipients)
+        print(len(self.recipients))
         for r in self.recipients:
             c = clients.find_w_username(r) 
-
             # If can't find recipent send error to creator,
             # stop creation of the chat
             if c == None:
@@ -56,8 +61,9 @@ class GroupChat():
                 err_res.add_pair("message", "At least one client doesn't exist")
                 self.creator.send(err_res.jsonify())
                 return False
-            else: 
-                self.recipients.append(c)
+            
+            self.valid_clients.append(c)
+
         return True
 
 

@@ -157,7 +157,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         # Register mgomez
         russ = yield websocket.websocket_connect(ws_url)       
         reg = Request("RegisterRequest")
-        reg.add_pair("username",  "russ4")
+        reg.add_pair("username", "russ4")
         reg.add_pair("password", "")
         reg.add_pair("auth", "false")
         russ.write_message(reg.jsonify())
@@ -192,28 +192,49 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         data = json.loads(send_response)
         print(data)
 
-        self.assertEqual(data["type"], "GroupChatInitResponse")
+        self.assertEqual(data["type"], "GroupMessageInitResponse")
         self.assertEqual(data["status"], 200)
 
         # Read Response from those in group chat
 
-        # Make Sure Spencer Gets Message
+        # Make Sure Spencer Gets Create Message
         recv_response = yield spencer.read_message()
         data = json.loads(recv_response)
         print(data)
 
-        self.assertEqual(data["type"], "GroupMessageInitRespsonse")
+        self.assertEqual(data["type"], "GroupMessageInitResponse")
         self.assertEqual(data["status"], 201)
         self.assertEqual(data["chatname"], "comp112")
 
-        # Make sure Fahad Gets Message
+        # Make sure Fahad Gets Create Message
         recv_response = yield fahad.read_message()
         data = json.loads(recv_response)
         print(data)
 
-        self.assertEqual(data["type"], "GroupMessageInitRespsonse")
+        self.assertEqual(data["type"], "GroupMessageInitResponse")
         self.assertEqual(data["status"], 201)
         self.assertEqual(data["chatname"], "comp112")
+
+        # Spencer Sends Message to Group
+        chat_msg = Request("MessageRequest")
+        chat_msg.add_pair("recipient", "comp112")
+        chat_msg.add_pair("content", "hey")
+
+        spencer.write_message(chat_msg.jsonify())        
+
+        # Make sure Fahad Gets Conent Message
+        recv_response = yield fahad.read_message()
+        data = json.loads(recv_response)
+        print(data)
+
+        self.assertEqual(data["type"], "MessageRecv")
+        self.assertEqual(data["status"], 200)
+        self.assertEqual(data["chatname"], "comp112")
+        self.assertEqual(data["sender"], "sperry4")
+        self.assertEqual(data["content"], "hey")
+
+
+
 
 
 
