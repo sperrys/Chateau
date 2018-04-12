@@ -7,6 +7,7 @@ package com.example.thechateau;
 public class ChatListItem {
     public String chatName;
     public String previewMessage;
+    public boolean isNotified;
 
 
     public ChatListItem(){
@@ -17,5 +18,6 @@ public class ChatListItem {
         super();
         this.chatName       = chatName;
         this.previewMessage = previewMessage;
+        this.isNotified      = false;
     }
 }

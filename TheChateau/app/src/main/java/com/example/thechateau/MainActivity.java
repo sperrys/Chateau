@@ -160,6 +160,11 @@ public class MainActivity extends AppCompatActivity
     private final String _GroupInitExample          = "GroupExample";
     private final String _GroupMessageInitialMessage     = "Hello, I've started a group chat with you all";
 
+    private final String _GeneralMessageSendRequest  = "MessageRequest";
+    private final String _GeneralMessageSendResponse = "MessageSendResponse";
+    private final String _GeneralMessageRecv         = "MessageRecv";
+
+
     private final String _SendGroupMessage          = "GroupMessageRequest";
     private final String _GroupMessageResponse      = "GroupMessageResponse";
     private final String _GroupMessageRecv          = "GroupMessageRecv";
@@ -495,15 +500,16 @@ public class MainActivity extends AppCompatActivity
         {
             json.put("recipient", chatName);
             json.put("content"  , content);
+            json.put("type", _GeneralMessageSendRequest);
 
-            if(isGroupChat)
+            /*if(isGroupChat)
             {
                 json.put("type"     , _SendGroupMessage);
             }
             else
             {
                 json.put("type"     , _SendSingleMessage);
-            }
+            }*/
 
         } catch (JSONException e)
         {
@@ -823,6 +829,7 @@ public class MainActivity extends AppCompatActivity
                         _MessagesReceived.add(newPair);
 
                         updateChatMessagePreview(chatname, content, false);
+                        ((ChatListAdapter)_ChatListAdapter).setNotified(chatname, true);
                     }
                     else if (status == 201)
                     {
@@ -882,6 +889,61 @@ public class MainActivity extends AppCompatActivity
                     }
                     break;
                 }
+
+                case _GeneralMessageSendResponse:
+                {
+                    Log.i("OnChatServerMsgReceived", "Got message send response");
+
+                    if(status == 200)
+                    {
+                        Log.i("OnChatServerMsgReceived", "Adding to message confirmations");
+                        _MessageSentConfirmations.add(_SingleMessageResponseExample);
+
+                    }
+
+                    break;
+
+                }
+
+                case _GeneralMessageRecv:
+                {
+                    Log.i("ChatServerMsgRecvGen", "Got Message Received");
+
+                    if (status == 200)
+                    {
+                        String content      = (String) jsonObject.get("content");
+                        String sender       = (String) jsonObject.get("sender");
+                        String chatName     = (String) jsonObject.get("chatname");
+                        boolean isGroupChat = (boolean) jsonObject.get("groupchat");
+
+                        // Add a new chat for this chatName if it doesn't exist yet
+                        if(_ChatHistories.get(sender) == null)
+                        {
+                            AddChat(sender, isGroupChat);
+                        }
+
+                        // Add the new message to our list of received messages
+                        Message newMessage = new Message(content, new User(sender), System.currentTimeMillis());
+                        ChatMessagePair newPair = new ChatMessagePair(sender, newMessage);
+                        _MessagesReceived.add(newPair);
+
+
+                        updateChatMessagePreview(sender, content, false);
+                        ((ChatListAdapter)_ChatListAdapter).setNotified(sender, true);
+
+                        // Check if the chat window is open for that chat
+                        // If it is, tell the chat to update its message history
+                        ChatWindowFragment chatWindow = getChatWindowFragment(sender);
+
+                        if(chatWindow != null)
+                        {
+                            Log.i("SingleMessageRecv", "Telling chat to update itself");
+                            chatWindow.onReceivedMessage();
+                        }
+                    }
+                    break;
+                }
+
                 case _SingleMessageRecvResponse:
                 {
                     Log.i("OnChatServerMsgReceived", "Got Single Message Received");
@@ -904,6 +966,7 @@ public class MainActivity extends AppCompatActivity
 
 
                         updateChatMessagePreview(sender, content, false);
+                        ((ChatListAdapter)_ChatListAdapter).setNotified(sender, true);
 
                         // Check if the chat window is open for that chat
                         // If it is, tell the chat to update its message history
