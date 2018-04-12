@@ -20,7 +20,10 @@
             android:gravity="center"
             android:textColor="#000000"
             android:textSize="15sp"
-            android:textStyle="bold">
+            android:textStyle="bold"
+            android:scrollHorizontally="true"
+            android:maxLines="1"
+            android:ellipsize="end">
         </TextView>
 
         <TextView
@@ -30,7 +33,10 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:textColor="#000000"
-            android:textSize="13sp" />
+            android:textSize="13sp"
+            android:scrollHorizontally="true"
+            android:maxLines="1"
+            android:ellipsize="end"/>
     </LinearLayout>
 
     <!-- Notification View -->

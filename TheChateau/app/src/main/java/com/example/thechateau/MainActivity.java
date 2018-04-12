@@ -34,7 +34,9 @@ import com.example.thechateau.R;
 public class MainActivity extends AppCompatActivity
                           implements ChatWindowFragment.OnFragmentInteractionListener{
 
-    private String _defaultPreviewMessage = "Preview Message";
+    private String _defaultPreviewMessage = "No Message History";
+    private String _sentPreviewText       = "Sent: ";
+    private String _readPreviewText       = "Received: ";
 
     private class ChatMessagePair {
         private String  _chatname;
@@ -517,6 +519,7 @@ public class MainActivity extends AppCompatActivity
 
         if(waitUntilMessageSent(3000))
         {
+
             return true;
         }
         else
@@ -818,12 +821,17 @@ public class MainActivity extends AppCompatActivity
 
                         ChatMessagePair newPair = new ChatMessagePair(chatname, newMessage);
                         _MessagesReceived.add(newPair);
+
+                        updateChatMessagePreview(chatname, content, false);
                     }
                     else if (status == 201)
                     {
                         // Create a new group chat
                         AddChat(chatname, true);
                     }
+
+
+
                     break;
                 }
 
@@ -894,6 +902,9 @@ public class MainActivity extends AppCompatActivity
                         ChatMessagePair newPair = new ChatMessagePair(sender, newMessage);
                         _MessagesReceived.add(newPair);
 
+
+                        updateChatMessagePreview(sender, content, false);
+
                         // Check if the chat window is open for that chat
                         // If it is, tell the chat to update its message history
                         ChatWindowFragment chatWindow = getChatWindowFragment(sender);
@@ -903,6 +914,7 @@ public class MainActivity extends AppCompatActivity
                             Log.i("SingleMessageRecv", "Telling chat to update itself");
                             chatWindow.onReceivedMessage();
                         }
+
 
                     }
                     break;
@@ -1115,6 +1127,43 @@ public class MainActivity extends AppCompatActivity
         }
 
         return true;
+    }
+
+    public void updateChatMessagePreview(String chatName, String content, boolean isSent)
+    {
+        Log.i("updatePreview()", "in updateChatMessage Preview");
+
+        // Update the chat message preview if it exists
+        //ChatListItem chat = getChatListItemWithChatName(_ChatListEntries, chatName);
+
+        String newPreviewMessage = "";
+
+        /*if (isSent )
+            newPreviewMessage = _sentPreviewText;
+        else
+            newPreviewMessage = _readPreviewText;
+*/
+        newPreviewMessage = content;
+
+        ((ChatListAdapter)_ChatListAdapter).setPreviewMessage(chatName, newPreviewMessage);
+
+
+
+        // Create a runnable action to run on the UI thread
+        Runnable updateMsgPreview = new Runnable() {
+            @Override
+            public void run() {
+                _ChatListAdapter.notifyDataSetChanged();
+            }
+        };
+
+        Log.i("updatePreview()", "running adapter on UI thread");
+
+        // Run action to update chatListAdapter
+        runOnUiThread(updateMsgPreview);
+
+
+
     }
 
 }

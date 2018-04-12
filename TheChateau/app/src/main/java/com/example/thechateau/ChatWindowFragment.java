@@ -268,6 +268,9 @@ public class ChatWindowFragment extends Fragment {
             ((MainActivity) getActivity()).moveChatToTop(_ChatName);
 
             _InfoMessageTextView.setText("Message \"" + sendString + "\" sent successfully");
+
+            ((MainActivity)getActivity()).updateChatMessagePreview(_ChatName, sendString, true);
+
         }
         else
         {

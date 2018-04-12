@@ -2,6 +2,7 @@ package com.example.thechateau;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -52,7 +53,10 @@ public class ChatListAdapter extends ArrayAdapter<ChatListItem> {
             holder = (ChatListItemHolder)row.getTag();
         }
 
+
         ChatListItem chatListItem = chatListItems.get(position);
+
+        Log.i("ChatListAdapter", "in getView, setting text of chat: " + chatListItem.chatName + " with message: " + chatListItem.previewMessage);
         holder.chatNameView.setText(chatListItem.chatName);
         holder.chatPreviewMessageView.setText(chatListItem.previewMessage);
 
@@ -60,6 +64,25 @@ public class ChatListAdapter extends ArrayAdapter<ChatListItem> {
 
 
     }
+
+    // Sets the preview of a given chatlist item
+    public void setPreviewMessage(String chatName, String newPreview)
+    {
+        ChatListItem chatToChange = null;
+
+        for(ChatListItem chat: chatListItems)
+        {
+            if(chat.chatName.equals(chatName))
+                chatToChange = chat;
+        }
+
+        if (chatToChange != null)
+        {
+            Log.i("ChatListAdapter","setPrevMsg: Setting preview message");
+            chatToChange.previewMessage = newPreview;
+        }
+    }
+
 
     static class ChatListItemHolder
     {
