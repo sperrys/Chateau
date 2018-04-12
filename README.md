@@ -26,38 +26,42 @@ This is a Repository for networks project 1.
 Arguments
 	- `"username"`
 	- `"password"`
+
 Response:
 	- If successful, `"type": "RegisterResponse", "status": 200`
 	- if generic failure, `"type": "ErrorResponse", status": 400` 
 	- if no socket (this shouldn't happen), `"type": "ErrorResponse", status": 300` 
 	- if user is already registered, `"type": "ErrorResponse", status": 302` 
-
+	- if username has already been taken, `"type": "ErrorResponse", status": 302` 
 
 **Start a New Group Message**
 
 "type": "GroupMessageInitRequest"
 
 Arguments:
-	- `"recipients" username of those to be in the chat
+	- `"recipients"` usernames of those to be in the chat
 	- `"chatname"` unique chatname
 
 Response:
-	- If successful, `"type": "GroupMessageInitResponse", "status": 200`
+	- If successful, `"type": "GroupMessageInitResponse", "status": 200` goes to the person who sent the request
+	- If successful, `"type": "GroupMessageInitResponse", "status": 201` goes to all the recipients
 	- if generic failure, `"type": "ErrorResponse", status": 400` 
 	- if failure is that the client making the request is not registered, `"type": "ErrorResponse", status": 301`
+	- if failure is that the chatname is not unique, `"type": "ErrorResponse", status": 301`
 
-**Send a Message to a pre-existing Chat**
+
+**Send a Message to a Chat or Client**
 
 "type": "GroupMessageRequest"
 
 Arguments: 
-	- "chatname"
+	- "recipient"
 	- "content"
 
 Response:
-	- If sucessful, "type": "GroupMessageResponse" and "status":200 
-	- If sucessful, all clients in chat will get a GroupMessageRecv
-	- If failure, "type": "ErrorResponse", "status": 400
+	- If sucessful, `"type": "MessageSendResponse"` and `"status": 200` goes to the person who sent the message
+	- If sucessful, all clients in chat will get a `"type": "GroupMessageRecv"`, `"content": "food"`
+	- If generic failure, `"type": "ErrorResponse", "status": 400`
 
 
 **Message From Other Person in Group Chat**
