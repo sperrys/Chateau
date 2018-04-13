@@ -26,13 +26,17 @@ This is a Repository for networks project 1.
 Arguments
 	- `"username"`
 	- `"password"`
+	- `"auth"`
 
 Response:
-	- If successful, `"type": "RegisterResponse", "status": 200`
+	- If successful, `"type": "RegisterResponse", "status": 200`, your username when chatting 
+	  is now the username entered.
 	- if generic failure, `"type": "ErrorResponse", status": 400` 
-	- if no socket (this shouldn't happen), `"type": "ErrorResponse", status": 300` 
-	- if user is already registered, `"type": "ErrorResponse", status": 302` 
+	- if user's socket is already registered with a username, `"type": "ErrorResponse", status": 302` 
 	- if username has already been taken, `"type": "ErrorResponse", status": 302` 
+	- if `"auth" : True,`, then the username password pair will be sent to the tuft's ldap server for 
+	  authentication.
+	- if `"auth" : False` then a succesful registration is then attempted without any form of authentication
 
 **Start a New Group Message**
 
@@ -47,7 +51,8 @@ Response:
 	- If successful, `"type": "GroupMessageInitResponse", "status": 201` goes to all the recipients
 	- if generic failure, `"type": "ErrorResponse", status": 400` 
 	- if failure is that the client making the request is not registered, `"type": "ErrorResponse", status": 301`
-	- if failure is that the chatname is not unique, `"type": "ErrorResponse", status": 301`
+	- if failure is that the chatname is not unique, `"type": "ErrorResponse", "status": 301`
+	- if failure is that a recipient does not exist, `"type": "ErrorResponse", "status": 302`
 
 
 **Send a Message to a Chat or Client**

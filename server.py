@@ -116,15 +116,14 @@ def RegisterRequestHandler(sock, msg):
     try: 
         name = msg["username"]
         pw = msg["password"]
-        #auth_type = msg["auth"]  
+        auth_type = msg["auth"]  
         c = clients.find_w_sock(sock) 
-        auth = True
 
-        #if auth_type = "false":     
-            #auth = TuftsAuth(name, pw)
-        #else:
-            #auth = True
-        
+        if auth_type == True:     
+            auth = TuftsAuth(name, pw)
+        else:
+            auth = True
+            
         if auth:     
             c.register(name, clients)
          
