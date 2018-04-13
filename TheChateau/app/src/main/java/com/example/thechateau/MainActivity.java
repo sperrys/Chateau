@@ -150,24 +150,16 @@ public class MainActivity extends AppCompatActivity
     private final String _RegisterRequest    = "RegisterRequest";
     private final String _RegisterResponse   = "RegisterResponse";
 
-    private final String _SendSingleMessage         = "SingleMessageRequest";
-    private final String _SingleMessageResponse     = "SingleMessageSendResponse";
-    private final String _SingleMessageRecvResponse = "SingleMessageRecvResponse";
+    private final String _GroupInitExample             = "SingleExample";
     private final String _SingleMessageResponseExample = "GroupExample";
 
     private final String _GroupMessageInitRequest   = "GroupMessageInitRequest";
     private final String _GroupMessageInitResponse  = "GroupMessageInitResponse";
-    private final String _GroupInitExample          = "GroupExample";
-    private final String _GroupMessageInitialMessage     = "Hello, I've started a group chat with you all";
 
     private final String _GeneralMessageSendRequest  = "MessageRequest";
     private final String _GeneralMessageSendResponse = "MessageSendResponse";
     private final String _GeneralMessageRecv         = "MessageRecv";
 
-
-    private final String _SendGroupMessage          = "GroupMessageRequest";
-    private final String _GroupMessageResponse      = "GroupMessageResponse";
-    private final String _GroupMessageRecv          = "GroupMessageRecv";
 
 
     private final String _ClientListRequest = "ClientListRequest";
@@ -657,6 +649,9 @@ public class MainActivity extends AppCompatActivity
             json.put("username", username);
             json.put("password", password);
 
+            // TODO change to be variable authentication
+            json.put("auth", false);
+
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -800,48 +795,6 @@ public class MainActivity extends AppCompatActivity
                     break;
                 }
 
-                case _GroupMessageResponse:
-                {
-
-                    Log.i("OnChatServerMsgReceived", "Got Group Message response");
-
-                    if (status == 200)
-                    {
-                        Log.i("OnChatServerMsgReceived", "Adding to message confirmations");
-                        _MessageSentConfirmations.add(_SingleMessageResponseExample);
-                    }
-                    break;
-
-                }
-
-                case _GroupMessageRecv:
-                {
-                    String content  = (String) jsonObject.get("content");
-                    String sender   = (String) jsonObject.get("sender");
-                    String chatname = (String) jsonObject.get("chatname");
-
-                    if(status == 200)
-                    {
-                        // Add the new message to our list of received messages
-                        Message newMessage = new Message(content, new User(sender), System.currentTimeMillis());
-
-                        ChatMessagePair newPair = new ChatMessagePair(chatname, newMessage);
-                        _MessagesReceived.add(newPair);
-
-                        updateChatMessagePreview(chatname, content, false);
-                        ((ChatListAdapter)_ChatListAdapter).setNotified(chatname, true);
-                    }
-                    else if (status == 201)
-                    {
-                        // Create a new group chat
-                        AddChat(chatname, true);
-                    }
-
-
-
-                    break;
-                }
-
                 case _ClientListResponse:
                 {
                     Log.i("OnChatServerMsgReceived", "Got ClientListResponse");
@@ -874,19 +827,6 @@ public class MainActivity extends AppCompatActivity
 
                 case _RandomMessageResponse:
                 {
-                    break;
-                }
-
-                case _SingleMessageResponse:
-                {
-                    Log.i("OnChatServerMsgReceived", "Got Single Message response");
-                    if(status == 200)
-                    {
-                        Log.i("OnChatServerMsgReceived", "Adding to message confirmations");
-                        _MessageSentConfirmations.add(_SingleMessageResponseExample);
-
-
-                    }
                     break;
                 }
 
@@ -944,44 +884,6 @@ public class MainActivity extends AppCompatActivity
                     break;
                 }
 
-                case _SingleMessageRecvResponse:
-                {
-                    Log.i("OnChatServerMsgReceived", "Got Single Message Received");
-
-                    if (status == 200)
-                    {
-                        String content = (String) jsonObject.get("content");
-                        String sender  = (String) jsonObject.get("sender");
-
-                        // Add a new chat for this chat
-                        if(_ChatHistories.get(sender) == null)
-                        {
-                            AddChat(sender, false);
-                        }
-
-                        // Add the new message to our list of received messages
-                        Message newMessage = new Message(content, new User(sender), System.currentTimeMillis());
-                        ChatMessagePair newPair = new ChatMessagePair(sender, newMessage);
-                        _MessagesReceived.add(newPair);
-
-
-                        updateChatMessagePreview(sender, content, false);
-                        ((ChatListAdapter)_ChatListAdapter).setNotified(sender, true);
-
-                        // Check if the chat window is open for that chat
-                        // If it is, tell the chat to update its message history
-                        ChatWindowFragment chatWindow = getChatWindowFragment(sender);
-
-                        if(chatWindow != null)
-                        {
-                            Log.i("SingleMessageRecv", "Telling chat to update itself");
-                            chatWindow.onReceivedMessage();
-                        }
-
-
-                    }
-                    break;
-                }
 
                 default:
                 {
