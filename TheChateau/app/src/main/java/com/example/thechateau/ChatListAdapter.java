@@ -60,7 +60,7 @@ public class ChatListAdapter extends ArrayAdapter<ChatListItem> {
 
         ChatListItem chatListItem = chatListItems.get(position);
 
-        Log.i("ChatListAdapter", "in getView, setting text of chat: " + chatListItem.chatName + " with message: " + chatListItem.previewMessage);
+        //Log.i("ChatListAdapter", "in getView, setting text of chat: " + chatListItem.chatName + " with message: " + chatListItem.previewMessage);
         holder.chatNameView.setText(chatListItem.chatName);
         holder.chatPreviewMessageView.setText(chatListItem.previewMessage);
 

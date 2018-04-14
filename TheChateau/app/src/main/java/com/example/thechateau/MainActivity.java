@@ -901,12 +901,12 @@ public class MainActivity extends AppCompatActivity
 
                         // Add the new message to our list of received messages
                         Message newMessage = new Message(content, new User(sender), System.currentTimeMillis());
-                        ChatMessagePair newPair = new ChatMessagePair(sender, newMessage);
+                        ChatMessagePair newPair = new ChatMessagePair(chatName, newMessage);
                         _MessagesReceived.add(newPair);
 
-
-                        updateChatMessagePreview(sender, content, false);
-                        setChatNotified(sender, true);
+                        // Update the preview and notification icon of the chat
+                        updateChatMessagePreview(chatName, content, false);
+                        setChatNotified(chatName, true);
 
                         // Check if the chat window is open for that chat
                         // If it is, tell the chat to update its message history
