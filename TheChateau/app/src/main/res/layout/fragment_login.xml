@@ -65,15 +65,24 @@
 
             </View>
 
-            <EditText
-                android:id="@+id/UsernameEditText"
-                android:gravity="center_horizontal"
+            <!-- Horizontal Scroll View lets text scroll right,
+               if user writes a really long username-->
+            <HorizontalScrollView
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:textColor="#ff000000"
-                android:hint="Enter Username"
+                android:layout_height="wrap_content"
+                android:scrollHorizontally="true">
 
-                />
+                <EditText
+                    android:id="@+id/UsernameEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_horizontal"
+                    android:hint="Enter Username"
+                    android:inputType="text"
+                    android:maxLines="1"
+                    android:scrollHorizontally="true"
+                    />
+            </HorizontalScrollView>
         </LinearLayout>
 
 
@@ -101,16 +110,25 @@
 
             </View>
 
-            <EditText
-                android:id="@+id/PasswordEditText"
-                android:gravity="center_horizontal"
+            <!-- Horizontal Scroll View lets text scroll right,
+                 if user writes a really long password -->
+            <HorizontalScrollView
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:hint="Enter Password"
-                android:inputType="textPassword"
+                android:layout_height="wrap_content"
+                android:scrollHorizontally="true">
 
-                />
+                <EditText
+                    android:id="@+id/PasswordEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_horizontal"
+                    android:hint="Enter Password"
+                    android:inputType="textPassword"
+                    android:maxLines="1"
+                    android:scrollHorizontally="true"
 
+                    />
+            </HorizontalScrollView>
 
         </LinearLayout>
 
