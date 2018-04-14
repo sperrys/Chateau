@@ -492,6 +492,7 @@ public class MainActivity extends AppCompatActivity
 
         // Make the activity's components visible again
         findViewById(R.id.nonFragmentStuff).setVisibility(View.VISIBLE);
+        //findViewById(R.id.fragment_container).setVisibility(View.INVISIBLE);
     }
 
 
@@ -906,16 +907,21 @@ public class MainActivity extends AppCompatActivity
 
                         // Update the preview and notification icon of the chat
                         updateChatMessagePreview(chatName, content, false);
-                        setChatNotified(chatName, true);
+
 
                         // Check if the chat window is open for that chat
-                        // If it is, tell the chat to update its message history
+                        // If open, tell the chat to update its message history
+                        // If not tell the chat there's a new message waiting
                         ChatWindowFragment chatWindow = getChatWindowFragment(chatName);
 
                         if(chatWindow != null)
                         {
                             Log.i("SingleMessageRecv", "Telling chat to update itself");
                             chatWindow.onReceivedMessage();
+                        }
+                        else
+                        {
+                            setChatNotified(chatName, true);
                         }
                     }
                     break;

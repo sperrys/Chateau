@@ -13,7 +13,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:layout_toLeftOf="@id/chatRowSeparator">
+            android:layout_toLeftOf="@id/NotificationLayout">
 
             <TextView
                 android:id="@+id/chatNameTitle"
@@ -41,27 +41,28 @@
                 android:textSize="13sp" />
         </LinearLayout>
 
-        <View
-            android:id="@+id/chatRowSeparator"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true">
 
-        </View>
 
         <LinearLayout
             android:id="@+id/NotificationLayout"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:layout_toRightOf="@id/chatRowSeparator">
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true">
+
+            <View
+                android:id="@+id/NotificationSeparator"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true">
+            </View>
 
             <TextView
                 android:id="@+id/chatNotificationView"
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:background="@color/NotificationColor"
-                android:gravity="center_vertical"
                 >
 
             </TextView>
