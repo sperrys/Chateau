@@ -1069,12 +1069,18 @@ public class MainActivity extends AppCompatActivity
         // Otherwise, send a group chat
         JSONObject json = new JSONObject();
 
+
         try {
 
-            JSONArray jsonArray = new JSONArray(Arrays.asList(contactsToAdd));
+            JSONArray jsonArrayBetter =  new JSONArray();
+
+            for (String contact: contactsToAdd)
+            {
+                jsonArrayBetter.put(contact);
+            }
 
             json.put("type"      , _GroupMessageInitRequest);
-            json.put("recipients", jsonArray);
+            json.put("recipients", (Object)jsonArrayBetter);
             json.put("chatname"  , chatName);
 
         } catch (JSONException e) {

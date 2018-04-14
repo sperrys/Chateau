@@ -97,7 +97,7 @@ public class AddChatFragment extends Fragment {
                     ((MainActivity) getActivity()).AddChat(_newChatName, (_ContactsToAddList.size() > 1));
 
                     // Make new chat appear at top of user's list of chats
-                    ((MainActivity) getActivity()).moveChatToTop(_newChatName);
+                    //((MainActivity) getActivity()).moveChatToTop(_newChatName);
 
                     // Go back to the activity
                     getActivity().onBackPressed();
