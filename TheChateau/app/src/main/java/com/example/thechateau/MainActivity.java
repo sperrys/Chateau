@@ -910,7 +910,7 @@ public class MainActivity extends AppCompatActivity
 
                         // Check if the chat window is open for that chat
                         // If it is, tell the chat to update its message history
-                        ChatWindowFragment chatWindow = getChatWindowFragment(sender);
+                        ChatWindowFragment chatWindow = getChatWindowFragment(chatName);
 
                         if(chatWindow != null)
                         {
