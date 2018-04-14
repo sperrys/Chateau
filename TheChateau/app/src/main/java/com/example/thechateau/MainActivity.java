@@ -297,12 +297,12 @@ public class MainActivity extends AppCompatActivity
 
         callWSConnect();
 
-        // Sample Code to check if Spencer chat reads its pending messages when opening
+        /*// Sample Code to check if Spencer chat reads its pending messages when opening
         Message m = new Message("Hi Russ", new User("Spencer"), System.currentTimeMillis());
         ChatMessagePair newPair = new ChatMessagePair("Spencer", m);
         _MessagesReceived.add(newPair);
         _MessagesReceived.add(newPair);
-        _MessagesReceived.add(newPair);
+        _MessagesReceived.add(newPair);*/
     }
 
 
