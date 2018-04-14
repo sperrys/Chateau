@@ -140,11 +140,6 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    /*public ArrayList<Message> getSingleMessagesReceived()
-    {
-        return _MessagesReceived;
-    }*/
-
     private Button              _AddNewChatButton;
     private Button              _AddChatToTopButton;
     private int                 _newChatCounter       = 0;
@@ -163,14 +158,10 @@ public class MainActivity extends AppCompatActivity
     private final String _GeneralMessageSendResponse = "MessageSendResponse";
     private final String _GeneralMessageRecv         = "MessageRecv";
 
-
-
     private final String _ClientListRequest = "ClientListRequest";
 
     private final int _GetRandomContactType     = 5;
     private final int _SendSingleMessageType    = 6;
-
-    // Response Strings
 
     private final String _ClientListResponse        = "ClientListResponse";
     private final String _RandomMessageResponse     = "RandomMessageResponse";
@@ -239,7 +230,7 @@ public class MainActivity extends AppCompatActivity
 
 
         // Make linked list of strings so we can easily add elements to front of list
-        _ChatListEntries = new LinkedList<ChatListItem>();
+        _ChatListEntries = new LinkedList<>();
 
         for (String chatName: _SampleChatListStrings)
         {
@@ -354,7 +345,7 @@ public class MainActivity extends AppCompatActivity
 
             _Chats.put(chatName, newChat);
 
-            //moveChatToTop(chatName);
+            moveChatToTop(chatName);
 
             return true;
         }
@@ -818,7 +809,7 @@ public class MainActivity extends AppCompatActivity
 
                 case _ClientListResponse:
                 {
-                    Log.i("OnChatServerMsgReceived", "Got ClientListResponse");
+                    Log.i("OnChatServerMsgReceived", "Got " + _ClientListResponse);
 
                     if(status == 200)
                     {
@@ -830,16 +821,18 @@ public class MainActivity extends AppCompatActivity
 
                         for(int i = 0; i < jsonArray.size(); i++)
                         {
-                            //String contact = (String)jsonArray.get(i);
+                            String contact = (String)jsonArray.get(i);
 
-                            //Log.i("OnChatServerMsgReceived", "current contact:" + contact);
+                            Log.i("OnChatServerMsgReceived", "current contact:" + contact);
 
-                            //if(!contact.equals(_CurrentUser))
-                            //{
+                            if(!contact.equals(_CurrentUser) && !contact.equals(""))
+                            {
+                                Log.i("OnChatServerMsgReceived", "adding contact:" + contact);
                                 contacts[i] = (String) jsonArray.get(i);
-                            //}
+                            }
                         }
 
+                        Log.i("OnChatServerMsgReceived", "Converting to array");
                         _ContactList = new ArrayList(Arrays.asList(contacts));
                     }
 
@@ -880,7 +873,7 @@ public class MainActivity extends AppCompatActivity
                         // Add a new chat for this chatName if it doesn't exist yet
                         if(_Chats.get(sender) == null)
                         {
-                            AddChat(sender, isGroupChat);
+                            AddChat(chatName, isGroupChat);
                         }
 
                         // Add the new message to our list of received messages
@@ -976,8 +969,34 @@ public class MainActivity extends AppCompatActivity
             Log.i("requestContactList", "contact:" + s);
         }
 
+        // Remove current user from contact list (user will never need to chat with themselves
+        //_ContactList = removeNameFromContactList(_ContactList, _CurrentUser);
+
         return _ContactList;
 
+    }
+
+    private ArrayList<String> removeNameFromContactList(ArrayList<String> contacts, String currentUser)
+    {
+        String tag = "RemoveNameFromContacts";
+
+        Log.i(tag, "in " + tag + " for " + currentUser);
+
+        for (int i = 0; i < contacts.size(); i++)
+        {
+            String contact = contacts.get(i);
+
+            Log.i(tag, "current contact " + contact);
+
+            if (contact.equals(currentUser))
+            {
+                Log.i(tag, "Removing " + currentUser);
+                contacts.remove(i); // Remove the string, and then the spot in the array list?
+
+                break;
+            }
+        }
+        return contacts;
     }
 
     // Runs until the timeToWaitMS has been reached, then returns

@@ -17,6 +17,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 public class AddChatFragment extends Fragment {
@@ -165,7 +166,13 @@ public class AddChatFragment extends Fragment {
         // Get a list of available contacts from the server
         //_AvailableContactList = new ArrayList<>(Arrays.asList(_SampleAvailableContacts));
         _AvailableContactList = ((MainActivity)getActivity()).requestContactList();
-        _AvailableContactList.remove(((MainActivity) getActivity()).getCurrentUser());
+
+        if (_AvailableContactList == null)
+        {
+            _AvailableContactList = new ArrayList<String>();
+        }
+        //_AvailableContactList.remove(((MainActivity) getActivity()).getCurrentUser());
+        Log.i(_Tag, "Returned from request contactList");
 
         // Show that no contacts are available if the list is empty
         if (_AvailableContactList.size() < 1)
@@ -249,6 +256,7 @@ public class AddChatFragment extends Fragment {
         {
             Log.i("removedAddedContactList", "Removing " + contact);
             _AvailableContactList.remove(contact);
+
         }
 
         updateListView();
@@ -256,8 +264,12 @@ public class AddChatFragment extends Fragment {
     // Updates the listview with the current available contacts
     private void updateListView()
     {
-        _ContactListAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_list_item_1, _AvailableContactList);
+        Log.i(_Tag, "in updateListView()");
+        _ContactListAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, _AvailableContactList);
+
+        //Log.i(_Tag, "made new adapter");
         _ContactListView.setAdapter(_ContactListAdapter);
+        //Log.i(_Tag, "set new adapter");
     }
 
     // Update the UI to show all contacts added
