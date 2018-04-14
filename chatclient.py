@@ -50,8 +50,9 @@ class Clients():
     # Return Array of the Client's Usernames
     def usernames(self):
         usernames = []
-        for c in self.clients: 
-            usernames.append(c.username)
+        for c in self.clients:
+            if c.username != "":
+                usernames.append(c.username)
         return usernames
 
     # checks whether a given username is 

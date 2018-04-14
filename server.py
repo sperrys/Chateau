@@ -265,6 +265,7 @@ def ClientListRequestHandler(sock, msg):
             usernames.remove(c.username)
 
             response = Response("ClientListResponse", 200)
+            print(usernames)
             response.add_pair("clients", usernames)
             c.send(response.jsonify())
 
