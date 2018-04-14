@@ -890,7 +890,7 @@ public class MainActivity extends AppCompatActivity
 
 
                         updateChatMessagePreview(sender, content, false);
-                        ((ChatListAdapter)_ChatListAdapter).setNotified(sender, true);
+                        setChatNotified(sender, true);
 
                         // Check if the chat window is open for that chat
                         // If it is, tell the chat to update its message history
@@ -1161,4 +1161,18 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    // Sets a chats notified attribute, indicating whether it should notify a new message or not
+    public void setChatNotified(final String chatName, final boolean isNotified)
+    {
+        Log.i("setChatNotified", "in setChatNotified for chat " + chatName);
+
+        Runnable _makeChatNotified = new Runnable() {
+            @Override
+            public void run() {
+                ((ChatListAdapter)_ChatListAdapter).setNotified(chatName, isNotified);
+            }
+        };
+
+        runOnUiThread(_makeChatNotified);
+    }
 }

@@ -90,7 +90,7 @@ public class ChatListAdapter extends ArrayAdapter<ChatListItem> {
             Log.i("ChatListAdapter","setNotified: setting notified with bool " + isNotified );
 
             chatToChange.isNotified = isNotified;
-
+            this.notifyDataSetChanged();
         }
     }
 

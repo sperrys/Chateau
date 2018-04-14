@@ -201,6 +201,9 @@ public class ChatWindowFragment extends Fragment {
 
         // Check if there are pending messages sent to this chat from other users
         updateMessageHistory();
+
+        // Turn off notification for this chat since the user has read messages for it already
+        ((MainActivity)getActivity()).setChatNotified(_ChatName, false);
     }
 
 
