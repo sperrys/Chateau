@@ -80,6 +80,8 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    private boolean             _WSConnected = false;
+
     private ChatWebSocket       _WSClient;
     private String              _WSHOST      = "ws://10.0.2.2:5000/ws";
     private String              _HerokuHost  = "ws://chateautufts.herokuapp.com:80/ws";
@@ -92,7 +94,8 @@ public class MainActivity extends AppCompatActivity
     private ListView                                _ChatListView;
     private final String[]                          _SampleChatListStrings = {"Spencer", "Russ", "Fahad", "Joe"};
     private LinkedList<ChatListItem>                _ChatListEntries;
-    private static Hashtable<String, Chat>          _ChatHistories = new Hashtable<>();
+    private static Hashtable<String, Chat>          _Chats = new Hashtable<>();
+
 
     private ArrayList<String>   _ContactList = new ArrayList<>();
 
@@ -133,7 +136,7 @@ public class MainActivity extends AppCompatActivity
 
     public boolean getGroupChatBool(String chatName)
     {
-        return _ChatHistories.get(chatName).IsGroupChat();
+        return _Chats.get(chatName).IsGroupChat();
     }
 
 
@@ -184,7 +187,7 @@ public class MainActivity extends AppCompatActivity
     // Returns a chat history with the given name
     public static List<Message> getChatHistory(String chatName)
     {
-        return _ChatHistories.get(chatName).getChatHistory();
+        return _Chats.get(chatName).getChatHistory();
     }
 
     public List<ChatListItem> getChatList() {
@@ -280,7 +283,7 @@ public class MainActivity extends AppCompatActivity
 
             Chat newChat = new Chat(chatHistory, false);
 
-            _ChatHistories.put(chatName, newChat);
+            _Chats.put(chatName, newChat);
         }
 
 
@@ -329,29 +332,36 @@ public class MainActivity extends AppCompatActivity
         // Open chat window of random chat created
     }
 
-    // Adds a new chat name to the list view
-    public void AddChat(String chatName, boolean isGroupChat) {
-
-        // Add item to list of entries
-        _ChatListEntries.add(new ChatListItem(chatName, _defaultPreviewMessage));
-
-        // Notify Adapter that chatListItems has changed
-        runOnUiThread(UpdateChatList);//_ChatListAdapter.notifyDataSetChanged();
+    // Adds a new chat name to the list view and to our list of chats
+    // Returns true if a new chat was added for the arguments specified,
+    // False otherwise (i.e. chat already exists)
+    public boolean AddChat(String chatName, boolean isGroupChat) {
 
         // Add a chat history for the chat name if necessary
-        Chat newChat = _ChatHistories.get(chatName);
+        Chat newChat = _Chats.get(chatName);
 
         if (newChat == null)
         {
+            // Add item to list of entries
+            _ChatListEntries.add(new ChatListItem(chatName, _defaultPreviewMessage));
+
+            // Notify Adapter that chatListItems has changed
+            runOnUiThread(UpdateChatList);//_ChatListAdapter.notifyDataSetChanged();
+
             List<Message> chatHistory = new ArrayList<Message>();
 
             newChat = new Chat(chatHistory, isGroupChat);
 
-            _ChatHistories.put(chatName, newChat);
+            _Chats.put(chatName, newChat);
+
+            //moveChatToTop(chatName);
+
+            return true;
         }
         else
         {
-            Log.i("AddChat", "ERROR chatHistory wasn't null, but sender didn't exist previously");
+            Log.i("AddChat", "ERROR chat already exists");
+            return false;
         }
 
     }
@@ -360,10 +370,14 @@ public class MainActivity extends AppCompatActivity
     // If the chat doesn't exist, it does nothing
     public void moveChatToTop(String chatToMoveString)
     {
+        Log.i("moveChatToTop", "in moveChatToTop");
         ChatListItem chatToMove = getChatListItemWithChatName(_ChatListEntries, chatToMoveString);
         // Check if string exists in the list
+
         if(chatToMove != null)
         {
+            Log.i("moveChatToTop", "Moving chat with name " + chatToMove.chatName);
+
             // Removes chat from list
             _ChatListEntries.remove(chatToMove);
 
@@ -383,7 +397,7 @@ public class MainActivity extends AppCompatActivity
     {
         for(ChatListItem item: chatListItems)
         {
-            if (item.equals(chatName))
+            if (item.chatName.equals(chatName))
             {
                 return item;
             }
@@ -513,7 +527,7 @@ public class MainActivity extends AppCompatActivity
 
 
         Log.i("SendChatMessageToServer", "Sending chat message(): " + message);
-        _WSClient.send(message);
+        sendMessageToServer(message);
 
         if(waitUntilMessageSent(3000))
         {
@@ -580,6 +594,9 @@ public class MainActivity extends AppCompatActivity
 
         Log.i("OnConnectedToServer", "In function");
 
+        // Indicate to everyone that we're connected to the server
+        _WSConnected = true;
+
         // Register current user with the server if necessary
         if(!_RegisteredUser) startLoginFragment();
 
@@ -619,12 +636,16 @@ public class MainActivity extends AppCompatActivity
     {
         Log.i("MainActivity", "Called OnServerDisconnect");
 
+        _WSConnected = false;
+
+        // Remove fragments from the display
         removeAllFragments();
 
+        // User is no longer registered when chats disconnect
         _RegisteredUser = false;
 
+        // Try reconnecting to the server
         _WSClient = new ChatWebSocket(_ServerURI, this);
-
         callWSConnect();
 
         // Set connected attribute to "connecting"
@@ -661,7 +682,7 @@ public class MainActivity extends AppCompatActivity
 
 
         Log.i("MainActivity", "Sending registration message(): " + message);
-        _WSClient.send(message);
+        sendMessageToServer(message);
 
         // Wait to see if client gets a registration response in 2 seconds, if not return false;
         if(waitUntilRegistered(2000))
@@ -857,7 +878,7 @@ public class MainActivity extends AppCompatActivity
                         boolean isGroupChat = (boolean) jsonObject.get("groupchat");
 
                         // Add a new chat for this chatName if it doesn't exist yet
-                        if(_ChatHistories.get(sender) == null)
+                        if(_Chats.get(sender) == null)
                         {
                             AddChat(sender, isGroupChat);
                         }
@@ -943,7 +964,7 @@ public class MainActivity extends AppCompatActivity
         String message = json.toString();
 
         Log.i("MainActivity", "Sending getClientMessage(): " + message);
-        _WSClient.send(message);
+        sendMessageToServer(message);
 
         // Wait a few seconds for contact list to be retrieved, then return contact list
         waitUntilTimeReached(2000);
@@ -989,7 +1010,7 @@ public class MainActivity extends AppCompatActivity
         Log.i("ChatWindowFragment", "in checkForNewMessages()");
 
         // Get the chat's chatHistory
-        List<Message> chatHistory = _ChatHistories.get(chatName).getChatHistory();
+        List<Message> chatHistory = _Chats.get(chatName).getChatHistory();
 
         if (chatHistory == null)
         {
@@ -1033,10 +1054,9 @@ public class MainActivity extends AppCompatActivity
 
             JSONArray jsonArray = new JSONArray(Arrays.asList(contactsToAdd));
 
-            json.put("type"     , _GroupMessageInitRequest);
+            json.put("type"      , _GroupMessageInitRequest);
             json.put("recipients", jsonArray);
-            //json.put("content"  , _GroupMessageInitialMessage);
-            json.put("chatname" , chatName);
+            json.put("chatname"  , chatName);
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -1046,7 +1066,7 @@ public class MainActivity extends AppCompatActivity
         String message = json.toString();
 
         Log.i("SendChatRegisToServer", "Sending group init message(): " + message);
-        _WSClient.send(message);
+        sendMessageToServer(message);
 
         if(waitUntilGroupMessageInitResponseReceived(3000))
         {
@@ -1058,6 +1078,16 @@ public class MainActivity extends AppCompatActivity
             Log.i("SendChatRegisToServer", "Did not receive init response");
             return false;
         }
+    }
+
+
+    // Waits until the web socket client is connected, and then sends a message
+    private void sendMessageToServer(String message)
+    {
+        Log.i("sendMessageToServer", "in sendMessageToServer()");
+        while (_WSClient == null || _WSConnected != true);
+
+        _WSClient.send(message);
     }
 
     // Waits for timetoWaitMS milliseconds for a GroupInitResponse to be received

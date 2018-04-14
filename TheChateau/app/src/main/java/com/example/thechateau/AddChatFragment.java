@@ -89,6 +89,9 @@ public class AddChatFragment extends Fragment {
 
                 if(success)
                 {
+
+                    Log.i(_Tag, "Chat was submitted successfully");
+
                     // Add new chat to our database of chats
                     ((MainActivity) getActivity()).AddChat(_newChatName, (_ContactsToAddList.size() > 1));
 
@@ -206,7 +209,7 @@ public class AddChatFragment extends Fragment {
 
         if (contact.equals(""))
         {
-            Log.i("AddChatFragment","contact field is empty");
+            Log.i(_Tag,"contact field is empty");
             _ErrorText.setText("ERROR: contact field is empty");
             return false;
         }
@@ -214,7 +217,7 @@ public class AddChatFragment extends Fragment {
         // Check if contact is registered with the server
         if (!contactExists(contact))
         {
-            Log.i("AddChatFragment","ERROR: contact is not registered in our database");
+            Log.i(_Tag,"ERROR: contact is not registered in our database");
             _ErrorText.setText("ERROR: contact \"" + contact + "\" is not registered in our database");
             return false;
         }
@@ -222,7 +225,7 @@ public class AddChatFragment extends Fragment {
         // Check contact isn't already set to be added our list of contacts to add
         if(contactAlreadyAdded(contact))
         {
-            Log.i("AddChatFragment","ERROR: contact is already set to be added");
+            Log.i(_Tag,"ERROR: contact is already set to be added");
             _ErrorText.setText("ERROR: contact \"" + contact + "\" is already set to be added");
             return false;
         }
