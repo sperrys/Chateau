@@ -369,17 +369,30 @@ public class MainActivity extends AppCompatActivity
         {
             Log.i("moveChatToTop", "Moving chat with name " + chatToMove.chatName);
 
-            // Removes chat from list
-            _ChatListEntries.remove(chatToMove);
-
-            // Adds chat to top of list
-            _ChatListEntries.addFirst(chatToMove);
-
-            // Tells list to update itself
-            _ChatListAdapter.notifyDataSetChanged();
-
+            RunMoveChatToTop(chatToMove);
         };
     }
+
+    // Helper function to MoveChatToTop
+    // Uses runnable to run the move chat operation on the UI Thread
+    private void RunMoveChatToTop(final ChatListItem chatToMove) {
+        Runnable moveChat = new Runnable() {
+            @Override
+            public void run() {
+                // Removes chat from list
+                _ChatListEntries.remove(chatToMove);
+
+                // Adds chat to top of list
+                _ChatListEntries.addFirst(chatToMove);
+
+                // Tells list to update itself
+                _ChatListAdapter.notifyDataSetChanged();
+            }
+        };
+
+        runOnUiThread(moveChat);
+    }
+
 
     // Searches through a list of chat names and checks if one of them has a chatName
     // that matches the chatname argument
@@ -792,12 +805,22 @@ public class MainActivity extends AppCompatActivity
 
                 case _GroupMessageInitResponse:
                 {
+                    String chatName = (String) jsonObject.get("chatname");
                     Log.i("OnChatSeverMsgReceived", "Received groupMessageInitResponse");
 
                     if(status == 200)
                     {
                         Log.i("OnChatServerMsgReceived", "Success, status is " + status);
                         _GroupInitConfirmations.add(_GroupInitExample);
+                    }
+                    else if (status == 201)
+                    {
+                        // Add a new chat for this chatName if it doesn't exist yet
+                        if (_Chats.get(chatName) == null)
+                        {
+                            AddChat(chatName, true);
+                        }
+
                     }
                     else
                     {
@@ -871,7 +894,7 @@ public class MainActivity extends AppCompatActivity
                         boolean isGroupChat = (boolean) jsonObject.get("groupchat");
 
                         // Add a new chat for this chatName if it doesn't exist yet
-                        if(_Chats.get(sender) == null)
+                        if(_Chats.get(chatName) == null)
                         {
                             AddChat(chatName, isGroupChat);
                         }
