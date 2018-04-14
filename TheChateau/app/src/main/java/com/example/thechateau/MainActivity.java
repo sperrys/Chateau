@@ -660,7 +660,7 @@ public class MainActivity extends AppCompatActivity
 
     // Register current client in chat server
     // Returns true if the user gets registered in a given amount of time, false otherwise
-    public boolean registerUser(String username, String password)
+    public boolean registerUser(String username, String password, boolean doAuthentication)
     {
 
         JSONObject json = new JSONObject();
@@ -671,7 +671,7 @@ public class MainActivity extends AppCompatActivity
             json.put("password", password);
 
             // TODO change to be variable authentication
-            json.put("auth", false);
+            json.put("auth", doAuthentication);
 
 
         } catch (JSONException e) {

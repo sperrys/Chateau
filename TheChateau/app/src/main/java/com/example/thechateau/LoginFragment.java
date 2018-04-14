@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -23,10 +24,13 @@ public class LoginFragment extends Fragment {
     private String mParam1;
     private String mParam2;
 
+    boolean _AuthenticationBool = false;
+
     EditText _PasswordEditText;
     EditText _UsernameEditText;
     Button   _LoginButton;
     TextView _InfoMessageText;
+    CheckBox _AuthenticationCheckBox;
 
 
     public LoginFragment() {
@@ -46,10 +50,11 @@ public class LoginFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        _LoginButton      = _FragmentView.findViewById(R.id.LoginButton);
-        _UsernameEditText = _FragmentView.findViewById(R.id.UsernameEditText);
-        _PasswordEditText = _FragmentView.findViewById(R.id.PasswordEditText);
-        _InfoMessageText  = _FragmentView.findViewById(R.id.LoginInfoMessage);
+        _LoginButton            = _FragmentView.findViewById(R.id.LoginButton);
+        _UsernameEditText       = _FragmentView.findViewById(R.id.UsernameEditText);
+        _PasswordEditText       = _FragmentView.findViewById(R.id.PasswordEditText);
+        _InfoMessageText        = _FragmentView.findViewById(R.id.LoginInfoMessage);
+        _AuthenticationCheckBox = _FragmentView.findViewById(R.id.AuthenticationCheckBox);
 
         getActivity().findViewById(R.id.nonFragmentStuff).setVisibility(View.INVISIBLE);
         //_MainActivity.findViewById(R.id.nonFragmentStuff).setVisibility(View.INVISIBLE);
@@ -64,7 +69,7 @@ public class LoginFragment extends Fragment {
                 username = _UsernameEditText.getText().toString();
                 password = _PasswordEditText.getText().toString();
 
-                if (((MainActivity)getActivity()).registerUser(username, password))
+                if (((MainActivity)getActivity()).registerUser(username, password, _AuthenticationBool))
                 {
                     Log.i("LoginFragment", "Registration success");
                     _InfoMessageText.setText("Registration successful");
@@ -82,6 +87,20 @@ public class LoginFragment extends Fragment {
             }
         });
 
+
+        _AuthenticationCheckBox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (_AuthenticationCheckBox.isChecked())
+                {
+                    _AuthenticationBool = true;
+                }
+                else
+                {
+                    _AuthenticationBool = false;
+                }
+            }
+        });
 
     }
 
