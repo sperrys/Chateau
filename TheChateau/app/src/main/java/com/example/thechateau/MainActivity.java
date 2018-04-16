@@ -171,23 +171,30 @@ public class MainActivity extends AppCompatActivity
 
     private final String _RegisterRequest    = "RegisterRequest";
     private final String _RegisterResponse   = "RegisterResponse";
+    private final long   _RegistrationApprovedCode = 200;
+    private final long   _UserAlreadyRegisteredCode = 302;
 
     private final String _GroupInitExample             = "SingleExample";
     private final String _SingleMessageResponseExample = "GroupExample";
 
     private final String _GroupMessageInitRequest   = "GroupMessageInitRequest";
     private final String _GroupMessageInitResponse  = "GroupMessageInitResponse";
+    private final long   _NewGroupChatCreatedCode       = 201;
+    private final long   _GroupChatCreationApprovedCode = 200;
 
     private final String _GeneralMessageSendRequest  = "MessageRequest";
     private final String _GeneralMessageSendResponse = "MessageSendResponse";
     private final String _GeneralMessageRecv         = "MessageRecv";
+    private final long   _GeneralMessageSentSuccessfullyCode = 200;
 
-    private final String _ClientListRequest = "ClientListRequest";
+    private final String _ClientListRequest  = "ClientListRequest";
+    private final String _ClientListResponse = "ClientListResponse";
+    private final long   _ClientListProvidedCode = 200;
 
     private final int _GetRandomContactType     = 5;
     private final int _SendSingleMessageType    = 6;
 
-    private final String _ClientListResponse        = "ClientListResponse";
+
     private final String _RandomMessageResponse     = "RandomMessageResponse";
 
 
@@ -828,7 +835,7 @@ public class MainActivity extends AppCompatActivity
                 case _RegisterResponse:
                 {
                     // If user was successfully registered
-                    if (status == 200 )
+                    if (status == _RegistrationApprovedCode )
                     {
                         Log.i(tag, "Registration successful");
 
@@ -837,7 +844,7 @@ public class MainActivity extends AppCompatActivity
                     }
 
                     // If user is already registered
-                    else if (status == 302)
+                    else if (status == _UserAlreadyRegisteredCode)
                     {
                         Log.i(tag, "Error, username was already registered");
                         // Tell user to pick a new username
@@ -859,12 +866,15 @@ public class MainActivity extends AppCompatActivity
                     String chatName = (String) jsonObject.get("chatname");
                     Log.i(tag, "Received groupMessageInitResponse");
 
-                    if(status == 200)
+                    // Indicates that a group chat this user created was approved by the server
+                    if(status == _GroupChatCreationApprovedCode)
                     {
                         Log.i(tag, "Success, status is " + status);
                         _GroupInitConfirmations.add(_GroupInitExample);
                     }
-                    else if (status == 201)
+
+                    // Indicates that a group was created by another user that includes this user
+                    else if (status == _NewGroupChatCreatedCode)
                     {
                         // Add a new chat for this chatName if it doesn't exist yet
                         if (_Chats.get(chatName) == null)
@@ -881,7 +891,7 @@ public class MainActivity extends AppCompatActivity
                     int messageID = 2;
 
                     // Add confirmation if status doesn't indicate that group chat was newly created
-                    if (status != 201)
+                    if (status != _NewGroupChatCreatedCode)
                     {
                         _AllMessageConfirmations.add(new MessageAck(messageID, status));
                     }
@@ -894,7 +904,7 @@ public class MainActivity extends AppCompatActivity
                     Log.i(tag, "Got " + _ClientListResponse);
 
                     // Update our contact list using the server's list of clients
-                    if(status == 200)
+                    if(status == _ClientListProvidedCode)
                     {
                         org.json.simple.JSONArray jsonArray = (org.json.simple.JSONArray)jsonObject.get("clients");
                         String[] contacts = new String[jsonArray.size()];
@@ -929,11 +939,11 @@ public class MainActivity extends AppCompatActivity
 
                 case _GeneralMessageSendResponse:
                 {
-                    Log.i("OnChatServerMsgReceived", "Got message send response");
+                    Log.i(tag, "Got message send response");
 
-                    if(status == 200)
+                    if(status == _GeneralMessageSentSuccessfullyCode)
                     {
-                        Log.i("OnChatServerMsgReceived", "Adding to message confirmations");
+                        Log.i(tag, "Adding to message confirmations");
                         _MessageSentConfirmations.add(_SingleMessageResponseExample);
 
                     }
@@ -949,7 +959,7 @@ public class MainActivity extends AppCompatActivity
                 {
                     Log.i("ChatServerMsgRecvGen", "Got Message Received");
 
-                    if (status == 200)
+                    if (status == 200 || status == 201)
                     {
                         String content      = (String) jsonObject.get("content");
                         String sender       = (String) jsonObject.get("sender");
@@ -977,7 +987,7 @@ public class MainActivity extends AppCompatActivity
 
                         if(chatWindow != null)
                         {
-                            Log.i("SingleMessageRecv", "Telling chat to update itself");
+                            Log.i(tag, "Telling chat to update itself");
                             chatWindow.onReceivedMessage();
                         }
                         else
@@ -991,7 +1001,7 @@ public class MainActivity extends AppCompatActivity
 
                 default:
                 {
-                    Log.i("OnChatServerMsgReceived", "Error, unknown type " + type);
+                    Log.i(tag, "Error, unknown type " + type);
                 }
             }
         }
