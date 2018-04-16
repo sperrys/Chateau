@@ -25,9 +25,8 @@ public class AddChatFragment extends Fragment {
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
-    private ArrayList<String>  _ContactsToAddList = new ArrayList<String>();
-    private ListView           _ContactsAddedListView;
-    private String             _ContactsAddedString = "Contacts Added: ";
+
+    //private String             _ContactsAddedString = "Contacts Added: ";
     private String             _newChatName;
 
     private Button   _SubmitButton;
@@ -40,11 +39,17 @@ public class AddChatFragment extends Fragment {
     private TextView _AddedContactTitleText;
     private View     _FragmentView;
 
-    private String[]              _SampleAvailableContacts = {"Arnold", "Honnu", "Joey", "Johnny", "Alex", "Fernando", "Alfred", "Hitchcock", "Dennis", "Yorgen"};
+
+    private ArrayList<String>     _ContactsToAddList = new ArrayList<String>();
+    private ListView              _ContactsToAddListView;
+    private ArrayAdapter          _ContactsToAddAdapter;
+
     private ArrayList<String>     _AvailableContactList;
-    private ArrayAdapter          _ContactListAdapter;
-    private ArrayAdapter          _AddedContactsAdapter;
-    private ListView              _ContactListView;
+    private ListView              _AvailableContactsListView;
+    private ArrayAdapter          _AvailableContactsAdapter;
+
+    private String[]              _SampleAvailableContacts = {"Arnold", "Honnu", "Joey", "Johnny", "Alex", "Fernando", "Alfred", "Hitchcock", "Dennis", "Yorgen"};
+
 
     private String _Tag = "AddChatFragment";
 
@@ -54,58 +59,26 @@ public class AddChatFragment extends Fragment {
         // Required empty public constructor
     }
 
-
-
-
+    /**********************************************************************************************/
+    /*                                 Basic Setup Functions                                      */
+    /**********************************************************************************************/
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Set chatName to invisible until we need a group chat
-        _ChatNameText.setVisibility(View.INVISIBLE);
-
         // Make activity view invisible
         getActivity().findViewById(R.id.nonFragmentStuff).setVisibility(View.INVISIBLE);
 
+        // Set chatName to invisible until we need a group chat
+        _ChatNameText.setVisibility(View.INVISIBLE);
+
+
         _SubmitButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-
-                // If no contacts have been added yet, it's possible the user
-                // entered a contact in the contact field without clicking Add Contact
-                // If adding a contact fails (Error messages will be shown after
-                // calling AttemptAddcContact)
-                // Otherwise, continue and attempt to submit the new chat
-                if (_ContactsToAddList.size() < 1)
-                {
-                    String contact = _AddContactText.getText().toString();
-
-                    // Attempt to add a contact, assuming one is written on the add contact line
-                    if(!AttemptAddContact(contact))
-                    {
-                        _ErrorText.setText("ERROR: Add at least one contact to create a new chat");
-                        return;
-                    }
-                }
-
-                boolean success = AttemptSubmission();
-
-                if(success)
-                {
-
-                    Log.i(_Tag, "Chat was submitted successfully");
-
-                    // Add new chat to our database of chats
-                    ((MainActivity) getActivity()).AddChat(_newChatName, (_ContactsToAddList.size() > 1));
-
-                    // Make new chat appear at top of user's list of chats
-                    //((MainActivity) getActivity()).moveChatToTop(_newChatName);
-
-                    // Go back to the activity
-                    getActivity().onBackPressed();
-                }
-
+            public void onClick(View view)
+            {
+                 onSubmitChatButtonClick();
             }
         });
 
@@ -117,128 +90,18 @@ public class AddChatFragment extends Fragment {
 
                 // Run process for trying to add a contact
                 onAddContactPrompted(contact);
-
             }
         });
 
 
-        // Update our list of available contacts by asking the server
-        UpdateContactList();
+        // Update our list of available contacts by asking the server for a list of them
+        UpdateAvailableContactsList();
 
-        setupContactListView();
-        setupAddedContactListView();
+        // Set up our two listviews
+        setupAvailableContactListView();
+        setupContactsToAddListView();
     }
 
-    // Set up the list of AddedContacts
-    private void setupAddedContactListView()
-    {
-        // Set up List view so that clicking on an item in the list prompts adding the contact
-        _ContactsAddedListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
-        {
-            @Override
-            public void onItemClick(AdapterView<?> parentView, View childView, int position, long id) {
-
-                String contact = (String)_ContactsAddedListView.getItemAtPosition(position);
-
-                _ContactsToAddList.remove(contact);
-
-                _AddedContactsAdapter.notifyDataSetChanged();
-
-                UpdateContactList();
-
-                if (_ContactsToAddList.size() <= 1)
-                {
-                    _ChatNameText.setVisibility(View.INVISIBLE);
-                    _ErrorText.setText("");
-                }
-
-            }
-        });
-
-
-        // Make an adapter for the Chat List view and set it
-        _AddedContactsAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, _ContactsToAddList);
-
-        // Set up Contact List View from UI
-        _ContactsAddedListView.setAdapter(_AddedContactsAdapter);
-
-    }
-
-    // Sets up the ContactList View
-    private void setupContactListView()
-    {
-        // Set up List view so that clicking on an item in the list prompts adding the contact
-        _ContactListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
-        {
-            @Override
-            public void onItemClick(AdapterView<?> parentView, View childView, int position, long id) {
-
-                String contact = (String)_ContactListView.getItemAtPosition(position);
-
-                onAddContactPrompted(contact);
-            }
-        });
-
-        // Make an adapter for the Chat List view and set it
-        _ContactListAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_list_item_1, _AvailableContactList);
-
-        // Set up Contact List View from UI
-        _ContactListView.setAdapter(_ContactListAdapter);
-    }
-
-    // Called whenever the add contact button or the list view is clicked to add a contact
-    private void onAddContactPrompted(String contact)
-    {
-
-        if(AttemptAddContact(contact))
-        {
-            // Clear the error text if the contact was added succesfully
-            _ErrorText.setText("");
-        }
-
-        if(_ContactsToAddList.size() > 1)
-        {
-            _ErrorText.setText("Please Enter a Name For The New Group Chat");
-            _ChatNameText.setVisibility(View.VISIBLE);
-        }
-
-        // Clear the contact text field
-        _AddContactText.getText().clear();;
-    }
-
-    // Update the contact list by getting the server's contact list
-    // also updates the UI to show contacts that changed
-    private void UpdateContactList()
-    {
-        // Get a list of available contacts from the server
-        _AvailableContactList = new ArrayList<>(Arrays.asList(_SampleAvailableContacts));
-        //_AvailableContactList = ((MainActivity)getActivity()).requestContactList();
-
-        if (_AvailableContactList == null)
-        {
-            _AvailableContactList = new ArrayList<String>();
-        }
-
-        Log.i(_Tag, "Returned from request contactList");
-
-        // Show that no contacts are available if the list is empty
-        if (_AvailableContactList.size() < 1)
-        {
-            _ContactTitleText.setText("No Contacts Available");
-        }
-        else
-        {
-            _ContactTitleText.setText("Contacts");
-        }
-
-        // Remove Contacts in the added list from the list of available contacts
-        removeAddedFromContactList();
-
-        // Update list view to show contacts changed
-        updateContactListView();
-
-
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -253,13 +116,105 @@ public class AddChatFragment extends Fragment {
         //_ContactsAddedText = _FragmentView.findViewById(R.id.ContactsAdded);
         _ErrorText         = _FragmentView.findViewById(R.id.ErrorMessage);
         _ContactTitleText  = _FragmentView.findViewById(R.id.ContactTitle);
-        _ContactListView   = _FragmentView.findViewById(R.id.ContactListView);
-        _ContactsAddedListView = _FragmentView.findViewById(R.id.AddedContactsListView);
+        _AvailableContactsListView   = _FragmentView.findViewById(R.id.ContactListView);
+        _ContactsToAddListView = _FragmentView.findViewById(R.id.AddedContactsListView);
         _AddedContactTitleText = _FragmentView.findViewById(R.id.AddedContactTitle);
-
 
         // Inflate the layout for this fragment
         return _FragmentView;
+    }
+
+    /**********************************************************************************************/
+    /*                                 Setup List View Functions                                  */
+    /**********************************************************************************************/
+
+    // Set up the list of AddedContacts
+    private void setupContactsToAddListView()
+    {
+        // Set up List view so that clicking a contact removes it from the contacts to add list
+        _ContactsToAddListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        {
+            @Override
+            public void onItemClick(AdapterView<?> parentView, View childView, int position, long id) {
+
+                String contact = (String)_ContactsToAddListView.getItemAtPosition(position);
+
+                // Remove contact and notify the contacts-to-add list view
+                _ContactsToAddList.remove(contact);
+                _ContactsToAddAdapter.notifyDataSetChanged();
+
+                // Remove the chat name field if necessary (in case removing the contact made the
+                // the potential chat no longer be a group chat)
+                if (_ContactsToAddList.size() <= 1)
+                {
+                    _ChatNameText.setVisibility(View.INVISIBLE);
+                    _ErrorText.setText("");
+                }
+
+                // Update the available contact list in case the contact we removed is still
+                // available to be added again
+                UpdateAvailableContactsList();
+
+            }
+        });
+
+        // Make and set the adapter for the contacts-to-add listview
+        _ContactsToAddAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, _ContactsToAddList);
+        _ContactsToAddListView.setAdapter(_ContactsToAddAdapter);
+
+    }
+
+    // Sets up the AvailableContactsListView
+    private void setupAvailableContactListView()
+    {
+        // Set up List view so that clicking on an item in the list prompts adding the contact
+        // to our potnetial chat
+        _AvailableContactsListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        {
+            @Override
+            public void onItemClick(AdapterView<?> parentView, View childView, int position, long id) {
+
+                String contact = (String)_AvailableContactsListView.getItemAtPosition(position);
+
+                onAddContactPrompted(contact);
+            }
+        });
+
+        //Make and set the adapter for the AvailableContactsListView
+        _AvailableContactsAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, _AvailableContactList);
+        _AvailableContactsListView.setAdapter(_AvailableContactsAdapter);
+    }
+
+
+
+    /**********************************************************************************************/
+    /*                              Add Contact Functions                                         */
+    /**********************************************************************************************/
+
+
+    // Called whenever the user tries to add a contact by clicking on the "add contact" button
+    // or by clicking on an item in the ContactsToAddListView
+    private void onAddContactPrompted(String contact)
+    {
+
+        // Attempt to add the contact
+        // Clear the error text if the contact was added succesfully
+        // Otherwise error text will be set accordingly in AttemptAddContact
+        if(AttemptAddContact(contact))
+        {
+            _ErrorText.setText("");
+        }
+
+        // If ContactsToAddList is big enough to be a group chat, make the chat name field
+        // visible to the user so they can enter a name for it
+        if(_ContactsToAddList.size() > 1)
+        {
+            _ErrorText.setText("Please Enter a Name For The New Group Chat");
+            _ChatNameText.setVisibility(View.VISIBLE);
+        }
+
+        // Clear the contact text box to show that the contact was added
+        _AddContactText.getText().clear();;
     }
 
     // Adds a contact to the contact list
@@ -278,7 +233,7 @@ public class AddChatFragment extends Fragment {
         }
 
         // Check if contact is registered with the server
-        if (!contactExists(contact))
+        if (!ContactExists(contact))
         {
             Log.i(_Tag,"ERROR: contact is not registered in our database");
             _ErrorText.setText("ERROR: contact \"" + contact + "\" is not registered in our database");
@@ -286,7 +241,7 @@ public class AddChatFragment extends Fragment {
         }
 
         // Check contact isn't already set to be added our list of contacts to add
-        if(contactAlreadyAdded(contact))
+        if(ContactAlreadyAdded(contact))
         {
             Log.i(_Tag,"ERROR: contact is already set to be added");
             _ErrorText.setText("ERROR: contact \"" + contact + "\" is already set to be added");
@@ -296,17 +251,24 @@ public class AddChatFragment extends Fragment {
         // Add contacts to our contactList
         _ContactsToAddList.add(contact);
 
-        // Update added list of contacts displayed to the user
-        updateContactsAddedView();
+        // Update contacts to add list that is displayed to the user
+        UpdateContactsToAddListView();
 
         // Remove all contacts in the added list from the available contacts list
-        removeAddedFromContactList();
+        RemoveContactsToAddFromAvailableContactsList();
 
         return true;
     }
 
+
+
+
+    /**********************************************************************************************/
+    /*                      Contact List Housekeeping Functions                                   */
+    /**********************************************************************************************/
+
     // Remove all contacts in the added list from the contact list displayed to the user
-    private void removeAddedFromContactList()
+    private void RemoveContactsToAddFromAvailableContactsList()
     {
         for(String contact: _ContactsToAddList)
         {
@@ -315,51 +277,72 @@ public class AddChatFragment extends Fragment {
 
         }
 
-        updateContactListView();
+        UpdateAvailableContactsListView();
     }
+
+    // Update the AvailableContactsList by getting the server's contact list
+    // -Also, update the UI to show that available contacts changed
+    private void UpdateAvailableContactsList()
+    {
+        // Get a list of available contacts from the server
+        _AvailableContactList = new ArrayList<>(Arrays.asList(_SampleAvailableContacts));
+        //_AvailableContactList = ((MainActivity)getActivity()).requestContactList();
+
+        if (_AvailableContactList == null)
+        {
+            _AvailableContactList = new ArrayList<>();
+        }
+
+        Log.i(_Tag, "Returned from request contactList");
+
+        // Show that no contacts are available if the list is empty
+        if (_AvailableContactList.size() < 1)
+        {
+            _ContactTitleText.setText("No Contacts Available");
+        }
+        else
+        {
+            _ContactTitleText.setText("Contacts");
+        }
+
+        // Remove contacts in the ContactsToAddList from the list of available contacts
+        RemoveContactsToAddFromAvailableContactsList();
+
+    }
+
     // Updates the listview with the current available contacts
-    private void updateContactListView()
+    private void UpdateAvailableContactsListView()
     {
         Log.i(_Tag, "in updateListView()");
 
-        _ContactListAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, _AvailableContactList);
+        _AvailableContactsAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, _AvailableContactList);
 
         //Log.i(_Tag, "made new adapter");
 
-        _ContactListView.setAdapter(_ContactListAdapter);
+        _AvailableContactsListView.setAdapter(_AvailableContactsAdapter);
 
         //Log.i(_Tag, "set new adapter");
     }
 
     // Update the UI to show all contacts added
-    // -Added a comma if necessary
-    // -Add contacts's name to list
-    // -Update the ContactsAdded View on the UI
-    private void updateContactsAddedView()
+    private void UpdateContactsToAddListView()
     {
         //_ContactsToAddList.add(contact);
-        _AddedContactsAdapter.notifyDataSetChanged();
+        _ContactsToAddAdapter.notifyDataSetChanged();
 
-        /*if (_ContactsToAddList.size() > 1) {
-            _ContactsAddedString += ", ";
-        }
-
-        _ContactsAddedString += contact;
-
-        _ContactsAddedText.setText(_ContactsAddedString);*/
     }
 
-    // Returns true if the contact is already set to be added to our database
-    private boolean contactAlreadyAdded(String contact)
+    // Returns true if the contact is already in our contacts-to-add list
+    private boolean ContactAlreadyAdded(String contact)
     {
         return _ContactsToAddList.contains(contact);
     }
 
     // Returns true if the contact is registered in the server's contact list
-    private boolean contactExists(String contact)
+    private boolean ContactExists(String contact)
     {
         // Request contact list from server
-        UpdateContactList();
+        UpdateAvailableContactsList();
 
         // Look through server's contact list and check if contact exists
         if (_AvailableContactList.contains(contact))
@@ -373,7 +356,51 @@ public class AddChatFragment extends Fragment {
 
     }
 
+    /**********************************************************************************************/
+    /*                                 Chat Submission Functions                                  */
+    /**********************************************************************************************/
+
+    private void onSubmitChatButtonClick()
+    {
+        // If no contacts have been added yet, it's possible the user
+        // entered a contact in the contact field without clicking Add Contact
+        // If adding a contact fails (Error messages will be shown after
+        // calling AttemptAddcContact)
+        // Otherwise, continue and attempt to submit the new chat
+        if (_ContactsToAddList.size() < 1)
+        {
+            String contact = _AddContactText.getText().toString();
+
+            // Attempt to add a contact, assuming one is written on the add contact line
+            if(!AttemptAddContact(contact))
+            {
+                _ErrorText.setText("ERROR: Add at least one contact to create a new chat");
+                return;
+            }
+        }
+
+        boolean success = AttemptSubmission();
+
+        if(success)
+        {
+
+            Log.i(_Tag, "Chat was submitted successfully");
+
+            // Add new chat to our database of chats
+            ((MainActivity) getActivity()).AddChat(_newChatName, (_ContactsToAddList.size() > 1));
+
+            // Make new chat appear at top of user's list of chats
+            //((MainActivity) getActivity()).moveChatToTop(_newChatName);
+
+            // Go back to the activity
+            getActivity().onBackPressed();
+        }
+    }
+
+
     // Attempts to register a chat with the server
+    // Returns true if the chat was registered successfully
+    // Returns false otherwise
     private boolean AttemptSubmission()
     {
         String chatName = _ChatNameText.getText().toString();
@@ -403,15 +430,7 @@ public class AddChatFragment extends Fragment {
         Log.i(_Tag, "_ChatNameText is "      + chatName);
 
 
-        // Give error if user tries to name a 1 on 1 chat
-        /*if (_ContactsToAddList.size() == 1 && !chatName.equals(""))
-        {
-            _ErrorText.setText("ERROR: You can't name 1 on 1 chats ");
-            _ChatNameText.getText().clear();
-            return false;
-        }*/
-
-        if (chatNameAlreadyExists(chatName))
+        if (ChatNameAlreadyExists(chatName))
         {
             _ErrorText.setText("ERROR: Chat name already exists");
             _ChatNameText.getText().clear();
@@ -419,33 +438,22 @@ public class AddChatFragment extends Fragment {
         }
 
         // Attempt to register the new chat with the server and send the result
-        boolean chatRegisteredWithServer = sendSubmissionToServer(chatName);
+        boolean chatIsRegisteredWithServer = sendSubmissionToServer(chatName);
 
-        return chatRegisteredWithServer;
+        return chatIsRegisteredWithServer;
     }
 
-    // Returns true if chatName already exists in the list of the user's chatnames
-    private boolean chatNameAlreadyExists(String chatName)
-    {
-        List<ChatListItem> chatNames = ((MainActivity)getActivity()).getChatList();
-
-        ChatListItem item = ((MainActivity) getActivity()).getChatListItemWithChatName(chatNames, chatName);
-
-        boolean containsName = item != null;
-
-        return containsName;
-    }
-
-
+    // Attempts to register the new chat with the server
+    // Returns true if the chat was registered successfully with the server
+    // Returns false otherwise
     private boolean sendSubmissionToServer(String chatName)
     {
 
         boolean success = ((MainActivity)getActivity()).sendChatRegistrationToServer(_ContactsToAddList, chatName);
 
-
         if (success)
         {
-            Log.i(_Tag, "chat registration successful");
+            Log.i(_Tag, "Chat registration successful");
 
             // Return true if we successfully registered new chat
             _newChatName = chatName;
@@ -454,11 +462,24 @@ public class AddChatFragment extends Fragment {
         }
         else
         {
-            Log.i(_Tag, "chat registration failed");
+            Log.i(_Tag, "Chat registration failed");
 
             _ErrorText.setText("ERROR: chat name " + chatName + " could not be registered");
+
             return false;
         }
+    }
+
+    // Returns true if chatName already exists in the list of the user's chatnames
+    private boolean ChatNameAlreadyExists(String chatName)
+    {
+        List<ChatListItem> chatNames = ((MainActivity)getActivity()).getChatList();
+
+        ChatListItem item = ((MainActivity) getActivity()).getChatListItemWithChatName(chatNames, chatName);
+
+        boolean containsName = item != null;
+
+        return containsName;
     }
 
     // TODO: Rename method, update argument and hook method into UI event

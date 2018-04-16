@@ -141,8 +141,9 @@
         <!-- Separates the two lists -->
         <View
             android:id="@+id/ListSeparator"
-            android:layout_width="1dp"
-            android:layout_height="1dp"
+            android:layout_width="2dp"
+            android:layout_height="match_parent"
+
             android:layout_centerHorizontal="true">
         </View>
 
