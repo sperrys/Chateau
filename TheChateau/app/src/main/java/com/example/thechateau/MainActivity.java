@@ -38,6 +38,29 @@ public class MainActivity extends AppCompatActivity
     private String _sentPreviewText       = "Sent: ";
     private String _readPreviewText       = "Received: ";
 
+    private class MessageAck
+    {
+        private int _messageID;
+        private int _messageStatus;
+
+        MessageAck(int messageID, int messageStatus)
+        {
+            _messageID     = messageID;
+            _messageStatus = messageStatus;
+        }
+
+        public int getID() {
+            return _messageID;
+        }
+
+        public int getStatus()
+        {
+            return _messageStatus;
+        }
+    };
+
+    public int _currentMessageID = 0;
+
     private class ChatMessagePair {
         private String  _chatname;
         private Message _message;
@@ -87,6 +110,7 @@ public class MainActivity extends AppCompatActivity
     private String              _HerokuHost  = "ws://chateautufts.herokuapp.com:80/ws";
     URI                         _ServerURI;
 
+    private ArrayList<MessageAck>                  _AllMessageConfirmations  = new ArrayList<>();
     private ArrayList<String>                      _MessageSentConfirmations = new ArrayList();
     private ArrayList<String>                      _GroupInitConfirmations   = new ArrayList<>();
     private ArrayList<ChatMessagePair>             _MessagesReceived   = new ArrayList<>();
@@ -580,6 +604,51 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    // Returns the status code of a message if it was found in the list of message confirmations
+    // Returns -1 if the message was never received
+    private int waitUntilMessageAcked(int messageID, long timeToWaitMS)
+    {
+        String tag = "waitUntilMessageAcked";
+        // Calc time that we will timeout
+        long timeOutExpiredTimeMS = System.currentTimeMillis() + timeToWaitMS;
+
+
+        while (1 == 1)
+        {
+            Log.i(tag, "Waiting for message");
+
+            long waitMs = timeOutExpiredTimeMS - System.currentTimeMillis();
+
+            if (waitMs <= 0)
+            {
+                Log.i(tag, "reached timeout after waiting for ACK");
+                return -1;
+            }
+
+            // Check if we got a message acknowledgement for the messageID
+            if (_AllMessageConfirmations.size() > 0)
+            {
+                Log.i(tag, "MESSAGE ACK stack > 0");
+
+                Iterator<MessageAck> iter = _AllMessageConfirmations.iterator();
+
+                while (iter.hasNext()) {
+                    MessageAck msgAck = iter.next();
+
+                    int currentID = msgAck.getID();
+
+                    Log.i(tag, "currentID is " + currentID + " with status " + msgAck.getStatus());
+
+                    // If you we find the right message ack, remove it and return it's status
+                    if (currentID == messageID) {
+                        iter.remove();
+                        return msgAck.getStatus();
+                    }
+
+                }
+            }
+        }
+    }
 
 
     /**********************************************************************************************/
