@@ -41,9 +41,9 @@ public class MainActivity extends AppCompatActivity
     private class MessageAck
     {
         private int _messageID;
-        private int _messageStatus;
+        private long _messageStatus;
 
-        MessageAck(int messageID, int messageStatus)
+        MessageAck(int messageID, long messageStatus)
         {
             _messageID     = messageID;
             _messageStatus = messageStatus;
@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity
             return _messageID;
         }
 
-        public int getStatus()
+        public long getStatus()
         {
             return _messageStatus;
         }
@@ -606,7 +606,7 @@ public class MainActivity extends AppCompatActivity
 
     // Returns the status code of a message if it was found in the list of message confirmations
     // Returns -1 if the message was never received
-    private int waitUntilMessageAcked(int messageID, long timeToWaitMS)
+    private long waitUntilMessageAcked(int messageID, long timeToWaitMS)
     {
         String tag = "waitUntilMessageAcked";
         // Calc time that we will timeout
@@ -632,7 +632,8 @@ public class MainActivity extends AppCompatActivity
 
                 Iterator<MessageAck> iter = _AllMessageConfirmations.iterator();
 
-                while (iter.hasNext()) {
+                while (iter.hasNext())
+                {
                     MessageAck msgAck = iter.next();
 
                     int currentID = msgAck.getID();
@@ -640,7 +641,8 @@ public class MainActivity extends AppCompatActivity
                     Log.i(tag, "currentID is " + currentID + " with status " + msgAck.getStatus());
 
                     // If you we find the right message ack, remove it and return it's status
-                    if (currentID == messageID) {
+                    if (currentID == messageID)
+                    {
                         iter.remove();
                         return msgAck.getStatus();
                     }
@@ -801,42 +803,16 @@ public class MainActivity extends AppCompatActivity
     /*                           Miscellaneous Functions                                          */
     /**********************************************************************************************/
 
-    /*// Called when a message is received by the user
-    private void onMessageReceived(Message message, String chatName)
-    {
-
-        // Initialize a chat for the sender if necessary
-        if(!_ChatListEntries.contains(chatName))
-        {
-            AddChat(chatName);
-        }
-
-        List<Message> chatHistory = getChatHistory(chatName);
-
-        // Initialize a chat history for the person if necessary
-        if (chatHistory != null)
-        {
-            Log.i("OnMessage", "Adding message to chatHistory");
-            chatHistory.add(message);
-
-            // Move the chat to the top of the list of chats
-            moveChatToTop(chatName);
-        }
-        else
-        {
-            Log.i("OnMessage", "ERROR chatHistory was null");
-        }
-    }*/
-
-
     // Called when a message is received from the chat server (called in ChatWebSocket)
     public void onChatServerMessageReceived(String message)
     {
         org.json.simple.JSONObject  jsonObject;
-        JSONParser parser = new JSONParser();
-        //int type;
 
-        Log.i("OnChatServerMsgReceived", "New Message Received: " + message);
+        JSONParser parser  = new JSONParser();
+
+        String tag = "OnChatServerMsgReceived";
+
+        Log.i(tag, "New Message Received: " + message);
 
         try
         {
@@ -844,43 +820,48 @@ public class MainActivity extends AppCompatActivity
 
             String type = (String)jsonObject.get("type");
             long status = (long)jsonObject.get("status");
-            Log.i("OnChatSeverMsgReceived", "Received type: " + type);
+
+            Log.i(tag, "Received type: " + type);
 
             switch (type)
             {
                 case _RegisterResponse:
                 {
                     // If user was successfully registered
-                    if (status == 200 ) {
-                        Log.i("OnChatServerMsgReceived", "Registration successful");
+                    if (status == 200 )
+                    {
+                        Log.i(tag, "Registration successful");
 
                         _RegisteredUser = true;
 
-                        //_CurrentUser    = (String)jsonObject.get("username");
-                        //Log.i("OnChatServerMsgReceived", "current user is now " + _CurrentUser);
                     }
 
                     // If user is already registered
                     else if (status == 302)
                     {
-                        Log.i("OnChatServerMsgReceived", "Error, username was already registered");
+                        Log.i(tag, "Error, username was already registered");
                         // Tell user to pick a new username
                     }
 
-                    else {
-                        Log.i("OnChatServerMsgReceived", "Error, status is " + status);
+                    else
+                    {
+                        Log.i(tag, "Error, status is " + status);
                     }
+
+                    int messageID = 1;
+                    _AllMessageConfirmations.add(new MessageAck(messageID, status));
+
                     break;
                 }
 
                 case _GroupMessageInitResponse:
                 {
                     String chatName = (String) jsonObject.get("chatname");
-                    Log.i("OnChatSeverMsgReceived", "Received groupMessageInitResponse");
+                    Log.i(tag, "Received groupMessageInitResponse");
 
                     if(status == 200)
                     {
-                        Log.i("OnChatServerMsgReceived", "Success, status is " + status);
+                        Log.i(tag, "Success, status is " + status);
                         _GroupInitConfirmations.add(_GroupInitExample);
                     }
                     else if (status == 201)
@@ -894,7 +875,15 @@ public class MainActivity extends AppCompatActivity
                     }
                     else
                     {
-                        Log.i("OnChatServerMsgReceived", "Error, status is " + status);
+                        Log.i(tag, "Error, status is " + status);
+                    }
+
+                    int messageID = 2;
+
+                    // Add confirmation if status doesn't indicate that group chat was newly created
+                    if (status != 201)
+                    {
+                        _AllMessageConfirmations.add(new MessageAck(messageID, status));
                     }
 
                     break;
@@ -902,32 +891,33 @@ public class MainActivity extends AppCompatActivity
 
                 case _ClientListResponse:
                 {
-                    Log.i("OnChatServerMsgReceived", "Got " + _ClientListResponse);
+                    Log.i(tag, "Got " + _ClientListResponse);
 
+                    // Update our contact list using the server's list of clients
                     if(status == 200)
                     {
                         org.json.simple.JSONArray jsonArray = (org.json.simple.JSONArray)jsonObject.get("clients");
-
-                        //_ContactList = new ArrayList<>();
-
                         String[] contacts = new String[jsonArray.size()];
 
                         for(int i = 0; i < jsonArray.size(); i++)
                         {
                             String contact = (String)jsonArray.get(i);
 
-                            Log.i("OnChatServerMsgReceived", "current contact:" + contact);
+                            //Log.i(tag, "current contact:" + contact);
 
                             if(!contact.equals(_CurrentUser) && !contact.equals(""))
                             {
-                                Log.i("OnChatServerMsgReceived", "adding contact:" + contact);
+                                //Log.i(tag, "adding contact:" + contact);
                                 contacts[i] = (String) jsonArray.get(i);
                             }
                         }
 
-                        Log.i("OnChatServerMsgReceived", "Converting to array");
+                        Log.i(tag, "Converting to array");
                         _ContactList = new ArrayList(Arrays.asList(contacts));
                     }
+
+                    int messageID = 3;
+                    _AllMessageConfirmations.add(new MessageAck(messageID, status));
 
                     break;
                 }
@@ -947,6 +937,9 @@ public class MainActivity extends AppCompatActivity
                         _MessageSentConfirmations.add(_SingleMessageResponseExample);
 
                     }
+
+                    int messageID = 4;
+                    _AllMessageConfirmations.add(new MessageAck(messageID, status));
 
                     break;
 
@@ -975,8 +968,7 @@ public class MainActivity extends AppCompatActivity
                         _MessagesReceived.add(newPair);
 
                         // Update the preview and notification icon of the chat
-                        updateChatMessagePreview(chatName, content, false);
-
+                        updateChatMessagePreviewAndNotification(chatName, content, false);
 
                         // Check if the chat window is open for that chat
                         // If open, tell the chat to update its message history
@@ -1247,7 +1239,7 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    public void updateChatMessagePreview(String chatName, String content, boolean isSent)
+    public void updateChatMessagePreviewAndNotification(String chatName, String content, boolean isSent)
     {
         Log.i("updatePreview()", "in updateChatMessage Preview");
 
