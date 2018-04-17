@@ -5,4 +5,8 @@
     <color name="colorAccent">#FF4081</color>
     <color name="NotificationColor">#FF8C00</color>
     <color name="lightBlue">#00bfff</color>
+    <color name="green">#5ec639</color>
+    <color name="red">#BF01</color>
+    <color name="otherRed">#FF0000</color>
+    <color name="DarkerOrange">#EE7600</color>
 </resources>

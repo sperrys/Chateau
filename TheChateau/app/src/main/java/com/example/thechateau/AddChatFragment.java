@@ -285,8 +285,8 @@ public class AddChatFragment extends Fragment {
     private void UpdateAvailableContactsList()
     {
         // Get a list of available contacts from the server
-        //_AvailableContactList = new ArrayList<>(Arrays.asList(_SampleAvailableContacts));
-        _AvailableContactList = ((MainActivity)getActivity()).requestContactList();
+        _AvailableContactList = new ArrayList<>(Arrays.asList(_SampleAvailableContacts));
+        //_AvailableContactList = ((MainActivity)getActivity()).requestContactList();
 
         if (_AvailableContactList == null)
         {
