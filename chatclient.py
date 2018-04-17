@@ -76,7 +76,7 @@ class ChatClient():
     def get_username(self):
         return self.username
 
-    def register(self, username, clients):
+    def register(self, username, clients, msg_id):
 
         # Make sure client is already registered
         if  self.registered:
@@ -95,7 +95,8 @@ class ChatClient():
             self.username = username
             self.registered = True
             
-            response = Response("RegisterResponse", 200)             
+            response = Response("RegisterResponse", 200) 
+            response.add_pair("msg_id", msg_id)            
             self.send(response.jsonify()) 
 
 

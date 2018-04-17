@@ -27,6 +27,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
 
         req = Request("RegisterRequest")
         req.add_pair("username", "sperry02")
+        req.add_pair("msg_id", 1)
         req.add_pair("password", "")
         req.add_pair("auth", "false")
 
@@ -48,6 +49,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         
         req = Request("RegisterRequest")
         req.add_pair("username",  "mgomez")
+        req.add_pair("msg_id", 1)
         req.add_pair("password", "")
         req.add_pair("auth", "false")
 

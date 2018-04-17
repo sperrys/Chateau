@@ -125,7 +125,7 @@ def RegisterRequestHandler(sock, msg):
             auth = True
             
         if auth:     
-            c.register(name, clients)
+            c.register(name, clients, msg["msg_id"])
          
         # Handle Error For Bad Authentication
         else: 
