@@ -149,6 +149,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void run() {
 
+            Log.i("MainActivity", "setting connected text to connected");
             _ConnectingText.setVisibility(View.VISIBLE);
             _ConnectingText.setText("Connected!");
         }
@@ -159,7 +160,7 @@ public class MainActivity extends AppCompatActivity
     private Runnable _SetConnectingText = new Runnable() {
         @Override
         public void run() {
-
+            Log.i("MainActivity", "setting connected text to connecting");
             _ConnectingText.setVisibility(View.VISIBLE);
             _ConnectingText.setText("Connecting...");
         }
@@ -775,7 +776,7 @@ public class MainActivity extends AppCompatActivity
             {
 
                 try {
-                    Thread.sleep(5000);
+                    Thread.sleep(2000);
                 }
                 catch (InterruptedException e)
                 {
