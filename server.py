@@ -129,13 +129,17 @@ def RegisterRequestHandler(sock, msg):
          
         # Handle Error For Bad Authentication
         else: 
-            c.send(Response("ErrorResponse", 301).jsonify())
+            auth_err = Response("ErrorResponse", 301)
+            auth_err.add_pair("msg_id", msg["msg_id"])
+            c.send(auth_err.jsonify())
 
     # Handle Generic Exception
     except Exception as e:
         print(e)
         print(traceback.format_exc())
-        sock.write_message(Response("ErrorResponse", 400).jsonify())
+        generic_err = Response("ErrorResponse", 400)
+        generic_err.add_pair("msg_id", msg["msg_id"])
+        sock.write_message(generic_err.jsonify())
 
     
 
@@ -157,13 +161,14 @@ def GroupMessageInitHandler(sock, msg):
             new_chat = GroupChat(c, name, recipients)
 
             # Validate the chat's recipients, send error if not valid
-            if new_chat.validate_recipients(clients):
+            if new_chat.validate_recipients(clients, msg["msg_id"]):
 
                 print(chats)
                 # Add chat to list of chats, check chatname uniqueness
                 if chats.add(new_chat):
                     # Send ACK back to group chat creator
                     ack_res = Response("GroupMessageInitResponse", 200)
+                    ack_res.add_pair("msg_id", msg["msg_id"])
                     c.send(ack_res.jsonify())
 
                     # Send notification of creation to all others in chat
@@ -173,6 +178,7 @@ def GroupMessageInitHandler(sock, msg):
                 
                 else: 
                     err = Response("ErrorResponse", 303)
+                    err.add_pair("msg_id", msg["msg_id"])
                     err.add_pair("detail", "chatname already taken")
                     c.send(err.jsonify())
 
@@ -180,20 +186,25 @@ def GroupMessageInitHandler(sock, msg):
 
         # Handle if Client is Not Registered
         else:
-            c.send(Response("ErrorResponse", 301).jsonify())
+            err = Response("ErrorResponse", 301)
+            err.add_pair("msg_id", msg["msg_id"])
+            c.send(err.jsonify())
 
     # Handle Other Exceptions
     except Exception as e:
         print(e)
         print(traceback.format_exc())
-        sock.write_message(Response("ErrorResponse", 400).jsonify())
+
+        err = Response("ErrorResponse", 400)
+        err.add_pair("msg_id", msg["msg_id"])
+        sock.write_message(err.jsonify())
 
 
 # Look for a valid message recipient
 # first using "recipient" as a chatname
 # then as a client's username
 
-def find_recipient(recipient, client):
+def find_recipient(recipient, client, msg_id):
     
     r = chats.find(recipient)
  
@@ -205,9 +216,10 @@ def find_recipient(recipient, client):
             return (r, "Single")
 
     err = Response("ErrorResponse", 303)
+    err.add_pair("msg_id", msg_id)
     err.add_pair("detail", "Recipient Doesn't Exist")
-    c.send(err.jsonify())
 
+    c.send(err.jsonify())
     return None
 
 # Currently Fails Silently on Whether A Person was Found or Not
@@ -220,7 +232,7 @@ def MessageRequestHandler(sock, msg):
         if c.registered:
             
             content = msg["content"]
-            recipient = find_recipient(msg["recipient"], c)
+            recipient = find_recipient(msg["recipient"], c, msg["msg_id"])
 
             response = Response("MessageRecv", 200)
             response.add_pair("content", content)
@@ -231,12 +243,14 @@ def MessageRequestHandler(sock, msg):
                 if recipient[1] == "Group":
                     response.add_pair("groupchat", True)
                     response.add_pair("chatname", msg["recipient"])
+                    response.add_pair("msg_id", msg["msg_id"])
                     recipient[0].send(response.jsonify(), c)
 
                 # chatname becomes person who sent
                 # for single messages
                 else:
                     response.add_pair("chatname", c.username)
+                    response.add_pair("msg_id", msg["msg_id"])
                     response.add_pair("groupchat", False)
                     recipient[0].send(response.jsonify())
 
@@ -247,13 +261,18 @@ def MessageRequestHandler(sock, msg):
          
         # Catch Exception if the client is not registered.  
         else: 
-             sock.write_message(Response("ErrorResponse", 301).jsonify())
+            err = Response("ErrorResponse", 301)
+            err.add_pair("msg_id", msg["msg_id"])
+            sock.write_message(err.jsonify())
 
     # Catch Generic Exception
     except Exception as e:
         print(e)
         print(traceback.format_exc())
-        sock.write_message(Response("ErroResponse", 400).jsonify())
+        res = Response("ErroResponse", 400)
+        res.add_pair("msg_id", msg["msg_id"])
+        sock.write_message(res.jsonify())
+
 
 
 def ClientListRequestHandler(sock, msg):

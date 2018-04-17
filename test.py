@@ -70,6 +70,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         reg = Request("RegisterRequest")
         reg.add_pair("username",  "russ2")
         reg.add_pair("password", "")
+        reg.add_pair("msg_id", 1)
         reg.add_pair("auth", "false")
         
         russ.write_message(reg.jsonify())
@@ -80,6 +81,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
 
         reg1 = Request("RegisterRequest")
         reg1.add_pair("username", "sperry2")
+        reg1.add_pair("msg_id", 1)
         reg1.add_pair("password", "")
         reg1.add_pair("auth", "false")
         
@@ -88,6 +90,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
 
         # Mgomez request client list
         cli_list = Request("ClientListRequest")
+        cli_list.add_pair("msg_id", 1)
         russ.write_message(cli_list.jsonify())
 
         response = yield russ.read_message()
@@ -109,6 +112,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         reg.add_pair("username",  "russ3")
         reg.add_pair("password", "")
         reg.add_pair("auth", "false")
+        reg.add_pair("msg_id", 1)
         
         russ.write_message(reg.jsonify())
         response = yield russ.read_message()
@@ -119,6 +123,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         reg1 = Request("RegisterRequest")
         reg1.add_pair("username", "sperry3")
         reg1.add_pair("password", "")
+        reg1.add_pair("msg_id", 2)
         reg1.add_pair("auth", "false")
         
         spencer.write_message(reg1.jsonify())
@@ -127,6 +132,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         # Mgomez3 chats sperry3
         msg = Request("MessageRequest")
         msg.add_pair("recipient", "sperry3")
+        msg.add_pair("msg_id", 3)
         msg.add_pair("content", "hey")
 
         russ.write_message(msg.jsonify())
@@ -159,6 +165,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         reg = Request("RegisterRequest")
         reg.add_pair("username", "russ4")
         reg.add_pair("password", "")
+        reg.add_pair("msg_id", 1)
         reg.add_pair("auth", "false")
         russ.write_message(reg.jsonify())
         response = yield russ.read_message()
@@ -168,6 +175,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         reg1 = Request("RegisterRequest")
         reg1.add_pair("username", "sperry4")
         reg1.add_pair("password", "")
+        reg1.add_pair("msg_id", 1)
         reg1.add_pair("auth", "false") 
         spencer.write_message(reg1.jsonify())
         response = yield spencer.read_message()
@@ -177,6 +185,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         reg2 = Request("RegisterRequest")
         reg2.add_pair("username", "fahad")
         reg2.add_pair("password", "")
+        reg2.add_pair("msg_id", 1)
         reg2.add_pair("auth", "false") 
         fahad.write_message(reg2.jsonify())
         response = yield fahad.read_message()
@@ -185,6 +194,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         chat_init = Request("GroupMessageInitRequest")
         chat_init.add_pair("recipients", ["sperry4", "fahad"])
         chat_init.add_pair("chatname", "comp112")
+        chat_init.add_pair("msg_id", 3)
 
         russ.write_message(chat_init.jsonify())
 
@@ -219,6 +229,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         chat_msg = Request("MessageRequest")
         chat_msg.add_pair("recipient", "comp112")
         chat_msg.add_pair("content", "hey")
+        chat_msg.add_pair("msg_id", 1)
 
         spencer.write_message(chat_msg.jsonify())        
 

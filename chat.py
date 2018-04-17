@@ -49,7 +49,7 @@ class GroupChat():
         self.message_id += 1
 
     # Make sure that all recipients are valid clients
-    def validate_recipients(self, clients):
+    def validate_recipients(self, clients, msg_id):
         print("Recipients: ", self.recipients)
         print(len(self.recipients))
         for r in self.recipients:
@@ -58,10 +58,15 @@ class GroupChat():
             # stop creation of the chat
             if c == None:
                 err_res = Response("ErrorResponse", 404)
-                err_res.add_pair("message", "At least one client doesn't exist")
+                err_res.add_pair("msg_id", msg["msg_id"])
+                err_res.add_pair("detail", "At least one client doesn't exist")
+
+                # Send Error Response to Chat Creator Return invalid
                 self.creator.send(err_res.jsonify())
                 return False
             
+            # If they do exist, add them to the list of valid clients 
+            # in the chat.
             self.valid_clients.append(c)
 
         return True
