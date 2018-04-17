@@ -225,6 +225,7 @@ def MessageRequestHandler(sock, msg):
             response = Response("MessageRecv", 200)
             response.add_pair("content", content)
             response.add_pair("sender", c.username)
+            response.add_pair("msg_id", msg["msg_id"])
 
             if recipient != None:
                 if recipient[1] == "Group":
@@ -241,6 +242,7 @@ def MessageRequestHandler(sock, msg):
 
                 # Send Ack back to sender
                 ack = Response("MessageSendResponse", 200) 
+                ack.add_pair("msg_id", msg["msg_id"])
                 c.send(ack.jsonify())
          
         # Catch Exception if the client is not registered.  
