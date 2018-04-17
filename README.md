@@ -52,16 +52,15 @@ Response:
 	- if generic failure, `"type": "ErrorResponse", status": 400` 
 	- if failure is that the client making the request is not registered, `"type": "ErrorResponse", status": 301`
 	- if failure is that the chatname is not unique, `"type": "ErrorResponse", "status": 301`
-	- if failure is that a recipient does not exist, `"type": "ErrorResponse", "status": 302`
-
+	- if failure is that one of the recipients in the chat message is not online,
 
 **Send a Message to a Chat or Client**
 
 "type": "GroupMessageRequest"
 
 Arguments: 
-	- "recipient"
-	- "content"
+	- `"recipient"` - recipient is either the username of a single person or the name of a groupchat.
+	- `"content"`
 
 Response:
 	- If sucessful, `"type": "MessageSendResponse"` and `"status": 200` goes to the person who sent the message
@@ -74,10 +73,9 @@ Response:
 "type" : "GroupMessageRecv"
 
 arguments: 
-	"status": 201 (if chat was newly created), 200 if afterthat
+	`"status": 201` (if chat was newly created), `200` if afterthat
 	"sender": username of the person who sent the message
 	"content": the actual content of the new message in the chat
-
 
 
 **Clients List:** 
@@ -89,6 +87,7 @@ Arguments
 Response:
 	- If successful, `"type": "ClientListResponse", "status": 200` and an array of `"clients"` usernames who are online. 
 	- if failure, `"type": "ErrorResponse", "status": 400` 
+	- if failure is that client is not registered, `"type": "ErrorResponse", "status": 301`
 
 
 **Random Message:** 
@@ -98,22 +97,12 @@ Response:
 Arguments
 	- `"content"`
 Response:
-	- If successful, `"type": "RandomMessageResponse", "status": 200` and a random `"clients"` username. 
-	- if failure, `"type": "ErrorResponse", "status": 400` 
+	- If successful, `"type": "RandomMessageResponse", "status": 200` and a random `"client"` username. 
+	- If successful, `"type": "RandomMessageRecvResponse", "status": 200` and a random `"sender"` username, `"content": content`
+	- if failure is that client is not recognized, `"type": "ErrorResponse", "status": 301`
+	- if failure is generic, `"type": "ErrorResponse", "status": 400` 
 
 **Initiate Single Conversation**
-
-"type": "SingleMessageRequest"
-
-Arguments
-	- `"recipient"`
-	- `"content"`
-
-Response:
-	- If successful, `"type": "SingleMessageRecvResponse", "status": 200`, and `"sender"` and `"content"` goes to whoever gets the message. A "SingleMessageSendResponse" with `"status": 200` is sent to whoever sent the original single message request.
-	- If failure, `"type": ErrorResponse, "status": 400`
-
-
 
 
 # To Use The Python Test Client
