@@ -40,13 +40,22 @@ public class MainActivity extends AppCompatActivity
 
     private class MessageAck
     {
-        private int _messageID;
-        private long _messageStatus;
+        private int    _messageID;
+        private long   _messageStatus;
+        private String _messageResponse;
 
         MessageAck(int messageID, long messageStatus)
         {
             _messageID     = messageID;
             _messageStatus = messageStatus;
+            _messageResponse = "";
+        }
+
+        MessageAck(int messageID, long messageStatus, String messageResponse)
+        {
+            _messageID       = messageID;
+            _messageStatus   = messageStatus;
+            _messageResponse = messageResponse;
         }
 
         public int getID() {
@@ -56,6 +65,11 @@ public class MainActivity extends AppCompatActivity
         public long getStatus()
         {
             return _messageStatus;
+        }
+
+        public String getMessageResponse()
+        {
+            return _messageResponse;
         }
     };
 
@@ -122,13 +136,14 @@ public class MainActivity extends AppCompatActivity
 
 
     private ArrayList<String>   _ContactList = new ArrayList<>();
-
     private ArrayAdapter        _ChatListAdapter;
-
     private boolean             _RegisteredUser = false; // True if user has been registered
 
     private TextView       _ConnectingText;
     private RelativeLayout _ConnectingLayout;
+
+    private Button _RandomChatButton;
+
 
     private Runnable _SetConnectedText = new Runnable() {
         @Override
@@ -193,9 +208,12 @@ public class MainActivity extends AppCompatActivity
 
     private final int _GetRandomContactType     = 5;
     private final int _SendSingleMessageType    = 6;
+    private final String _ErrorResponse = "ErrorResponse";
 
-
-    private final String _RandomMessageResponse     = "RandomMessageResponse";
+    private final String _RandomMessageRequest = "RandomMessageRequest";
+    private final String _RandomMessageResponse = "RandomMessageResponse";
+    private final long _RandomMessageSuccess = 200;
+    private final long _RandomMessageError   = 400;
 
 
 
@@ -233,6 +251,14 @@ public class MainActivity extends AppCompatActivity
 
         _ConnectingText   = findViewById(R.id.ConnectingText);
         _ConnectingLayout = findViewById(R.id.ConnectingLayout);
+
+        _RandomChatButton = findViewById(R.id.RandomChatButton);
+        _RandomChatButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startRandomChat("Default Chat Message");
+            }
+        });
 
         /******************************/
         /* Set up Add New Chat Button */
@@ -342,14 +368,70 @@ public class MainActivity extends AppCompatActivity
     /*                                  Add Chat Functions                                        */
     /**********************************************************************************************/
 
-    private void startRandomChat()
+    private void startRandomChat(String content)
     {
         // Set loading bar on UI screen with messages showing retrieval process
 
+
+        JSONObject json = new JSONObject();
+
+        try
+        {
+            json.put("content"  , content);
+            json.put("type", _RandomMessageRequest);
+
+        }
+        catch (JSONException e)
+        {
+            e.printStackTrace();
+        }
+
+        String message = json.toString();
+
         // Ask server for Random person to chat
+        sendMessageToServer(message);
+
+        MessageAck messageAck = waitUntilMessageAcked(6, 2000);
+
+        if(messageAck != null && messageAck.getStatus() == _RandomMessageSuccess)
+        {
+            org.json.simple.JSONObject jsonObject;
+
+            JSONParser parser = new JSONParser();
+
+            try
+            {
+                jsonObject = (org.json.simple.JSONObject) parser.parse(message);
+
+                String clientName = (String) jsonObject.get("clients");
+
+                // Add new chat if necessary
+                if(_Chats.get(clientName) == null)
+                {
+                    AddChat(clientName, false);
+                }
+
+                Message newMsg = new Message(content, new User(getCurrentUser()), System.currentTimeMillis());
+                ChatMessagePair newPair = new ChatMessagePair(clientName, newMsg);
+                _MessagesReceived.add(newPair);
+
+                openChatWindow(clientName);
+
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+        else
+        {
+            Log.i("RandomChat",  "Error, Random chat could not be created");
+        }
+
 
         // Check if random person is already being chatted with?
         // -But what if they exist in a 1-1 chat you already have?
+
 
         // Open chat window of random chat created
     }
@@ -613,7 +695,7 @@ public class MainActivity extends AppCompatActivity
 
     // Returns the status code of a message if it was found in the list of message confirmations
     // Returns -1 if the message was never received
-    private long waitUntilMessageAcked(int messageID, long timeToWaitMS)
+    private MessageAck waitUntilMessageAcked(int messageID, long timeToWaitMS)
     {
         String tag = "waitUntilMessageAcked";
         // Calc time that we will timeout
@@ -629,13 +711,13 @@ public class MainActivity extends AppCompatActivity
             if (waitMs <= 0)
             {
                 Log.i(tag, "reached timeout after waiting for ACK");
-                return -1;
+                return null;
             }
 
             // Check if we got a message acknowledgement for the messageID
             if (_AllMessageConfirmations.size() > 0)
             {
-                Log.i(tag, "MESSAGE ACK stack > 0");
+                //Log.i(tag, "MESSAGE ACK stack > 0");
 
                 Iterator<MessageAck> iter = _AllMessageConfirmations.iterator();
 
@@ -645,13 +727,13 @@ public class MainActivity extends AppCompatActivity
 
                     int currentID = msgAck.getID();
 
-                    Log.i(tag, "currentID is " + currentID + " with status " + msgAck.getStatus());
+                    //Log.i(tag, "currentID is " + currentID + " with status " + msgAck.getStatus());
 
-                    // If you we find the right message ack, remove it and return it's status
+                    // If you we find the right message ack, remove it and return its status
                     if (currentID == messageID)
                     {
                         iter.remove();
-                        return msgAck.getStatus();
+                        return msgAck;
                     }
 
                 }
@@ -934,6 +1016,23 @@ public class MainActivity extends AppCompatActivity
 
                 case _RandomMessageResponse:
                 {
+                    Log.i(tag, "Got Random Message Response");
+                    if (status == _RandomMessageSuccess)
+                    {
+
+                    }
+                    else if (status == _RandomMessageError)
+                    {
+                        Log.i(tag, "Error, got error code for random message");
+                    }
+                    else
+                    {
+                        Log.i(tag, "Error, unknown random message status " + status);
+                    }
+
+                    int messageID = 6;
+                    _AllMessageConfirmations.add(new MessageAck(messageID, status, message));
+
                     break;
                 }
 
@@ -998,6 +1097,13 @@ public class MainActivity extends AppCompatActivity
                     break;
                 }
 
+                case _ErrorResponse:
+                {
+                    Log.i(tag, "Error response received: " + type);
+
+                    int messageID = 8;
+                    _AllMessageConfirmations.add(new MessageAck(messageID, status));
+                }
 
                 default:
                 {
@@ -1107,18 +1213,18 @@ public class MainActivity extends AppCompatActivity
 
         boolean messageConfirmationReceived = false;
 
-        while (1 == 1) {
+        while (1 == 1)
+        {
             Log.i("waitUntilTimeReached", "Waiting");
 
             long waitMs = timeOutExpiredTimeMS - System.currentTimeMillis();
 
-            if (waitMs <= 0) {
+            if (waitMs <= 0)
+            {
 
                 Log.i("waitUntilTimeReached", "reached timeout for waiting for message");
                 return;
             }
-
-
         }
     }
 
@@ -1209,7 +1315,7 @@ public class MainActivity extends AppCompatActivity
     // Waits until the web socket client is connected, and then sends a message
     private void sendMessageToServer(String message)
     {
-        Log.i("sendMessageToServer", "in sendMessageToServer()");
+        Log.i("sendMessageToServer", "in sendMessageToServer() for message " + message);
         while (_WSClient == null || _WSConnected != true);
 
         _WSClient.send(message);

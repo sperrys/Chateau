@@ -76,6 +76,15 @@
                 android:layout_gravity="center"
                 android:text="Add New Chat" />
 
+            <Button
+                android:id="@+id/RandomChatButton"
+                android:text="Add Random Chat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                />
+
+
             <!-- Moves Connecting View to Bottom of Scrren -->
             <View
                 android:layout_width="wrap_content"
@@ -109,23 +118,7 @@
                 android:hint="Enter Chat To Add"></EditText>
                 -->
 
-            <!--<Button
-                android:id="@+id/MoveChatToTopButton"
-                android:text="Add Chat To Top"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                />
 
-            <EditText
-                android:id="@+id/ChatToMoveToTop"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:hint="Enter Chat To Move To Top"
-                android:layout_gravity="center"
-                >
-            </EditText>
-            -->
 
 
         </LinearLayout>
