@@ -877,13 +877,19 @@ public class MainActivity extends AppCompatActivity
     }
 
     // Sets the screen to touchable or untouchable based on the argument
-    private void setScreenTouchability(boolean makeTouchable)
+    private void setScreenTouchability(final boolean makeTouchable)
     {
         String tag = "setScreenTouchability";
         Log.i(tag, "in setScreenTouch with boolean " + makeTouchable);
 
-        View view = getWindow().getDecorView().getRootView();
-        view.setEnabled(makeTouchable);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                View view = getWindow().getDecorView().getRootView();
+                view.setEnabled(makeTouchable);
+            }
+        });
+        
 
     }
 
