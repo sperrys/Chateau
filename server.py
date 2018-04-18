@@ -319,9 +319,9 @@ def RandomMessageRequestHandler(sock, msg):
             if usernames != [c.username]:
 
                 # Make Sure Not to Send Usernaame to Self 
-                new_friend = sample(usernames, 1)
+                new_friend = sample(usernames, 1)[0]
                 while new_friend == c.username:
-                    new_friend = sample(usernames, 1)
+                    new_friend= sample(usernames, 1)
 
                 # Send Message to Random Client
                 response = Response("RandomMessageRecvResponse", 200)
@@ -350,7 +350,7 @@ def RandomMessageRequestHandler(sock, msg):
     except Exception as e:
         print (e)
         print(traceback.format_exc())
-        sock.write_message("ErrorResponse", 400).jsonify()
+        sock.write_message(Response("ErrorResponse", 400).jsonify())
 
 
 app = tornado.web.Application([
