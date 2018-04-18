@@ -48,8 +48,8 @@ public class MainActivity extends AppCompatActivity
     /**********************************************************************************************/
 
     private ArrayList<MessageAck>                  _AllMessageConfirmations  = new ArrayList<>();
-    private ArrayList<String>                      _MessageSentConfirmations = new ArrayList();
-    private ArrayList<String>                      _GroupInitConfirmations   = new ArrayList<>();
+    //private ArrayList<String>                      _MessageSentConfirmations = new ArrayList();
+    //private ArrayList<String>                      _GroupInitConfirmations   = new ArrayList<>();
     private ArrayList<ReceivedMessage>             _MessagesReceived         = new ArrayList<>();
 
     private class ReceivedMessage {
@@ -659,6 +659,8 @@ public class MainActivity extends AppCompatActivity
     // Returns false if the message couldn't be sent
     public boolean sendChatMessageToServer(String chatName, String content, boolean isGroupChat)
     {
+        String tag = "sendChatMsgToServer";
+
         JSONObject json = new JSONObject();
 
         try
@@ -676,7 +678,7 @@ public class MainActivity extends AppCompatActivity
         String message = json.toString();
 
 
-        Log.i("SendChatMessageToServer", "Sending chat message(): " + message);
+        Log.i(tag, "Sending chat message(): " + message);
         MessageAck ack = sendMessageToServer(json);
 
         if (ack != null )
@@ -685,18 +687,18 @@ public class MainActivity extends AppCompatActivity
 
             if (status == _GeneralMessageSentSuccessfullyCode)
             {
-                Log.i("MainActivity","General Message sent");
+                Log.i(tag,"General Message \"" + content + "\" sent");
                 return true;
             }
             else
             {
-                Log.i("MainActivity","General message not sent, got status" + status);
+                Log.i(tag,"General message \"" + content + "\" not sent, got status" + status);
                 return false;
             }
         }
         else
         {
-            Log.i("MainActivity","Error, Ack was null for general message sent");
+            Log.i(tag,"Error, Ack was null for general message sent");
             return false;
         }
 
@@ -715,7 +717,7 @@ public class MainActivity extends AppCompatActivity
     // Waits for timetoWaitMS milliseconds for a message confirmation to be received
     // If it receives a message confirmation in that time, it returns true
     // Else, returns false
-    private boolean waitUntilMessageSent(long timeToWaitMS)
+    /*private boolean waitUntilMessageSent(long timeToWaitMS)
     {
         // Calc time that we will timeout
         long timeOutExpiredTimeMS = System.currentTimeMillis() + timeToWaitMS;
@@ -745,26 +747,27 @@ public class MainActivity extends AppCompatActivity
 
 
         return true;
-    }
+    }*/
 
     // Returns the status code of a message if it was found in the list of message confirmations
     // Returns -1 if the message was never received
     private MessageAck waitUntilMessageAcked(long messageID, long timeToWaitMS)
     {
         String tag = "waitUntilMessageAcked";
+        Log.i(tag, "Starting wait for message ID: " + messageID);
         // Calc time that we will timeout
         long timeOutExpiredTimeMS = System.currentTimeMillis() + timeToWaitMS;
 
 
         while (1 == 1)
         {
-            Log.i(tag, "Waiting for message");
+            //Log.i(tag, "Waiting for message");
 
             long waitMs = timeOutExpiredTimeMS - System.currentTimeMillis();
 
             if (waitMs <= 0)
             {
-                Log.i(tag, "reached timeout after waiting for ACK");
+                Log.i(tag, "Reached timeout after waiting for messaged ID: " + messageID);
                 return null;
             }
 
@@ -786,6 +789,7 @@ public class MainActivity extends AppCompatActivity
                     // If you we find the right message ack, remove it and return its status
                     if (currentID == messageID)
                     {
+                        Log.i(tag, "Found ack for messageID " + messageID + " with status " + msgAck.getStatus());
                         iter.remove();
                         return msgAck;
                     }
@@ -940,7 +944,7 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    // Loops for a given amount of time until the user is registered
+    /*// Loops for a given amount of time until the user is registered
     // Returns true if user was registered in a given amount of time, false otherwise
     private boolean waitUntilRegistered(long timeToWaitMS)
     {
@@ -949,7 +953,7 @@ public class MainActivity extends AppCompatActivity
 
         while (!_RegisteredUser)
         {
-            Log.i("waitUntilRegistered", "Waiting for register timeout");
+            //Log.i("waitUntilRegistered", "Waiting for register timeout");
 
             long waitMs = timeOutExpiredTimeMS - System.currentTimeMillis();
 
@@ -963,7 +967,7 @@ public class MainActivity extends AppCompatActivity
 
         Log.i("waitUntilRegistered", "user became registered");
         return true;
-    }
+    }*/
 
     /**********************************************************************************************/
     /*                           Miscellaneous Functions                                          */
@@ -1030,7 +1034,7 @@ public class MainActivity extends AppCompatActivity
                     if(status == _GroupChatCreationApprovedCode)
                     {
                         Log.i(tag, "Success, status is " + status);
-                        _GroupInitConfirmations.add(_GroupInitExample);
+                        //_GroupInitConfirmations.add(_GroupInitExample);
                     }
 
                     // Indicates that a group was created by another user that includes this user
@@ -1120,8 +1124,8 @@ public class MainActivity extends AppCompatActivity
 
                     if(status == _GeneralMessageSentSuccessfullyCode)
                     {
-                        Log.i(tag, "Adding to message confirmations");
-                        _MessageSentConfirmations.add(_SingleMessageResponseExample);
+                        //Log.i(tag, "Adding to message confirmations");
+                        //_MessageSentConfirmations.add(_SingleMessageResponseExample);
 
                     }
 
@@ -1177,7 +1181,7 @@ public class MainActivity extends AppCompatActivity
 
                 case _ErrorResponse:
                 {
-                    Log.i(tag, "Error response received: " + type);
+                    Log.i(tag, "Received an error response" );
 
                     long messageID = (long)jsonObject.get(_messageIDField);
                     _AllMessageConfirmations.add(new MessageAck(messageID, status));
@@ -1502,7 +1506,7 @@ public class MainActivity extends AppCompatActivity
         return ack;
     }
 
-    // Waits for timetoWaitMS milliseconds for a GroupInitResponse to be received
+    /*// Waits for timetoWaitMS milliseconds for a GroupInitResponse to be received
     // If we receives a confirmation in that time, return true
     // Else, returns false
     private boolean waitUntilGroupMessageInitResponseReceived(long timeToWaitMS)
@@ -1534,7 +1538,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         return true;
-    }
+    }*/
 
     public void updateChatMessagePreviewAndNotification(String chatName, String content, boolean isSent)
     {
