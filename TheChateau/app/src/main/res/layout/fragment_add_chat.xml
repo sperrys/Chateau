@@ -56,7 +56,16 @@
         </Button>
     </LinearLayout>
 
-    <!-- Contacts Title Text -->
+    <!-- Upper Horizontal Border for Contact Lists
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/colorPrimaryDark"
+        app:layout_constraintBottom_toBottomOf="@id/ContactTitleLayout">
+
+    </View>-->
+
+    <!-- Contacts List Title Layout -->
     <RelativeLayout
         android:id="@+id/ContactTitleLayout"
         android:layout_width="match_parent"
@@ -94,7 +103,7 @@
 
         </View>
 
-        <!-- Right Side Added Contacts -->
+        <!-- Right Side with Added Contacts -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -141,7 +150,7 @@
         <!-- Separates the two lists -->
         <View
             android:id="@+id/ListSeparator"
-            android:layout_width="2dp"
+            android:layout_width="1dp"
             android:layout_height="match_parent"
 
             android:layout_centerHorizontal="true">
@@ -165,9 +174,16 @@
 
         </LinearLayout>
 
-
-
     </RelativeLayout>
+
+    <!-- Lower Border for Contact Lists Layout
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/colorPrimaryDark"
+        app:layout_constraintBottom_toBottomOf="@id/ListsLayout">
+    </View>-->
+
 
     <!-- Enter ChatName Layout -->
     <LinearLayout

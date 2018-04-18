@@ -2,6 +2,7 @@ package com.example.thechateau;
 
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -298,10 +299,12 @@ public class AddChatFragment extends Fragment {
         // Show that no contacts are available if the list is empty
         if (_AvailableContactList.size() < 1)
         {
+            _AddedContactTitleText.setVisibility(View.INVISIBLE);
             _ContactTitleText.setText("No Contacts Available");
         }
         else
         {
+            _AddedContactTitleText.setVisibility(View.VISIBLE);
             _ContactTitleText.setText("Contacts");
         }
 
@@ -315,7 +318,8 @@ public class AddChatFragment extends Fragment {
     {
         Log.i(_Tag, "in updateListView()");
 
-        _AvailableContactsAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, _AvailableContactList);
+        _AvailableContactsAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_list_item_1, _AvailableContactList);
+
 
         //Log.i(_Tag, "made new adapter");
 

@@ -270,7 +270,7 @@ public class ChatWindowFragment extends Fragment {
             // Move the current chat to most recently sent in Main's chat list
             ((MainActivity) getActivity()).moveChatToTop(_ChatName);
 
-            _InfoMessageTextView.setText("Message \"" + sendString + "\" sent successfully");
+            //_InfoMessageTextView.setText("Message \"" + sendString + "\" sent successfully");
 
             ((MainActivity)getActivity()).updateChatMessagePreviewAndNotification(_ChatName, sendString, true);
 
@@ -280,7 +280,7 @@ public class ChatWindowFragment extends Fragment {
             Log.i(_tag, "Message not sent through server");
 
             // ERROR message couldn't be sent
-            _InfoMessageTextView.setText("ERROR Message \"" + sendString + "\" couldn't be sent");
+            _InfoMessageTextView.setText("ERROR Message could not be sent");
         }
 
         // Clear the text box
