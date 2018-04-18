@@ -179,6 +179,7 @@ public class MainActivity extends AppCompatActivity
 
             Log.i("MainActivity", "setting connected text to connected");
             _ConnectingText.setVisibility(View.VISIBLE);
+            //_ConnectingText.bringToFront();
             _ConnectingText.setText("Connected!");
         }
     };
@@ -627,6 +628,13 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    private void startConnectingFragment()
+    {
+        // Start a connecting fragment so that the connecting message appears and disappears
+        // as hoped for
+
+    }
+
 
     private void removeAllFragments()
     {
@@ -866,8 +874,8 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void run() {
 
-                        Log.i("WaiterThread", "Setting ConnectingLayout to Invisible");
-                        _ConnectingLayout.setVisibility(View.INVISIBLE);
+                        Log.i("WaiterThread", "Setting ConnectingLayout to Gone");
+                        _ConnectingLayout.setVisibility(View.GONE);
                     }
                 });
             }
@@ -889,8 +897,6 @@ public class MainActivity extends AppCompatActivity
                 view.setEnabled(makeTouchable);
             }
         });
-        
-
     }
 
     // Called by the websocket client when the server disconnects
