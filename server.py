@@ -133,7 +133,7 @@ def RegisterRequestHandler(sock, msg):
         else: 
             auth_err = Response("ErrorResponse", 301)
             auth_err.add_pair("msg_id", msg["msg_id"])
-            auth_err.add_pair("detail", msg["Authentication failed"])
+            auth_err.add_pair("detail", "Authentication failed")
             c.send(auth_err.jsonify())
 
     # Handle Generic Exception
@@ -272,7 +272,7 @@ def MessageRequestHandler(sock, msg):
     except Exception as e:
         print(e)
         print(traceback.format_exc())
-        res = Response("ErroResponse", 400)
+        res = Response("ErrorResponse", 400)
         res.add_pair("msg_id", msg["msg_id"])
         sock.write_message(res.jsonify())
 
@@ -289,13 +289,15 @@ def ClientListRequestHandler(sock, msg):
             usernames.remove(c.username)
 
             response = Response("ClientListResponse", 200)
-            print(usernames)
+            response.add_pair("msg_id", msg["msg_id"])
             response.add_pair("clients", usernames)
             c.send(response.jsonify())
 
         # Handle Error for Client not registered
         else: 
-            c.send(Response("ErrorResponse", 301).jsonify())
+            err = Response("ErrorResponse", 301)
+            err.add_pair("msg_id", msg["msg_id"])
+            c.send(err.jsonify())
     
     # Handle Generic Error, or no client with Sock
     except Exception as e:
