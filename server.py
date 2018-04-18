@@ -131,6 +131,7 @@ def RegisterRequestHandler(sock, msg):
         else: 
             auth_err = Response("ErrorResponse", 301)
             auth_err.add_pair("msg_id", msg["msg_id"])
+            auth_err.add_pair("detail", msg["Authentication failed"])
             c.send(auth_err.jsonify())
 
     # Handle Generic Exception
@@ -325,6 +326,7 @@ def RandomMessageRequestHandler(sock, msg):
 
             # Send Ack Back to Sender 
             send_response = Response("RandomMessageSendResponse", 200)
+            send_response.add_pair("msg_id", msg["msg_id"])
             send_response.add_pair("recipient", new_friend.username)
             c.send(send_response.jsonify())
 
