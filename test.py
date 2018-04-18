@@ -1,6 +1,6 @@
 
 # Application to demonstrate testing tornado websockets.
-# Try it wiith: python -m tornado.testing discover
+# Try it with: python -m tornado.testing discover
 
 
 import json

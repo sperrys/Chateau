@@ -101,6 +101,7 @@ Response:
 	- If successful, `"type": "RandomMessageRecvResponse", "status": 200` and a random `"sender"` username, `"content": content`
 	- if failure is that client is not recognized, `"type": "ErrorResponse", "status": 301`
 	- if failure is generic, `"type": "ErrorResponse", "status": 400` 
+	- if failure is that not enough people are online, `"type": "ErrorResponse", "status": 404` 
 
 **Initiate Single Conversation**
 

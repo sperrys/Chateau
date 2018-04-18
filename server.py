@@ -10,6 +10,8 @@ import json
 import os
 import traceback
 
+from random import sample
+
 import tornado.ioloop
 from  tornado.ioloop import PeriodicCallback
 import tornado.web
@@ -312,23 +314,31 @@ def RandomMessageRequestHandler(sock, msg):
         if c.registered:
             usernames = clients.usernames()
 
-            # Make Sure Not to Send Usernaame to Self 
-            new_friend = sample(usernames, 1)
-            while new_friend == c.username:
+            if usernames != [c.username]:
+
+                # Make Sure Not to Send Usernaame to Self 
                 new_friend = sample(usernames, 1)
+                while new_friend == c.username:
+                    new_friend = sample(usernames, 1)
 
-            # Send Message to Random Client
-            response = Response("RandomMessageRecvResponse", 200)
-            response.add_pair("sender", c.username)
-            response.add_pair("content", msg["content"])
+                # Send Message to Random Client
+                response = Response("RandomMessageRecvResponse", 200)
+                response.add_pair("sender", c.username)
+                response.add_pair("content", msg["content"])
 
-            new_friend.send(response.jsonify())
+                new_friend.send(response.jsonify())
 
-            # Send Ack Back to Sender 
-            send_response = Response("RandomMessageSendResponse", 200)
-            send_response.add_pair("msg_id", msg["msg_id"])
-            send_response.add_pair("recipient", new_friend.username)
-            c.send(send_response.jsonify())
+                # Send Ack Back to Sender 
+                send_response = Response("RandomMessageSendResponse", 200)
+                send_response.add_pair("msg_id", msg["msg_id"])
+                send_response.add_pair("recipient", new_friend.username)
+                c.send(send_response.jsonify())
+            else:
+                  # Send Ack Back to Sender 
+                err = Response("ErrorResponse", 404)
+                err.add_pair("msg_id", msg["msg_id"])
+                err.add_pair("detail", "not enough people online")
+                c.send(send_response.jsonify())
 
         # Handle client is not registered
         else:
@@ -338,7 +348,7 @@ def RandomMessageRequestHandler(sock, msg):
     except Exception as e:
         print (e)
         print(traceback.format_exc())
-        sock.write_message(ErrorResponse(400).jsonify())
+        sock.write_message("ErrorResponse", 400).jsonify()
 
 
 app = tornado.web.Application([
