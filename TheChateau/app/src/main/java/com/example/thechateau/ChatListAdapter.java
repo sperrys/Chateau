@@ -65,9 +65,9 @@ public class ChatListAdapter extends ArrayAdapter<ChatListItem> {
         holder.chatPreviewMessageView.setText(chatListItem.previewMessage);
 
         if(chatListItem.isNotified)
-            holder.notificationView.setBackgroundColor(_NotificationColor);
+            holder.notificationView.setVisibility(View.VISIBLE);
         else
-            holder.notificationView.setBackgroundColor(Color.TRANSPARENT);
+            holder.notificationView.setVisibility(View.INVISIBLE);
 
 
         return row;

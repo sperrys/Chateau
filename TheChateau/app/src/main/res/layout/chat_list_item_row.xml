@@ -58,14 +58,14 @@
                 android:layout_centerHorizontal="true">
             </View>
 
-            <TextView
+            <View
                 android:id="@+id/chatNotificationView"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:background="@color/NotificationColor"
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:background="@drawable/notification_circle"
                 >
 
-            </TextView>
+            </View>
 
         </LinearLayout>
 

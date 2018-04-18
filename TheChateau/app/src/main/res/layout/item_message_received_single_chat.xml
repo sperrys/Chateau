@@ -18,7 +18,7 @@
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:layout_marginLeft="8dp"
-        android:background="@drawable/circle"
+        android:background="@drawanotificationCirclercle"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
     -->

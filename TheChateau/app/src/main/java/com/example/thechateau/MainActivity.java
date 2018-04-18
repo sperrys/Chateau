@@ -633,6 +633,7 @@ public class MainActivity extends AppCompatActivity
         // Start a connecting fragment so that the connecting message appears and disappears
         // as hoped for
 
+
     }
 
 
