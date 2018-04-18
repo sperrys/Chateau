@@ -34,52 +34,29 @@ import com.example.thechateau.R;
 public class MainActivity extends AppCompatActivity
                           implements ChatWindowFragment.OnFragmentInteractionListener{
 
-    private String _defaultPreviewMessage = "No Message History";
-    private String _sentPreviewText       = "Sent: ";
-    private String _readPreviewText       = "Received: ";
+    /**********************************************************************************************/
+    /*                                    Web Socket Stuff                                        */
+    /**********************************************************************************************/
+    private boolean             _WSConnected = false;
+    private ChatWebSocket       _WSClient;
+    private String              _WSHOST      = "ws://10.0.2.2:5000/ws";
+    private String              _HerokuHost  = "ws://chateautufts.herokuapp.com:80/ws";
+    URI                         _ServerURI;
 
-    private class MessageAck
-    {
-        private int    _messageID;
-        private long   _messageStatus;
-        private String _messageResponse;
+    /**********************************************************************************************/
+    /*                            Message Housekeeping Structures                                 */
+    /**********************************************************************************************/
 
-        MessageAck(int messageID, long messageStatus)
-        {
-            _messageID     = messageID;
-            _messageStatus = messageStatus;
-            _messageResponse = "";
-        }
+    private ArrayList<MessageAck>                  _AllMessageConfirmations  = new ArrayList<>();
+    private ArrayList<String>                      _MessageSentConfirmations = new ArrayList();
+    private ArrayList<String>                      _GroupInitConfirmations   = new ArrayList<>();
+    private ArrayList<ReceivedMessage>             _MessagesReceived         = new ArrayList<>();
 
-        MessageAck(int messageID, long messageStatus, String messageResponse)
-        {
-            _messageID       = messageID;
-            _messageStatus   = messageStatus;
-            _messageResponse = messageResponse;
-        }
-
-        public int getID() {
-            return _messageID;
-        }
-
-        public long getStatus()
-        {
-            return _messageStatus;
-        }
-
-        public String getMessageResponse()
-        {
-            return _messageResponse;
-        }
-    };
-
-    public int _currentMessageID = 0;
-
-    private class ChatMessagePair {
+    private class ReceivedMessage {
         private String  _chatname;
         private Message _message;
 
-        ChatMessagePair(String chatname, Message message)
+        ReceivedMessage(String chatname, Message message)
         {
             _chatname = chatname;
             _message  = message;
@@ -95,7 +72,39 @@ public class MainActivity extends AppCompatActivity
         }
 
     }
+    private class MessageAck {
+        private long    _messageID;
+        private long   _messageStatus;
+        private String _messageResponse;
 
+        MessageAck(long messageID, long messageStatus)
+        {
+            _messageID     = messageID;
+            _messageStatus = messageStatus;
+            _messageResponse = "";
+        }
+
+        MessageAck(long messageID, long messageStatus, String messageResponse)
+        {
+            _messageID       = messageID;
+            _messageStatus   = messageStatus;
+            _messageResponse = messageResponse;
+        }
+
+        public long getID() {
+            return _messageID;
+        }
+
+        public long getStatus()
+        {
+            return _messageStatus;
+        }
+
+        public String getMessageResponse()
+        {
+            return _messageResponse;
+        }
+    };
     private class Chat {
         List<Message> _chatHistory;
         boolean _isGroupChat;
@@ -117,33 +126,46 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private boolean             _WSConnected = false;
+    /**********************************************************************************************/
+    /*                             Chat Lists and Histories                                       */
+    /**********************************************************************************************/
 
-    private ChatWebSocket       _WSClient;
-    private String              _WSHOST      = "ws://10.0.2.2:5000/ws";
-    private String              _HerokuHost  = "ws://chateautufts.herokuapp.com:80/ws";
-    URI                         _ServerURI;
-
-    private ArrayList<MessageAck>                  _AllMessageConfirmations  = new ArrayList<>();
-    private ArrayList<String>                      _MessageSentConfirmations = new ArrayList();
-    private ArrayList<String>                      _GroupInitConfirmations   = new ArrayList<>();
-    private ArrayList<ChatMessagePair>             _MessagesReceived   = new ArrayList<>();
-
-    private ListView                                _ChatListView;
     private final String[]                          _SampleChatListStrings = {"Spencer", "Russ", "Fahad", "Joe"};
     private LinkedList<ChatListItem>                _ChatListEntries;
+    private ListView                                _ChatListView;
+    private ArrayAdapter                            _ChatListAdapter;
     private static Hashtable<String, Chat>          _Chats = new Hashtable<>();
+
+    private Runnable UpdateChatList = new Runnable() {
+        @Override
+        public void run() {
+
+            _ChatListAdapter.notifyDataSetChanged();
+        }
+    };
 
 
     private ArrayList<String>   _ContactList = new ArrayList<>();
-    private ArrayAdapter        _ChatListAdapter;
-    private boolean             _RegisteredUser = false; // True if user has been registered
 
+    /**********************************************************************************************/
+    /*                             User Registration Variables                                    */
+    /**********************************************************************************************/
+
+    private boolean             _RegisteredUser = false; // True if user has been registered
+    private String              _CurrentUser;
+
+    /**********************************************************************************************/
+    /*                                  Fragment Variables                                        */
+    /**********************************************************************************************/
+
+    private FragmentManager _FragmentManager;
+    private String openChatWindowString = "Opening ChatWindow: ";
+
+    /**********************************************************************************************/
+    /*                            Connecting Layout Variables                                     */
+    /**********************************************************************************************/
     private TextView       _ConnectingText;
     private RelativeLayout _ConnectingLayout;
-
-    private Button _RandomChatButton;
-
 
     private Runnable _SetConnectedText = new Runnable() {
         @Override
@@ -155,8 +177,6 @@ public class MainActivity extends AppCompatActivity
         }
     };
 
-    private String openChatWindowString = "Opening ChatWindow: ";
-
     private Runnable _SetConnectingText = new Runnable() {
         @Override
         public void run() {
@@ -166,60 +186,76 @@ public class MainActivity extends AppCompatActivity
         }
     };
 
-    private Runnable UpdateChatList = new Runnable() {
-        @Override
-        public void run() {
 
-            _ChatListAdapter.notifyDataSetChanged();
-        }
-    };
+    /**********************************************************************************************/
+    /*                                       Buttons                                              */
+    /**********************************************************************************************/
 
-    public boolean getGroupChatBool(String chatName)
-    {
-        return _Chats.get(chatName).IsGroupChat();
-    }
+    private Button         _AddNewChatButton;
+    private Button         _RandomChatButton;
 
+    /**********************************************************************************************/
+    /*                         Message Type And Status Code Definitions                           */
+    /**********************************************************************************************/
 
-    private Button              _AddNewChatButton;
-    private Button              _AddChatToTopButton;
-    private int                 _newChatCounter       = 0;
-    private String              _CurrentUser;
-
-    private final String _RegisterRequest    = "RegisterRequest";
-    private final String _RegisterResponse   = "RegisterResponse";
-    private final long   _RegistrationApprovedCode = 200;
+    /* Message Type And Status Code Definitions */
+    private final String _RegisterRequest           = "RegisterRequest";
+    private final String _RegisterResponse          = "RegisterResponse";
+    private final long   _RegistrationApprovedCode  = 200;
     private final long   _UserAlreadyRegisteredCode = 302;
 
     private final String _GroupInitExample             = "SingleExample";
     private final String _SingleMessageResponseExample = "GroupExample";
 
-    private final String _GroupMessageInitRequest   = "GroupMessageInitRequest";
-    private final String _GroupMessageInitResponse  = "GroupMessageInitResponse";
+    private final String _GroupMessageInitRequest       = "GroupMessageInitRequest";
+    private final String _GroupMessageInitResponse      = "GroupMessageInitResponse";
     private final long   _NewGroupChatCreatedCode       = 201;
     private final long   _GroupChatCreationApprovedCode = 200;
 
-    private final String _GeneralMessageSendRequest  = "MessageRequest";
-    private final String _GeneralMessageSendResponse = "MessageSendResponse";
-    private final String _GeneralMessageRecv         = "MessageRecv";
+    private final String _GeneralMessageSendRequest          = "MessageRequest";
+    private final String _GeneralMessageSendResponse         = "MessageSendResponse";
+    private final String _GeneralMessageRecv                 = "MessageRecv";
     private final long   _GeneralMessageSentSuccessfullyCode = 200;
 
-    private final String _ClientListRequest  = "ClientListRequest";
-    private final String _ClientListResponse = "ClientListResponse";
+    private final String _ClientListRequest      = "ClientListRequest";
+    private final String _ClientListResponse     = "ClientListResponse";
     private final long   _ClientListProvidedCode = 200;
 
-    private final int _GetRandomContactType     = 5;
-    private final int _SendSingleMessageType    = 6;
     private final String _ErrorResponse = "ErrorResponse";
 
-    private final String _RandomMessageRequest = "RandomMessageRequest";
+    private final String _RandomMessageRequest  = "RandomMessageRequest";
     private final String _RandomMessageResponse = "RandomMessageResponse";
-    private final long _RandomMessageSuccess = 200;
-    private final long _RandomMessageError   = 400;
+    private final long   _RandomMessageSuccess  = 200;
+    private final long   _RandomMessageError    = 400;
+
+    /**********************************************************************************************/
+    /*                               Message Preview Variables                                    */
+    /**********************************************************************************************/
+    private String _defaultPreviewMessage = "No Message History";
+    private String _sentPreviewText       = "Sent: ";
+    private String _readPreviewText       = "Received: ";
+
+    /**********************************************************************************************/
+    /*                                Message ID Variables                                        */
+    /**********************************************************************************************/
 
 
+    private       long   _currentMessageID = 0;
+    private final long   _MaxMessageID     = 10000;
+    private       long   _messageIDRegistrationGimmick = _MaxMessageID + 1;
+    private final String _messageIDField   = "msg_id";
 
-    private FragmentManager _FragmentManager;
+    /**********************************************************************************************/
+    /*                                  Data Access Functions                                     */
+    /**********************************************************************************************/
 
+    // Returns true if the chatname specified is a group chat, false otherwise
+    public boolean getGroupChatBool(String chatName)
+    {
+        return _Chats.get(chatName).IsGroupChat();
+    }
+
+    // Returns the user currently using the app
     public String getCurrentUser()
     {
         return _CurrentUser;
@@ -241,6 +277,10 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+
+    /**********************************************************************************************/
+    /*                            Larger Functions And Logic                                      */
+    /**********************************************************************************************/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -283,9 +323,6 @@ public class MainActivity extends AppCompatActivity
         /*************************/
         /* Set up Chat List View */
         /*************************/
-
-
-
 
         // Make linked list of strings so we can easily add elements to front of list
         _ChatListEntries = new LinkedList<>();
@@ -356,13 +393,15 @@ public class MainActivity extends AppCompatActivity
         callWSConnect();
 
         String simepleChatName = "Spencer";
+
         // Sample Code to check if Spencer chat reads its pending messages when opening
         Message m = new Message("Hi Russ", new User(simepleChatName), System.currentTimeMillis());
-        ChatMessagePair newPair = new ChatMessagePair(simepleChatName, m);
+        ReceivedMessage newPair = new ReceivedMessage(simepleChatName, m);
         _MessagesReceived.add(newPair);
         _MessagesReceived.add(newPair);
+
         Message n = new Message("I'm Russ", new User("mgomez"), System.currentTimeMillis());
-        _MessagesReceived.add(new ChatMessagePair(simepleChatName, n));
+        _MessagesReceived.add(new ReceivedMessage(simepleChatName, n));
     }
 
 
@@ -392,9 +431,8 @@ public class MainActivity extends AppCompatActivity
         String message = json.toString();
 
         // Ask server for Random person to chat
-        sendMessageToServer(message);
+        MessageAck messageAck = sendMessageToServer(json);
 
-        MessageAck messageAck = waitUntilMessageAcked(6, 2000);
 
         if(messageAck != null && messageAck.getStatus() == _RandomMessageSuccess)
         {
@@ -415,7 +453,7 @@ public class MainActivity extends AppCompatActivity
                 }
 
                 Message newMsg = new Message(content, new User(getCurrentUser()), System.currentTimeMillis());
-                ChatMessagePair newPair = new ChatMessagePair(clientName, newMsg);
+                ReceivedMessage newPair = new ReceivedMessage(clientName, newMsg);
                 _MessagesReceived.add(newPair);
 
                 openChatWindow(clientName);
@@ -453,7 +491,7 @@ public class MainActivity extends AppCompatActivity
             _ChatListEntries.add(new ChatListItem(chatName, _defaultPreviewMessage));
 
             // Notify Adapter that chatListItems has changed
-            runOnUiThread(UpdateChatList);//_ChatListAdapter.notifyDataSetChanged();
+            runOnUiThread(UpdateChatList);
 
             List<Message> chatHistory = new ArrayList<Message>();
 
@@ -629,15 +667,6 @@ public class MainActivity extends AppCompatActivity
             json.put("content"  , content);
             json.put("type", _GeneralMessageSendRequest);
 
-            /*if(isGroupChat)
-            {
-                json.put("type"     , _SendGroupMessage);
-            }
-            else
-            {
-                json.put("type"     , _SendSingleMessage);
-            }*/
-
         } catch (JSONException e)
         {
             e.printStackTrace();
@@ -648,8 +677,30 @@ public class MainActivity extends AppCompatActivity
 
 
         Log.i("SendChatMessageToServer", "Sending chat message(): " + message);
-        sendMessageToServer(message);
+        MessageAck ack = sendMessageToServer(json);
 
+        if (ack != null )
+        {
+            long status = ack.getStatus();
+
+            if (status == _GeneralMessageSentSuccessfullyCode)
+            {
+                Log.i("MainActivity","General Message sent");
+                return true;
+            }
+            else
+            {
+                Log.i("MainActivity","General message not sent, got status" + status);
+                return false;
+            }
+        }
+        else
+        {
+            Log.i("MainActivity","Error, Ack was null for general message sent");
+            return false;
+        }
+
+        /*
         if(waitUntilMessageSent(3000))
         {
 
@@ -658,7 +709,7 @@ public class MainActivity extends AppCompatActivity
         else
         {
             return false;
-        }
+        }*/
     }
 
     // Waits for timetoWaitMS milliseconds for a message confirmation to be received
@@ -698,7 +749,7 @@ public class MainActivity extends AppCompatActivity
 
     // Returns the status code of a message if it was found in the list of message confirmations
     // Returns -1 if the message was never received
-    private MessageAck waitUntilMessageAcked(int messageID, long timeToWaitMS)
+    private MessageAck waitUntilMessageAcked(long messageID, long timeToWaitMS)
     {
         String tag = "waitUntilMessageAcked";
         // Calc time that we will timeout
@@ -728,7 +779,7 @@ public class MainActivity extends AppCompatActivity
                 {
                     MessageAck msgAck = iter.next();
 
-                    int currentID = msgAck.getID();
+                    long currentID = msgAck.getID();
 
                     //Log.i(tag, "currentID is " + currentID + " with status " + msgAck.getStatus());
 
@@ -830,6 +881,7 @@ public class MainActivity extends AppCompatActivity
     // Returns true if the user gets registered in a given amount of time, false otherwise
     public boolean registerUser(String username, String password, boolean doAuthentication)
     {
+        String tag = "RegisterUser()";
 
         JSONObject json = new JSONObject();
 
@@ -850,8 +902,30 @@ public class MainActivity extends AppCompatActivity
 
 
         Log.i("MainActivity", "Sending registration message(): " + message);
-        sendMessageToServer(message);
+        MessageAck ack = sendMessageToServer(json);
 
+        if (ack != null )
+        {
+            long status = ack.getStatus();
+
+            if (status == _RegistrationApprovedCode)
+            {
+                Log.i(tag,"Registration approved");
+                return true;
+            }
+            else
+            {
+                Log.i(tag,"Registration not approved, got status " + status);
+                return false;
+            }
+        }
+        else
+        {
+            Log.i(tag,"Error, ack was null for Registration ");
+            return false;
+        }
+
+        /*
         // Wait to see if client gets a registration response in 2 seconds, if not return false;
         if(waitUntilRegistered(2000))
         {
@@ -862,7 +936,7 @@ public class MainActivity extends AppCompatActivity
         else
         {
             return false;
-        }
+        }*/
 
     }
 
@@ -940,7 +1014,8 @@ public class MainActivity extends AppCompatActivity
                         Log.i(tag, "Error, status is " + status);
                     }
 
-                    int messageID = 1;
+
+                    long messageID = (long)jsonObject.get(_messageIDField);
                     _AllMessageConfirmations.add(new MessageAck(messageID, status));
 
                     break;
@@ -973,7 +1048,7 @@ public class MainActivity extends AppCompatActivity
                         Log.i(tag, "Error, status is " + status);
                     }
 
-                    int messageID = 2;
+                    long messageID = (long)jsonObject.get(_messageIDField);
 
                     // Add confirmation if status doesn't indicate that group chat was newly created
                     if (status != _NewGroupChatCreatedCode)
@@ -1011,7 +1086,7 @@ public class MainActivity extends AppCompatActivity
                         _ContactList = new ArrayList(Arrays.asList(contacts));
                     }
 
-                    int messageID = 3;
+                    long messageID = (long)jsonObject.get(_messageIDField);
                     _AllMessageConfirmations.add(new MessageAck(messageID, status));
 
                     break;
@@ -1033,7 +1108,7 @@ public class MainActivity extends AppCompatActivity
                         Log.i(tag, "Error, unknown random message status " + status);
                     }
 
-                    int messageID = 6;
+                    long messageID = (long)jsonObject.get(_messageIDField);
                     _AllMessageConfirmations.add(new MessageAck(messageID, status, message));
 
                     break;
@@ -1050,7 +1125,7 @@ public class MainActivity extends AppCompatActivity
 
                     }
 
-                    int messageID = 4;
+                    long messageID = (long)jsonObject.get(_messageIDField);
                     _AllMessageConfirmations.add(new MessageAck(messageID, status));
 
                     break;
@@ -1076,7 +1151,7 @@ public class MainActivity extends AppCompatActivity
 
                         // Add the new message to our list of received messages
                         Message newMessage = new Message(content, new User(sender), System.currentTimeMillis());
-                        ChatMessagePair newPair = new ChatMessagePair(chatName, newMessage);
+                        ReceivedMessage newPair = new ReceivedMessage(chatName, newMessage);
                         _MessagesReceived.add(newPair);
 
                         // Update the preview and notification icon of the chat
@@ -1104,9 +1179,10 @@ public class MainActivity extends AppCompatActivity
                 {
                     Log.i(tag, "Error response received: " + type);
 
-                    int messageID = 8;
+                    long messageID = (long)jsonObject.get(_messageIDField);
                     _AllMessageConfirmations.add(new MessageAck(messageID, status));
                 }
+                break;
 
                 default:
                 {
@@ -1166,9 +1242,32 @@ public class MainActivity extends AppCompatActivity
         String message = json.toString();
 
         Log.i("MainActivity", "Sending getClientMessage(): " + message);
-        sendMessageToServer(message);
+        MessageAck ack = sendMessageToServer(json);
 
-        // Wait a few seconds for contact list to be retrieved, then return contact list
+        // Return current contact list regardless of the result
+        if (ack != null)
+        {
+            long status = ack.getStatus();
+
+            if (status != _ClientListProvidedCode)
+            {
+                Log.i("MainActivity", "Client list acked");
+                return _ContactList;
+            }
+            else
+            {
+                Log.i("MainActivity", "Error, clientlist response code was " + status);
+                return _ContactList;
+            }
+        }
+        else
+        {
+            Log.i("MainActivity", "Client list ack not received");
+            return _ContactList;
+        }
+
+
+        /*// Wait a few seconds for contact list to be retrieved, then return contact list
         waitUntilTimeReached(2000);
 
         Log.i("requestContactList", "List of current contacts");
@@ -1181,7 +1280,7 @@ public class MainActivity extends AppCompatActivity
         // Remove current user from contact list (user will never need to chat with themselves
         //_ContactList = removeNameFromContactList(_ContactList, _CurrentUser);
 
-        return _ContactList;
+        return _ContactList;*/
 
     }
 
@@ -1245,12 +1344,12 @@ public class MainActivity extends AppCompatActivity
             Log.i("ChatWindowFragment", "Error chat history for " + chatName + " is null");
         }
 
-        Iterator<ChatMessagePair> iter = _MessagesReceived.iterator();
+        Iterator<ReceivedMessage> iter = _MessagesReceived.iterator();
 
         // Check if we've any received messages for this chat
         while (iter.hasNext())
         {
-            ChatMessagePair m = iter.next();
+            ReceivedMessage m = iter.next();
 
             String messageChatName = m.getChatname();
 
@@ -1269,6 +1368,8 @@ public class MainActivity extends AppCompatActivity
     }
     public boolean sendChatRegistrationToServer(List<String> contactsToAdd, String chatName)
     {
+        String tag = "SendChatRegisToServer";
+
         // Single chats don't need to be registered to the server
         if (contactsToAdd.size() == 1)
         {
@@ -1299,29 +1400,106 @@ public class MainActivity extends AppCompatActivity
 
         String message = json.toString();
 
-        Log.i("SendChatRegisToServer", "Sending group init message(): " + message);
-        sendMessageToServer(message);
 
-        if(waitUntilGroupMessageInitResponseReceived(3000))
+        Log.i(tag, "Sending group init message(): " + message);
+        MessageAck ack = sendMessageToServer(json);
+
+        if (ack != null )
         {
-            Log.i("SendChatRegisToServer", "Received init response");
+            long status = ack.getStatus();
+
+            if (status == _GroupChatCreationApprovedCode)
+            {
+                Log.i(tag,"Group Chat creation approved");
+                return true;
+            }
+            else
+            {
+                Log.i(tag,"Group Chat creation not approved, got status" + status);
+                return false;
+            }
+        }
+        else
+        {
+            Log.i(tag,"Error, Ack was null for Group Chat creation");
+            return false;
+        }
+        /*if(waitUntilGroupMessageInitResponseReceived(3000))
+        {
+            Log.i(tag, "Received init response");
             return true;
         }
         else
         {
-            Log.i("SendChatRegisToServer", "Did not receive init response");
+            Log.i(tag, "Did not receive init response");
             return false;
-        }
+        }*/
     }
 
-
     // Waits until the web socket client is connected, and then sends a message
-    private void sendMessageToServer(String message)
+    /*private MessageAck sendRegistrationMessageToServer(JSONObject json)
     {
+        try
+        {
+            // Put the current ID in the json string
+            json.put(_messageIDField, _messageIDRegistrationGimmick);
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
+        String message = json.toString();
+
         Log.i("sendMessageToServer", "in sendMessageToServer() for message " + message);
         while (_WSClient == null || _WSConnected != true);
 
         _WSClient.send(message);
+
+        MessageAck ack = waitUntilMessageAcked(_messageIDRegistrationGimmick, 2000);
+
+        _currentMessageID++;
+
+        // Reset message ID if necessary
+        if (_currentMessageID > _MaxMessageID)
+        {
+            _currentMessageID = 0;
+        }
+
+        return ack;
+    }*/
+
+    // Waits until the web socket client is connected, and then sends a message
+    private MessageAck sendMessageToServer(JSONObject json)
+    {
+        try
+        {
+            // Put the current ID in the json string
+            json.put(_messageIDField, _currentMessageID);
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
+        String message = json.toString();
+
+        Log.i("sendMessageToServer", "in sendMessageToServer() for message " + message);
+        while (_WSClient == null || _WSConnected != true);
+
+        _WSClient.send(message);
+
+        MessageAck ack = waitUntilMessageAcked(_currentMessageID, 2000);
+        //Log.i("sendMessageToServer", "msgID before: " + _currentMessageID);
+        _currentMessageID++;
+        //Log.i("sendMessageToServer", "msgID after: " + _currentMessageID);
+
+
+        // Reset message ID if necessary
+        if (_currentMessageID > _MaxMessageID)
+        {
+            _currentMessageID = 0;
+        }
+
+        return ack;
     }
 
     // Waits for timetoWaitMS milliseconds for a GroupInitResponse to be received

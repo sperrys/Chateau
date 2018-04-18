@@ -280,7 +280,7 @@ public class ChatWindowFragment extends Fragment {
             Log.i(_tag, "Message not sent through server");
 
             // ERROR message couldn't be sent
-            _InfoMessageTextView.setText("ERROR Message \"" + sendString + "\"couldn't be sent");
+            _InfoMessageTextView.setText("ERROR Message \"" + sendString + "\" couldn't be sent");
         }
 
         // Clear the text box
