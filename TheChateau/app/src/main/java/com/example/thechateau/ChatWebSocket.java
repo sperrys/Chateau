@@ -46,7 +46,7 @@ public class ChatWebSocket extends WebSocketClient {
         Log.i(_WSTAG, "new connection opened");
         //_openCalled = true;
 
-        _MainActivity.onConnectedToServer();
+        _MainActivity.onServerConnect();
     }
 
     @Override

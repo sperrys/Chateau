@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -151,8 +152,13 @@ public class MainActivity extends AppCompatActivity
     /*                             User Registration Variables                                    */
     /**********************************************************************************************/
 
-    private boolean             _RegisteredUser = false; // True if user has been registered
+    private boolean             _UserIsRegistered = false; // True if user has been registered
     private String              _CurrentUser;
+    private String              _CurrentPassword;
+    private boolean             _RegisterWithAuthentication = false;
+    private boolean             _UserHasRegisteredBefore = false;
+
+
 
     /**********************************************************************************************/
     /*                                  Fragment Variables                                        */
@@ -814,27 +820,41 @@ public class MainActivity extends AppCompatActivity
     }
 
     // Called by WebSocketClient when it has connected to the server
-    public void onConnectedToServer() {
-        // Update text view that says connecting or not
-
-        Log.i("OnConnectedToServer", "In function");
+    public void onServerConnect()
+    {
+        String tag = "onServerConnect";
+        Log.i(tag, "In function");
 
         // Indicate to everyone that we're connected to the server
         _WSConnected = true;
 
         // Register current user with the server if necessary
-        if(!_RegisteredUser) startLoginFragment();
+        if(!_UserHasRegisteredBefore)
+        {
+            Log.i(tag, "First time user, prompting the login fragment");
+            startLoginFragment();
+        }
+        else
+        {
+            Log.i(tag, "Second time user, prompting user registration again");
+            registerUser(_CurrentUser, _CurrentPassword, _RegisterWithAuthentication);
+        }
 
         // Set the text in the connected layout to "connected!"
         runOnUiThread(_SetConnectedText);
 
+        // Set screen to touchable
+        setScreenTouchability(true);
+
+        Log.i(tag, "Got past login fragment");
         // Wait for a few seconds and then make the connecting layout view disappear
         Thread waiter = new Thread() {
             @Override
             public void run()
             {
 
-                try {
+                try
+                {
                     Thread.sleep(2000);
                 }
                 catch (InterruptedException e)
@@ -856,6 +876,17 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    // Sets the screen to touchable or untouchable based on the argument
+    private void setScreenTouchability(boolean makeTouchable)
+    {
+        String tag = "setScreenTouchability";
+        Log.i(tag, "in setScreenTouch with boolean " + makeTouchable);
+
+        View view = getWindow().getDecorView().getRootView();
+        view.setEnabled(makeTouchable);
+
+    }
+
     // Called by the websocket client when the server disconnects
     public void onServerDisconnect()
     {
@@ -863,11 +894,14 @@ public class MainActivity extends AppCompatActivity
 
         _WSConnected = false;
 
+        // Disable the screen from being touched by the user
+        setScreenTouchability(false);
+
         // Remove fragments from the display
-        removeAllFragments();
+        //removeAllFragments();
 
         // User is no longer registered when chats disconnect
-        _RegisteredUser = false;
+        _UserIsRegistered = false;
 
         // Try reconnecting to the server
         _WSClient = new ChatWebSocket(_ServerURI, this);
@@ -916,6 +950,11 @@ public class MainActivity extends AppCompatActivity
 
             if (status == _RegistrationApprovedCode)
             {
+                _RegisterWithAuthentication = doAuthentication;
+                _CurrentPassword = password;
+                _CurrentUser     = username;
+                _UserHasRegisteredBefore = true;
+
                 Log.i(tag,"Registration approved");
                 return true;
             }
@@ -1004,7 +1043,7 @@ public class MainActivity extends AppCompatActivity
                     {
                         Log.i(tag, "Registration successful");
 
-                        _RegisteredUser = true;
+                        _UserIsRegistered = true;
 
                     }
 
@@ -1192,7 +1231,10 @@ public class MainActivity extends AppCompatActivity
 
                 default:
                 {
-                    Log.i(tag, "Error, unknown type " + type);
+                    Log.i(tag, "Error, unknown type: " + type);
+
+                    long messageID = (long)jsonObject.get(_messageIDField);
+                    _AllMessageConfirmations.add(new MessageAck(messageID, status));
                 }
             }
         }
