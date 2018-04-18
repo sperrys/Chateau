@@ -394,14 +394,16 @@ public class MainActivity extends AppCompatActivity
 
         String simepleChatName = "Spencer";
 
-        // Sample Code to check if Spencer chat reads its pending messages when opening
-        Message m = new Message("Hi Russ", new User(simepleChatName), System.currentTimeMillis());
-        ReceivedMessage newPair = new ReceivedMessage(simepleChatName, m);
-        _MessagesReceived.add(newPair);
-        _MessagesReceived.add(newPair);
+        for (int i = 0; i < 10; i++) {
+            // Sample Code to check if Spencer chat reads its pending messages when opening
+            Message m = new Message("Hi Russ", new User(simepleChatName), System.currentTimeMillis());
+            ReceivedMessage newPair = new ReceivedMessage(simepleChatName, m);
+            _MessagesReceived.add(newPair);
+            _MessagesReceived.add(newPair);
 
-        Message n = new Message("I'm Russ", new User("mgomez"), System.currentTimeMillis());
-        _MessagesReceived.add(new ReceivedMessage(simepleChatName, n));
+            Message n = new Message("I'm Russ", new User("mgomez"), System.currentTimeMillis());
+            _MessagesReceived.add(new ReceivedMessage(simepleChatName, n));
+        }
     }
 
 
@@ -1357,7 +1359,7 @@ public class MainActivity extends AppCompatActivity
 
             String messageChatName = m.getChatname();
 
-            Log.i("checkForNewMessages()", "requested chatname is " + chatName+ "and current chatname is " + messageChatName);
+            Log.i("checkForNewMessages()", "requested chatname is " + chatName+ " and current chatname is " + messageChatName);
 
             // If we found a message for this chat
             // -Add it to the chat history for that chat

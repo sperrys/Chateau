@@ -3,6 +3,7 @@ package com.example.thechateau;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -30,6 +31,7 @@ public class ChatWindowFragment extends Fragment {
     private String _ChatName;
     private RecyclerView       _MessageRecycler;
     private MessageListAdapter _MessageAdapter;
+    //private LinearLayoutManager _RecyclerLayoutManager;
 
     private List<Message> _MessageList;
 
@@ -140,9 +142,9 @@ public class ChatWindowFragment extends Fragment {
                 // Get string from text box
                 String sendString = _sendMessageText.getText().toString();
 
-                String infoString = "Sending \"" + sendString + "\" to recipient(s)";
+                //String infoString = "Sending \"" + sendString + "\" to recipient(s)";
 
-                _InfoMessageTextView.setText(infoString);
+                //_InfoMessageTextView.setText(infoString);
 
                 attemptSendMessage(sendString);
             }
@@ -199,11 +201,20 @@ public class ChatWindowFragment extends Fragment {
         _MessageAdapter  = new MessageListAdapter(this.getContext(), _MessageList, _currentUser.getName());
         _MessageRecycler.setAdapter(_MessageAdapter);
 
+
         // Check if there are pending messages sent to this chat from other users
         updateMessageHistory();
 
         // Turn off notification for this chat since the user has read messages for it already
         ((MainActivity)getActivity()).setChatNotified(_ChatName, false);
+
+        // Make sure chat history is scrolled to bottom when chat window is first opened
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                _MessageRecycler.scrollToPosition(_MessageList.size() - 1);
+            }
+        }, 200);
     }
 
 
@@ -274,6 +285,7 @@ public class ChatWindowFragment extends Fragment {
 
             ((MainActivity)getActivity()).updateChatMessagePreviewAndNotification(_ChatName, sendString, true);
 
+            getActivity().runOnUiThread(_UpdateMessageDisplay);
         }
         else
         {
@@ -286,7 +298,7 @@ public class ChatWindowFragment extends Fragment {
         // Clear the text box
         _sendMessageText.getText().clear();
 
-        getActivity().runOnUiThread(_UpdateMessageDisplay);
+
     }
 
 
