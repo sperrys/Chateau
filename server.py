@@ -246,14 +246,12 @@ def MessageRequestHandler(sock, msg):
                 if recipient[1] == "Group":
                     response.add_pair("groupchat", True)
                     response.add_pair("chatname", msg["recipient"])
-                    response.add_pair("msg_id", msg["msg_id"])
                     recipient[0].send(response.jsonify(), c)
 
                 # chatname becomes person who sent
                 # for single messages
                 else:
                     response.add_pair("chatname", c.username)
-                    response.add_pair("msg_id", msg["msg_id"])
                     response.add_pair("groupchat", False)
                     recipient[0].send(response.jsonify())
 
@@ -330,7 +328,8 @@ def RandomMessageRequestHandler(sock, msg):
                 print(new_friend.username)
 
                 # Send Message to Random Client
-                response = Response("RandomMessageRecv", 200)
+                response = Response("MessageRecv", 200)
+                response.add_pair("chatname", c.username)
                 response.add_pair("sender", c.username)
                 response.add_pair("content", msg["content"])
 

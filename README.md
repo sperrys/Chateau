@@ -98,7 +98,7 @@ Arguments
 	- `"content"`
 Response:
 	- If successful, `"type": "RandomMessageResponse", "status": 200` and a random `"client"` username. 
-	- If successful, `"type": "RandomMessageRecv", "status": 200` and a random `"sender"` username, `"content": content`
+	- If successful, `"type": "MessageRecv", "status": 200` and a random `"sender"` username, `"chatname" : chatname, "content": content`
 	- if failure is that client is not recognized, `"type": "ErrorResponse", "status": 301`
 	- if failure is generic, `"type": "ErrorResponse", "status": 400` 
 	- if failure is that not enough people are online, `"type": "ErrorResponse", "status": 404` 

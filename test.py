@@ -288,7 +288,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         # Since Spencer is the only other client, he should get the message
         response = yield spencer.read_message()
         data = json.loads(response)
-        self.assertEqual(data["type"], "RandomMessageRecv")
+        self.assertEqual(data["type"], "MessageRecv")
         self.assertEqual(data["status"], 200)
         self.assertEqual(data["sender"], "sperry3")
         self.assertEqual(data["content"], "sup")
