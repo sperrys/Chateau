@@ -339,7 +339,7 @@ def RandomMessageRequestHandler(sock, msg):
                 # Send Ack Back to Sender 
                 send_response = Response("RandomMessageResponse", 200)
                 send_response.add_pair("msg_id", msg["msg_id"])
-                send_response.add_pair("recipient", new_friend.username)
+                send_response.add_pair("client", new_friend.username)
                 c.send(send_response.jsonify())
             else:
                   # Send Error to Sender 
