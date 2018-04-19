@@ -443,7 +443,7 @@ public class MainActivity extends AppCompatActivity
         MessageAck messageAck = sendMessageToServer(json);
 
 
-        if(messageAck != null && messageAck.getStatus() == _RandomMessageSuccess)
+        if (messageAck != null && messageAck.getStatus() == _RandomMessageSuccess)
         {
             org.json.simple.JSONObject jsonObject;
 
@@ -453,7 +453,7 @@ public class MainActivity extends AppCompatActivity
             {
                 jsonObject = (org.json.simple.JSONObject) parser.parse(message);
 
-                String clientName = (String) jsonObject.get("clients");
+                String clientName = (String) jsonObject.get("client");
 
                 // Add new chat if necessary
                 if(_Chats.get(clientName) == null)
