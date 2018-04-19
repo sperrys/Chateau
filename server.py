@@ -312,26 +312,32 @@ def RandomMessageRequestHandler(sock, msg):
 
     try:
         c = clients.find_w_sock(sock)
+        print("client: ", c)
     
         if c.registered:
             usernames = clients.usernames()
+            usernames.remove(c.username)
+            print(usernames)
 
-            if usernames != [c.username]:
+            if usernames != []:
 
                 # Make Sure Not to Send Usernaame to Self 
-                new_friend = sample(usernames, 1)[0]
-                while new_friend == c.username:
-                    new_friend= sample(usernames, 1)
+                #s = sample(usernames, 1)
+                #print("rand", s)
+                rand = s[0]
+                
+                new_friend = clients.find_w_username(rand)
+                print(new_friend.username)
 
                 # Send Message to Random Client
-                response = Response("RandomMessageRecvResponse", 200)
+                response = Response("RandomMessageRec", 200)
                 response.add_pair("sender", c.username)
                 response.add_pair("content", msg["content"])
 
                 new_friend.send(response.jsonify())
 
                 # Send Ack Back to Sender 
-                send_response = Response("RandomMessageSendResponse", 200)
+                send_response = Response("RandomMessageResponse", 200)
                 send_response.add_pair("msg_id", msg["msg_id"])
                 send_response.add_pair("recipient", new_friend.username)
                 c.send(send_response.jsonify())

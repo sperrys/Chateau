@@ -246,10 +246,52 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         self.assertEqual(data["sender"], "sperry4")
         self.assertEqual(data["content"], "hey")
 
+    @testing.gen_test
+    def test_randomchat_valid(self):
+        ws_url = "ws://localhost:" + str(self.get_http_port()) + "/ws"
 
+        # Register mgomez
+        russ = yield websocket.websocket_connect(ws_url)     
+        
+        reg = Request("RegisterRequest")
+        reg.add_pair("username",  "russ3")
+        reg.add_pair("password", "")
+        reg.add_pair("auth", "false")
+        reg.add_pair("msg_id", 1)
+        
+        russ.write_message(reg.jsonify())
+        response = yield russ.read_message()
+        
+        # Register Sperry02
+        spencer = yield websocket.websocket_connect(ws_url)     
 
+        reg1 = Request("RegisterRequest")
+        reg1.add_pair("username", "sperry3")
+        reg1.add_pair("password", "")
+        reg1.add_pair("msg_id", 2)
+        reg1.add_pair("auth", "false")
+        
+        spencer.write_message(reg1.jsonify())
+        response = yield spencer.read_message()
 
+        # Russ send random message
+        rand_msg = Request("RandomMessageRequest")
+        rand_msg.add_pair("msg_id", 1)
+        rand_msg.add_pair("content", "sup")
+        russ.write_message(rand_msg.jsonify())
 
+        response = yield russ.read_message()
+        data = json.loads(response)
+        self.assertEqual(data["type"], "RandomMessageSendResponse")
+        self.assertEqual(data["status"], 200)
+
+        # Since Spencer is the only other client, he should get the message
+        response = yield spencer.read_message()
+        data = json.loads(response)
+        self.assertEqual(data["type"], "RandomMessageRecv")
+        self.assertEqual(data["status"], 200)
+        self.assertEqual(data["sender"], "sperry3")
+        self.assertEqual(data["content"], "sup")
 
 
 
