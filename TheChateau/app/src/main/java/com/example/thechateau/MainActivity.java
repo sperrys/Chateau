@@ -838,22 +838,23 @@ public class MainActivity extends AppCompatActivity
         _WSConnected = true;
 
         // Register current user with the server if necessary
-        if(!_UserHasRegisteredBefore)
+        //if(!_UserHasRegisteredBefore)
+        if (!_UserIsRegistered)
         {
             Log.i(tag, "First time user, prompting the login fragment");
             startLoginFragment();
         }
-        else
+        /*else
         {
             Log.i(tag, "Second time user, prompting user registration again");
             registerUser(_CurrentUser, _CurrentPassword, _RegisterWithAuthentication);
-        }
+        }*/
 
         // Set the text in the connected layout to "connected!"
         runOnUiThread(_SetConnectedText);
 
         // Set screen to touchable
-        setScreenTouchability(true);
+        //setScreenTouchability(true);
 
         Log.i(tag, "Got past login fragment");
         // Wait for a few seconds and then make the connecting layout view disappear
@@ -908,10 +909,10 @@ public class MainActivity extends AppCompatActivity
         _WSConnected = false;
 
         // Disable the screen from being touched by the user
-        setScreenTouchability(false);
+        //setScreenTouchability(false);
 
         // Remove fragments from the display
-        //removeAllFragments();
+        removeAllFragments();
 
         // User is no longer registered when chats disconnect
         _UserIsRegistered = false;
@@ -1310,7 +1311,7 @@ public class MainActivity extends AppCompatActivity
         {
             long status = ack.getStatus();
 
-            if (status != _ClientListProvidedCode)
+            if (status == _ClientListProvidedCode)
             {
                 Log.i("MainActivity", "Client list acked");
                 return _ContactList;
