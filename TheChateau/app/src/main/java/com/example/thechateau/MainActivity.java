@@ -451,9 +451,12 @@ public class MainActivity extends AppCompatActivity
 
             try
             {
-                jsonObject = (org.json.simple.JSONObject) parser.parse(message);
+                jsonObject = (org.json.simple.JSONObject) parser.parse(messageAck.getMessageResponse());
 
                 String clientName = (String) jsonObject.get("client");
+
+
+                Log.i("startRandomChat", "clientName is " + clientName);
 
                 // Add new chat if necessary
                 if(_Chats.get(clientName) == null)
@@ -1191,6 +1194,52 @@ public class MainActivity extends AppCompatActivity
 
                 }
 
+                /*case "RandomMessageRecv":
+                {
+                    Log.i("RandomMessageRecv", "Random Message Received");
+
+                    if (status == 200 || status == 201)
+                    {
+                        String content      = (String) jsonObject.get("content");
+                        String sender       = (String) jsonObject.get("sender");
+                        //String chatName     = (String) jsonObject.get("chatname");
+                        //boolean isGroupChat = (boolean) jsonObject.get("groupchat");
+
+                        String chatName = sender;
+                        boolean isGroupChat = false;
+
+                        // Add a new chat for this chatName if it doesn't exist yet
+                        if(_Chats.get(chatName) == null)
+                        {
+                            AddChat(chatName, isGroupChat);
+                        }
+
+                        // Add the new message to our list of received messages
+                        Message newMessage = new Message(content, new User(sender), System.currentTimeMillis());
+                        ReceivedMessage newPair = new ReceivedMessage(chatName, newMessage);
+                        _MessagesReceived.add(newPair);
+
+                        // Update the preview and notification icon of the chat
+                        updateChatMessagePreviewAndNotification(chatName, content, false);
+
+                        // Check if the chat window is open for that chat
+                        // If open, tell the chat to update its message history
+                        // If not tell the chat there's a new message waiting
+                        ChatWindowFragment chatWindow = getChatWindowFragment(chatName);
+
+                        if(chatWindow != null)
+                        {
+                            Log.i(tag, "Telling chat to update itself");
+                            chatWindow.onReceivedMessage();
+                        }
+                        else
+                        {
+                            setChatNotified(chatName, true);
+                        }
+                    }
+                }
+                break;*/
+
                 case _GeneralMessageRecv:
                 {
                     Log.i("ChatServerMsgRecvGen", "Got Message Received");
@@ -1233,6 +1282,8 @@ public class MainActivity extends AppCompatActivity
                     }
                     break;
                 }
+
+
 
                 case _ErrorResponse:
                 {
