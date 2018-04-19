@@ -342,11 +342,11 @@ def RandomMessageRequestHandler(sock, msg):
                 send_response.add_pair("recipient", new_friend.username)
                 c.send(send_response.jsonify())
             else:
-                  # Send Ack Back to Sender 
+                  # Send Error to Sender 
                 err = Response("ErrorResponse", 404)
                 err.add_pair("msg_id", msg["msg_id"])
                 err.add_pair("detail", "not enough people online")
-                c.send(send_response.jsonify())
+                c.send(err.jsonify())
 
         # Handle client is not registered
         else:
