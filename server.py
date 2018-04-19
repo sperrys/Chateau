@@ -332,6 +332,7 @@ def RandomMessageRequestHandler(sock, msg):
                 response.add_pair("chatname", c.username)
                 response.add_pair("sender", c.username)
                 response.add_pair("content", msg["content"])
+                response.add_pair("groupchat", False)
 
                 new_friend.send(response.jsonify())
 
