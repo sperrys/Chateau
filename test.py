@@ -118,6 +118,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         
         russ.write_message(reg.jsonify())
         response = yield russ.read_message()
+        data = json.loads(response)
         
         # Register Sperry02
         spencer = yield websocket.websocket_connect(ws_url)     
@@ -130,6 +131,9 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         
         spencer.write_message(reg1.jsonify())
         response = yield spencer.read_message()
+        data = json.loads(response)
+        self.assertEqual(data["status"], 200)
+        
 
         # Mgomez3 chats sperry3
         msg = Request("MessageRequest")
@@ -141,6 +145,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
 
         send_response = yield russ.read_message()
         data = json.loads(send_response)
+        print(data)
 
         self.assertEqual(data["type"], "MessageSendResponse")
         self.assertEqual(data["status"], 200)
@@ -148,6 +153,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         # Read Response from Recipient
         recv_response = yield spencer.read_message()
         data = json.loads(recv_response)
+        print(data)
 
         self.assertEqual(data["type"], "MessageRecv")
         self.assertEqual(data["content"], "hey")
@@ -254,7 +260,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         russ = yield websocket.websocket_connect(ws_url)     
         
         reg = Request("RegisterRequest")
-        reg.add_pair("username",  "russ3")
+        reg.add_pair("username",  "russ5")
         reg.add_pair("password", "")
         reg.add_pair("auth", "false")
         reg.add_pair("msg_id", 1)
@@ -266,7 +272,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         spencer = yield websocket.websocket_connect(ws_url)     
 
         reg1 = Request("RegisterRequest")
-        reg1.add_pair("username", "sperry3")
+        reg1.add_pair("username", "sperry5")
         reg1.add_pair("password", "")
         reg1.add_pair("msg_id", 2)
         reg1.add_pair("auth", "false")
@@ -277,21 +283,14 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         # Russ send random message
         rand_msg = Request("RandomMessageRequest")
         rand_msg.add_pair("msg_id", 1)
-        rand_msg.add_pair("content", "sup")
         russ.write_message(rand_msg.jsonify())
 
         response = yield russ.read_message()
         data = json.loads(response)
-        self.assertEqual(data["type"], "RandomMessageSendResponse")
-        self.assertEqual(data["status"], 200)
+        print(data)
 
-        # Since Spencer is the only other client, he should get the message
-        response = yield spencer.read_message()
-        data = json.loads(response)
-        self.assertEqual(data["type"], "MessageRecv")
+        self.assertEqual(data["type"], "RandomMessageResponse")
         self.assertEqual(data["status"], 200)
-        self.assertEqual(data["sender"], "sperry3")
-        self.assertEqual(data["content"], "sup")
 
 
 

@@ -262,6 +262,7 @@ def MessageRequestHandler(sock, msg):
          
         # Catch Exception if the client is not registered.  
         else: 
+            print(c.username, " is not registered!!")
             err = Response("ErrorResponse", 301)
             err.add_pair("msg_id", msg["msg_id"])
             sock.write_message(err.jsonify())
@@ -319,22 +320,12 @@ def RandomMessageRequestHandler(sock, msg):
 
             if usernames != []:
 
-                # Make Sure Not to Send Usernaame to Self 
                 s = sample(usernames, 1)
                 print("rand", s)
                 rand = s[0]
                 
                 new_friend = clients.find_w_username(rand)
-                print(new_friend.username)
-
-                # Send Message to Random Client
-                response = Response("MessageRecv", 200)
-                response.add_pair("chatname", c.username)
-                response.add_pair("sender", c.username)
-                response.add_pair("content", msg["content"])
-                response.add_pair("groupchat", False)
-
-                new_friend.send(response.jsonify())
+                print("New friend:" , new_friend.username)
 
                 # Send Ack Back to Sender 
                 send_response = Response("RandomMessageResponse", 200)
