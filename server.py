@@ -322,8 +322,8 @@ def RandomMessageRequestHandler(sock, msg):
             if usernames != []:
 
                 # Make Sure Not to Send Usernaame to Self 
-                #s = sample(usernames, 1)
-                #print("rand", s)
+                s = sample(usernames, 1)
+                print("rand", s)
                 rand = s[0]
                 
                 new_friend = clients.find_w_username(rand)
