@@ -330,7 +330,7 @@ def RandomMessageRequestHandler(sock, msg):
                 print(new_friend.username)
 
                 # Send Message to Random Client
-                response = Response("RandomMessageRec", 200)
+                response = Response("RandomMessageRecv", 200)
                 response.add_pair("sender", c.username)
                 response.add_pair("content", msg["content"])
 
