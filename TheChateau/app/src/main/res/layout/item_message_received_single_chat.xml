@@ -29,6 +29,7 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="8dp"
         android:text="Other User"
+        android:textColor="@color/BlackColor"
         android:textSize="12sp"
         app:layout_constraintTop_toTopOf="parent" />
     <!--
@@ -54,6 +55,7 @@
 
     <!-- Message Timestamp -->
     <TextView
+        android:textColor="@color/BlackColor"
         android:id="@+id/text_message_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

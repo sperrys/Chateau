@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -343,6 +344,7 @@ public class MainActivity extends AppCompatActivity
         // Make an adapter for the Chat List view and set it
         _ChatListAdapter = new ChatListAdapter(this, R.layout.chat_list_item_row, _ChatListEntries);
 
+
         // Set up Chat List View from UI
         // If a chat list item is clicked, it opens a chat window activity
         _ChatListView = findViewById(R.id.chat_list_view);
@@ -428,7 +430,7 @@ public class MainActivity extends AppCompatActivity
 
         try
         {
-            json.put("content"  , content);
+            //json.put("content"  , content);
             json.put("type", _RandomMessageRequest);
 
         }
@@ -464,9 +466,9 @@ public class MainActivity extends AppCompatActivity
                     AddChat(clientName, false);
                 }
 
-                Message newMsg = new Message(content, new User(getCurrentUser()), System.currentTimeMillis());
-                ReceivedMessage newPair = new ReceivedMessage(clientName, newMsg);
-                _MessagesReceived.add(newPair);
+                //Message newMsg = new Message(content, new User(getCurrentUser()), System.currentTimeMillis());
+                //ReceivedMessage newPair = new ReceivedMessage(clientName, newMsg);
+                //_MessagesReceived.add(newPair);
 
                 openChatWindow(clientName);
 
@@ -492,7 +494,8 @@ public class MainActivity extends AppCompatActivity
     // Adds a new chat name to the list view and to our list of chats
     // Returns true if a new chat was added for the arguments specified,
     // False otherwise (i.e. chat already exists)
-    public boolean AddChat(String chatName, boolean isGroupChat) {
+    public boolean AddChat(String chatName, boolean isGroupChat)
+    {
 
         // Add a chat history for the chat name if necessary
         Chat newChat = _Chats.get(chatName);

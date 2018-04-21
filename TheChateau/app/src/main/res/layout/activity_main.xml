@@ -16,6 +16,7 @@
         android:id="@+id/nonFragmentStuff"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@color/MainScreenGreen"
         >
 
         <!-- Left Hand Side -->
@@ -24,22 +25,34 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_toLeftOf="@+id/layoutSeparator"
-
             android:orientation="vertical">
 
             <TextView
                 android:id="@+id/chat_list_title"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="Current Chats"></TextView>
+                android:gravity="center"
+                android:textColor="@color/BlackColor"
+                android:text="Chats"
+                android:paddingTop="10dp"
+                android:paddingBottom="5dp">
+
+            </TextView>
+
+            <!-- TopLine Above of ListView -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.005dp"
+                android:background="@color/BlackColor">
+            </View>
 
             <ListView
                 android:id="@+id/chat_list_view"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_below="@id/chat_list_title">
-
+                android:layout_below="@id/chat_list_title"
+                android:divider="@color/BlackColor"
+                android:dividerHeight="0.5dp">
             </ListView>
 
         </LinearLayout>
@@ -48,12 +61,10 @@
         <!-- Middle Separator -->
         <View
             android:id="@+id/layoutSeparator"
-            android:layout_width=".05dp"
+            android:layout_width="0.05dp"
             android:layout_height="match_parent"
             android:layout_centerHorizontal="true"
-            android:background="@color/colorPrimaryDark" />
-
-
+            android:background="@color/BlackColor" />
 
 
         <!-- Right Hand Side -->
@@ -62,6 +73,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_toRightOf="@+id/layoutSeparator"
+
             android:orientation="vertical">
 
             <!-- Spacer so Button looks nicer -->
@@ -69,21 +81,32 @@
                 android:layout_width="match_parent"
                 android:layout_height="20dp" />
 
+            <!-- Add Chat Button -->
             <Button
                 android:id="@+id/addChatButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:text="Add New Chat" />
+                android:text="Add New Chat"
+                android:background="@color/PalerCerulean"
+                android:padding="10dp"/>
 
+            <!-- View to Separate Buttons -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="10dp">
+            </View>
+
+            <!-- Start Random Chat Button -->
             <Button
                 android:id="@+id/RandomChatButton"
                 android:text="Add Random Chat"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
+                android:background="@color/PalerCerulean"
+                android:padding="10dp"
                 />
-
 
         </LinearLayout>
 
@@ -103,7 +126,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:background="@color/NotificationColor">
+            android:background="@color/DarkerOrange">
 
             <TextView
                 android:id="@+id/ConnectingText"

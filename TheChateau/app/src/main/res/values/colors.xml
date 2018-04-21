@@ -1,12 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
+
+    <!-- Misc -->
     <color name="colorAccent">#FF4081</color>
+    <color name="BlackColor">#000000</color>
+
+    <!-- Oranges -->
     <color name="NotificationColor">#FF8C00</color>
-    <color name="lightBlue">#00bfff</color>
-    <color name="green">#5ec639</color>
+    <color name="DarkerOrange">#EE7600</color>
+
+
+    <!-- Reds -->
     <color name="red">#BF01</color>
     <color name="otherRed">#FF0000</color>
-    <color name="DarkerOrange">#EE7600</color>
+
+    <!-- Greens -->
+    <color name ="LighterGreen">#B3C83E</color>
+    <color name="OldLoginGreen">#a4c639</color>
+    <color name="green">#5ec639</color>
+    <color name="MainScreenGreen">#4b9F7C</color>
+    <color name="darkerGreen">#4b9E7C</color>
+
+    <!-- Blues -->
+    <color name="MutedBlue">#C5CAE9</color>
+    <color name="LoginButtonBlueColor">#650004FA</color>
+    <color name="lightBlue">#00bfff</color>
+    <color name="PalerCerulean">#FF408CAF</color>
+    <color name="Cerulean">#FF008CAF</color>
+    <color name="DarkerCerulean">#8F008CAF</color>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+
+
 </resources>

@@ -3,7 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.thechateau.AddChatFragment">
+    tools:context="com.example.thechateau.AddChatFragment"
+    android:background="@color/MainScreenGreen">
 
     <!-- Title Layout -->
     <LinearLayout
@@ -12,13 +13,16 @@
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:orientation="horizontal"
+        android:paddingTop="10dp"
         android:paddingBottom="10dp"
         app:layout_constraintBottom_toTopOf="@id/AddContactLayout">
 
         <TextView
             android:id="@+id/titleText"
+            android:textColor="@color/BlackColor"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+
             android:text="Create a New Chat" />
     </LinearLayout>
 
@@ -51,6 +55,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Add Contact"
+            android:padding="10dp"
+            android:background="@color/Cerulean"
             app:layout_constraintLeft_toRightOf="@id/AddContactTextBox">
 
         </Button>
@@ -89,6 +95,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Contacts"
+                android:textColor="@color/BlackColor"
                 />
 
         </LinearLayout>
@@ -116,7 +123,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
-                android:text="Added" />
+                android:text="Added"
+                android:textColor="@color/BlackColor"
+                />
         </LinearLayout>
 
     </RelativeLayout>
@@ -217,11 +226,13 @@
         android:gravity="center"
         android:layout_margin="10dp"
         android:paddingBottom="10dp"
+        android:textColor="@color/BlackColor"
         app:layout_constraintTop_toBottomOf="@id/ChatNameLayout">
 
 
         <TextView
             android:id="@+id/ErrorMessage"
+            android:textColor="@color/BlackColor"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
@@ -244,7 +255,9 @@
             android:id="@+id/SubmitButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Create Chat" />
+            android:text="Create Chat"
+            android:background="@color/Cerulean"
+            android:padding="10dp"/>
     </LinearLayout>
 
 
