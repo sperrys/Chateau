@@ -70,7 +70,7 @@
 
     <!-- Chat Messages Section -->
     <android.support.v7.widget.RecyclerView
-        android:background="@color/MainScreenGreen"
+        android:background="@color/LightGray"
         android:id="@+id/reyclerview_message_list"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -87,7 +87,7 @@
         android:layout_width="0dp"
         android:layout_height="8dp"
         android:layout_marginBottom="0dp"
-        android:background="@color/MainScreenGreen"
+        android:background="@color/LightGray"
         app:layout_constraintBottom_toTopOf="@+id/EndRecyclerViewLine"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
@@ -112,7 +112,7 @@
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:textColor="@color/BlackColor"
-        android:background="@color/MainScreenGreen"
+        android:background="@color/LightGray"
         app:layout_constraintBottom_toTopOf="@+id/chatWindowDivider"/>
 
 

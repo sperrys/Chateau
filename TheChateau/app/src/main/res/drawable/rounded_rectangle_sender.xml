@@ -4,7 +4,7 @@ android:shape="rectangle" >
 
 <!-- Message Background color -->
 <solid
-    android:color="@color/DarkerOrange" >
+    android:color="@color/MainScreenGreen" >
 </solid>
 
 <!-- Set Radius to make corners rounded -->
