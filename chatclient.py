@@ -81,12 +81,14 @@ class ChatClient():
         # Make sure client is already registered
         if  self.registered:
             response = Response("RegisterResponse", 303)
+            response.add_pair("msg_id", msg_id)
             response.add_pair("detail", "client already registered")
             self.send(response.jsonify)
 
         # Check for unique username
         elif not clients.unique_username(username):
             response = Response("RegisterResponse", 302)
+            response.add_pair("msg_id", msg_id)
             response.add_pair("detail", "username is already taken")
             self.send(response.jsonify())
             

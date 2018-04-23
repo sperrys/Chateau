@@ -1,4 +1,3 @@
-
 import json
 
 from response import Response
@@ -58,7 +57,7 @@ class GroupChat():
             # stop creation of the chat
             if c == None:
                 err_res = Response("ErrorResponse", 404)
-                err_res.add_pair("msg_id", msg["msg_id"])
+                err_res.add_pair("msg_id", msg_id)
                 err_res.add_pair("detail", "At least one client doesn't exist")
 
                 # Send Error Response to Chat Creator Return invalid

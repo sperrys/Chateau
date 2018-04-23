@@ -3,3 +3,5 @@ TheChateau/
 
 __pycache__/
 *.pyc
+
+*.idea

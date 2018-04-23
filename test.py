@@ -8,7 +8,7 @@ import json
 from request import Request
 
 from tornado import testing, httpserver, gen, websocket
-from server import app
+from service_authority import app
 
 from test_client import TestClient
 
