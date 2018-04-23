@@ -207,10 +207,12 @@ public class MainActivity extends AppCompatActivity
     /**********************************************************************************************/
 
     /* Message Type And Status Code Definitions */
-    private final String _RegisterRequest           = "RegisterRequest";
-    private final String _RegisterResponse          = "RegisterResponse";
-    private final long   _RegistrationApprovedCode  = 200;
-    private final long   _UserAlreadyRegisteredCode = 302;
+    public final static String _RegisterRequest           = "RegisterRequest";
+    public final static String _RegisterResponse          = "RegisterResponse";
+    public final static long   _RegistrationApprovedCode      = 200;
+    public final static long   _UserAlreadyRegisteredCode     = 302;
+    public final static long   _GenericRegistrationErrorCode  = 400;
+    public final static long   _NoServerResponseCode          = -1;
 
     private final String _GroupInitExample             = "SingleExample";
     private final String _SingleMessageResponseExample = "GroupExample";
@@ -938,14 +940,16 @@ public class MainActivity extends AppCompatActivity
     /**********************************************************************************************/
 
     // Register current client in chat server
-    // Returns true if the user gets registered in a given amount of time, false otherwise
-    public boolean registerUser(String username, String password, boolean doAuthentication)
+    // Returns the status of the register code received, or a register failed code if
+    // no response was received from the server
+    public long registerUser(String username, String password, boolean doAuthentication)
     {
         String tag = "RegisterUser()";
 
         JSONObject json = new JSONObject();
 
-        try {
+        try
+        {
             json.put("type",     _RegisterRequest);
             json.put("username", username);
             json.put("password", password);
@@ -954,7 +958,9 @@ public class MainActivity extends AppCompatActivity
             json.put("auth", doAuthentication);
 
 
-        } catch (JSONException e) {
+        }
+        catch (JSONException e)
+        {
             e.printStackTrace();
         }
 
@@ -976,18 +982,18 @@ public class MainActivity extends AppCompatActivity
                 _UserHasRegisteredBefore = true;
 
                 Log.i(tag,"Registration approved");
-                return true;
             }
             else
             {
                 Log.i(tag,"Registration not approved, got status " + status);
-                return false;
             }
+
+            return status;
         }
         else
         {
             Log.i(tag,"Error, ack was null for Registration ");
-            return false;
+            return _NoServerResponseCode;
         }
 
         /*

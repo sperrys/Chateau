@@ -24,6 +24,7 @@ public class LoginFragment extends Fragment {
     private String mParam1;
     private String mParam2;
 
+
     boolean _AuthenticationBool = false;
 
     EditText _PasswordEditText;
@@ -34,7 +35,8 @@ public class LoginFragment extends Fragment {
 
 
     public LoginFragment() {
-        //_MainActivity = (MainActivity)getActivity();
+
+
     }
 
     @Override
@@ -69,20 +71,34 @@ public class LoginFragment extends Fragment {
                 username = _UsernameEditText.getText().toString();
                 password = _PasswordEditText.getText().toString();
 
-                if (((MainActivity)getActivity()).registerUser(username, password, _AuthenticationBool))
+                long registrationStatus  = ((MainActivity)getActivity()).registerUser(username, password, _AuthenticationBool);
+
+                Log.i("LoginFragment", "Received status: " + registrationStatus);
+
+                if (registrationStatus == MainActivity._RegistrationApprovedCode )
                 {
                     Log.i("LoginFragment", "Registration success");
                     _InfoMessageText.setText("Registration successful");
                     getActivity().onBackPressed();
                 }
-                else
+                else if (registrationStatus == MainActivity._UserAlreadyRegisteredCode)
                 {
-                    Log.i("LoginFragment", "Registration failed");
-                    _InfoMessageText.setText("Error: login failed. Please try again");
+                    Log.i("LoginFragment", "User Already Registered");
+                    _InfoMessageText.setText("Error: User already registered.\nTry another name");
 
                     // Clear text info
                     _UsernameEditText.getText().clear();
                     _PasswordEditText.getText().clear();
+                }
+                else if (registrationStatus == MainActivity._NoServerResponseCode)
+                {
+                    Log.i("LoginFragment", "No server response");
+                    _InfoMessageText.setText("Error: Can't connect to server.\nPlease try again");
+                }
+                else
+                {
+                    Log.i("LoginFragment", "Error: Got status of " + registrationStatus);
+                    _InfoMessageText.setText("Error: Unknown error.\nPlease try again.");
                 }
             }
         });
