@@ -108,6 +108,34 @@
                 android:padding="10dp"
                 />
 
+            <!-- View to Separate Random Chat Button and TextView -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="10dp">
+            </View>
+
+            <!-- Random Chat Failure Layout -->
+            <RelativeLayout
+                android:id="@+id/RandomChatInfoLayout"
+                android:layout_margin="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:background="@color/BlackColor"
+                android:padding="1dp"
+                android:visibility="invisible">
+
+                <TextView
+                    android:id="@+id/RandomChatInfo"
+                    android:padding="10dp"
+                    android:text="Random chat failed, \n not enough people online"
+                    android:background="@color/MainScreenGreen"
+                    android:textColor="@color/BlackColor"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </RelativeLayout>
+
         </LinearLayout>
 
 
@@ -137,6 +165,8 @@
                 />
 
         </RelativeLayout>
+
+
 
 
     </RelativeLayout>

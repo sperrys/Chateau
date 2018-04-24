@@ -2,6 +2,7 @@ package com.example.thechateau;
 
 
 import android.net.Uri;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -237,6 +238,7 @@ public class MainActivity extends AppCompatActivity
     private final String _RandomMessageResponse = "RandomMessageResponse";
     private final long   _RandomMessageSuccess  = 200;
     private final long   _RandomMessageError    = 400;
+    private final long   _NoOtherUsersErrorCode = 404;
 
     /**********************************************************************************************/
     /*                               Message Preview Variables                                    */
@@ -287,6 +289,8 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    private RelativeLayout _RandomChatInfoLayout;
+    private TextView       _RandomChatInfoText;
 
     /**********************************************************************************************/
     /*                            Larger Functions And Logic                                      */
@@ -302,6 +306,12 @@ public class MainActivity extends AppCompatActivity
 
         _ConnectingText   = findViewById(R.id.ConnectingText);
         _ConnectingLayout = findViewById(R.id.ConnectingLayout);
+
+        _RandomChatInfoLayout = findViewById(R.id.RandomChatInfoLayout);
+        _RandomChatInfoText   = findViewById(R.id.RandomChatInfo);
+
+
+
 
         _RandomChatButton = findViewById(R.id.RandomChatButton);
         _RandomChatButton.setOnClickListener(new View.OnClickListener() {
@@ -425,8 +435,7 @@ public class MainActivity extends AppCompatActivity
 
     private void startRandomChat(String content)
     {
-        // Set loading bar on UI screen with messages showing retrieval process
-
+        // Set loading bar on UI screen with messages showing retrieval process?
 
         JSONObject json = new JSONObject();
 
@@ -446,43 +455,49 @@ public class MainActivity extends AppCompatActivity
         // Ask server for Random person to chat
         MessageAck messageAck = sendMessageToServer(json);
 
-
-        if (messageAck != null && messageAck.getStatus() == _RandomMessageSuccess)
+        if (messageAck != null)
         {
-            org.json.simple.JSONObject jsonObject;
+            Long status = messageAck.getStatus();
 
-            JSONParser parser = new JSONParser();
-
-            try
+            if (status == _RandomMessageSuccess)
             {
-                jsonObject = (org.json.simple.JSONObject) parser.parse(messageAck.getMessageResponse());
+                org.json.simple.JSONObject jsonObject;
 
-                String clientName = (String) jsonObject.get("client");
+                JSONParser parser = new JSONParser();
 
-
-                Log.i("startRandomChat", "clientName is " + clientName);
-
-                // Add new chat if necessary
-                if(_Chats.get(clientName) == null)
+                try
                 {
-                    AddChat(clientName, false);
+                    jsonObject = (org.json.simple.JSONObject) parser.parse(messageAck.getMessageResponse());
+
+                    String clientName = (String) jsonObject.get("client");
+
+                    Log.i("startRandomChat", "clientName is " + clientName);
+
+                    // Add new chat if necessary
+                    if (_Chats.get(clientName) == null)
+                    {
+                        AddChat(clientName, false);
+                    }
+
+                    openChatWindow(clientName);
+
                 }
-
-                //Message newMsg = new Message(content, new User(getCurrentUser()), System.currentTimeMillis());
-                //ReceivedMessage newPair = new ReceivedMessage(clientName, newMsg);
-                //_MessagesReceived.add(newPair);
-
-                openChatWindow(clientName);
-
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
             }
-            catch (Exception e)
+            else if (status == _NoOtherUsersErrorCode)
             {
-                e.printStackTrace();
+                brieflyDisplayRandomChatInfo("Error: No other users online");
             }
+
         }
         else
         {
+            brieflyDisplayRandomChatInfo("Error: No server response");
             Log.i("RandomChat",  "Error, Random chat could not be created");
+
         }
 
 
@@ -491,6 +506,21 @@ public class MainActivity extends AppCompatActivity
 
 
         // Open chat window of random chat created
+    }
+
+    public void brieflyDisplayRandomChatInfo(String infoMessage)
+    {
+        _RandomChatInfoLayout.setVisibility(View.VISIBLE);
+        _RandomChatInfoText.setVisibility(View.VISIBLE);
+        _RandomChatInfoText.setText(infoMessage);
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                _RandomChatInfoLayout.setVisibility(View.INVISIBLE);
+                _RandomChatInfoText.setVisibility(View.INVISIBLE);
+            }
+        }, 2000);
     }
 
     // Adds a new chat name to the list view and to our list of chats
