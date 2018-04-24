@@ -180,8 +180,8 @@ public class MainActivity extends AppCompatActivity
         public void run() {
 
             Log.i("MainActivity", "setting connected text to connected");
-            _ConnectingText.setVisibility(View.VISIBLE);
-            //_ConnectingText.bringToFront();
+            _ConnectingLayout.setVisibility(View.VISIBLE);
+
             _ConnectingText.setText("Connected!");
         }
     };
@@ -190,8 +190,18 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void run() {
             Log.i("MainActivity", "setting connected text to connecting");
-            _ConnectingText.setVisibility(View.VISIBLE);
+            _ConnectingLayout.setVisibility(View.VISIBLE);
+            
             _ConnectingText.setText("Connecting...");
+        }
+    };
+
+    private Runnable _RemoveConnectingText = new Runnable() {
+        @Override
+        public void run() {
+
+            Log.i("WaiterThread", "Setting ConnectingLayout to Gone");
+            _ConnectingLayout.setVisibility(View.GONE);
         }
     };
 
@@ -508,7 +518,7 @@ public class MainActivity extends AppCompatActivity
         // Open chat window of random chat created
     }
 
-    public void brieflyDisplayRandomChatInfo(String infoMessage)
+    private void brieflyDisplayRandomChatInfo(String infoMessage)
     {
         _RandomChatInfoLayout.setVisibility(View.VISIBLE);
         _RandomChatInfoText.setVisibility(View.VISIBLE);
@@ -521,6 +531,30 @@ public class MainActivity extends AppCompatActivity
                 _RandomChatInfoText.setVisibility(View.INVISIBLE);
             }
         }, 2000);
+    }
+
+    // Removes the connecting text from the screen after a certain delay has been reached
+    private void RemoveConnectingTextAfterDelay(final long delayMillis)
+    {
+        Log.i("RemoveConnectingText", "Removing Connecting Text after " + delayMillis + " millis");
+        Thread waiter = new Thread() {
+            @Override
+            public void run()
+            {
+
+                try
+                {
+                    Thread.sleep(delayMillis);
+                }
+                catch (InterruptedException e)
+                {
+                    Log.i("WaiterThread", "Exception! " + e.getMessage());
+                }
+
+                runOnUiThread(_RemoveConnectingText);
+            }
+        };
+        waiter.run();
     }
 
     // Adds a new chat name to the list view and to our list of chats
@@ -678,7 +712,7 @@ public class MainActivity extends AppCompatActivity
     private void removeAllFragments()
     {
         Log.i("MainActivity", "Called RemoveAllFragments");
-        for(Fragment fragment:getSupportFragmentManager().getFragments())
+        for (Fragment fragment:getSupportFragmentManager().getFragments())
         {
             /*if(fragment instanceof NavigationDrawerFragment)
             {
@@ -686,7 +720,7 @@ public class MainActivity extends AppCompatActivity
             }
             else
             {*/
-            if(fragment!=null)
+            if(fragment != null)
             {
                 getSupportFragmentManager().beginTransaction().remove(fragment).commit();
             }
@@ -895,32 +929,10 @@ public class MainActivity extends AppCompatActivity
         //setScreenTouchability(true);
 
         Log.i(tag, "Got past login fragment");
+
         // Wait for a few seconds and then make the connecting layout view disappear
-        Thread waiter = new Thread() {
-            @Override
-            public void run()
-            {
+        RemoveConnectingTextAfterDelay(2000);
 
-                try
-                {
-                    Thread.sleep(2000);
-                }
-                catch (InterruptedException e)
-                {
-                    Log.i("WaiterThread", "Exception! " + e.getMessage());
-                }
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-
-                        Log.i("WaiterThread", "Setting ConnectingLayout to Gone");
-                        _ConnectingLayout.setVisibility(View.GONE);
-                    }
-                });
-            }
-        };
-        waiter.run();
 
     }
 
@@ -946,6 +958,9 @@ public class MainActivity extends AppCompatActivity
 
         _WSConnected = false;
 
+        // Set connected attribute to "connecting"
+        runOnUiThread(_SetConnectingText);
+
         // Disable the screen from being touched by the user
         //setScreenTouchability(false);
 
@@ -959,8 +974,6 @@ public class MainActivity extends AppCompatActivity
         _WSClient = new ChatWebSocket(_ServerURI, this);
         callWSConnect();
 
-        // Set connected attribute to "connecting"
-        runOnUiThread(_SetConnectingText);
 
     }
 
