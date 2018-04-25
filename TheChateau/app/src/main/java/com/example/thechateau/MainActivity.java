@@ -191,7 +191,7 @@ public class MainActivity extends AppCompatActivity
         public void run() {
             Log.i("MainActivity", "setting connected text to connecting");
             _ConnectingLayout.setVisibility(View.VISIBLE);
-            
+
             _ConnectingText.setText("Connecting...");
         }
     };
@@ -221,7 +221,7 @@ public class MainActivity extends AppCompatActivity
     public final static String _RegisterRequest           = "RegisterRequest";
     public final static String _RegisterResponse          = "RegisterResponse";
     public final static long   _RegistrationApprovedCode      = 200;
-    public final static long   _UserAlreadyRegisteredCode     = 302;
+    public final static long   _UserAlreadyRegisteredCode     = 303;
     public final static long   _GenericRegistrationErrorCode  = 400;
     public final static long   _NoServerResponseCode          = -1;
 
@@ -410,7 +410,8 @@ public class MainActivity extends AppCompatActivity
 
         // Set up URI to connect to the server
 
-        try {
+        try
+        {
             _ServerURI = new URI(_HerokuHost);
         } catch (URISyntaxException e) {
             e.printStackTrace();
@@ -551,10 +552,24 @@ public class MainActivity extends AppCompatActivity
                     Log.i("WaiterThread", "Exception! " + e.getMessage());
                 }
 
-                runOnUiThread(_RemoveConnectingText);
+                setConnectingLayout(View.GONE, "");
+                //runOnUiThread(_RemoveConnectingText);
             }
         };
         waiter.run();
+    }
+
+    private void setConnectingLayout(final int visibility, final String connectMessage)
+    {
+        Log.i("setConnectingLayout", "Setting connected layout to " + visibility + " with message " + connectMessage);
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                _ConnectingLayout.setVisibility(visibility);
+                _ConnectingText.setText(connectMessage);
+            }
+        });
     }
 
     // Adds a new chat name to the list view and to our list of chats
@@ -871,16 +886,18 @@ public class MainActivity extends AppCompatActivity
                 {
                     MessageAck msgAck = iter.next();
 
-                    long currentID = msgAck.getID();
-
-                    //Log.i(tag, "currentID is " + currentID + " with status " + msgAck.getStatus());
-
-                    // If you we find the right message ack, remove it and return its status
-                    if (currentID == messageID)
+                    if (msgAck != null)
                     {
-                        Log.i(tag, "Found ack for messageID " + messageID + " with status " + msgAck.getStatus());
-                        iter.remove();
-                        return msgAck;
+                        long currentID = msgAck.getID();
+
+                        //Log.i(tag, "currentID is " + currentID + " with status " + msgAck.getStatus());
+
+                        // If you we find the right message ack, remove it and return its status
+                        if (currentID == messageID) {
+                            Log.i(tag, "Found ack for messageID " + messageID + " with status " + msgAck.getStatus());
+                            iter.remove();
+                            return msgAck;
+                        }
                     }
 
                 }
@@ -909,21 +926,32 @@ public class MainActivity extends AppCompatActivity
         // Indicate to everyone that we're connected to the server
         _WSConnected = true;
 
+
+
         // Register current user with the server if necessary
         //if(!_UserHasRegisteredBefore)
         if (!_UserIsRegistered)
         {
+            removeAllFragments();
             Log.i(tag, "First time user, prompting the login fragment");
             startLoginFragment();
         }
         /*else
         {
-            Log.i(tag, "Second time user, prompting user registration again");
-            registerUser(_CurrentUser, _CurrentPassword, _RegisterWithAuthentication);
+            Log.i(tag, "Skipping Login Fragment prompting user registration again");
+
+            if (registerUserAgain(1) == false)
+            {
+                removeAllFragments();
+                startLoginFragment();
+            }
         }*/
 
         // Set the text in the connected layout to "connected!"
-        runOnUiThread(_SetConnectedText);
+        setConnectingLayout(View.VISIBLE, "Connected!");
+        //runOnUiThread(_SetConnectedText);
+
+
 
         // Set screen to touchable
         //setScreenTouchability(true);
@@ -934,6 +962,32 @@ public class MainActivity extends AppCompatActivity
         RemoveConnectingTextAfterDelay(2000);
 
 
+    }
+
+    // Attempts to register a user that has already been registered in the system
+    // up to <timesToTry> times
+    private boolean registerUserAgain(int timesToTry)
+    {
+
+        String tag = "RegisterUserAgain";
+        for (int i = 0; i < timesToTry ; i++)
+        {
+            Log.i(tag, "Attempt " + i + " to Re-Register User: " + _CurrentUser);
+            long status = registerUser(_CurrentUser, _CurrentPassword, _RegisterWithAuthentication);
+
+            if (status == _RegistrationApprovedCode)
+            {
+                Log.i(tag, "Re-Registration Success");
+                return true;
+            }
+            else if (status == _UserAlreadyRegisteredCode)
+            {
+                Log.i(tag, "Previous username " + _CurrentUser + " has been taken");
+                return false;
+            }
+        }
+
+        return false;
     }
 
     // Sets the screen to touchable or untouchable based on the argument
@@ -959,13 +1013,14 @@ public class MainActivity extends AppCompatActivity
         _WSConnected = false;
 
         // Set connected attribute to "connecting"
-        runOnUiThread(_SetConnectingText);
+        setConnectingLayout(View.VISIBLE, "Connecting...");
+        //runOnUiThread(_SetConnectingText);
 
         // Disable the screen from being touched by the user
         //setScreenTouchability(false);
 
         // Remove fragments from the display
-        removeAllFragments();
+        //removeAllFragments();
 
         // User is no longer registered when chats disconnect
         _UserIsRegistered = false;
@@ -1651,6 +1706,8 @@ public class MainActivity extends AppCompatActivity
         while (_WSClient == null || _WSConnected != true);
 
         _WSClient.send(message);
+
+
 
         MessageAck ack = waitUntilMessageAcked(_currentMessageID, 2000);
         //Log.i("sendMessageToServer", "msgID before: " + _currentMessageID);
