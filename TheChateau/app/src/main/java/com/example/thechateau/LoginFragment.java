@@ -63,13 +63,26 @@ public class LoginFragment extends Fragment {
 
         _LoginButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-
-
+            public void onClick(View view)
+            {
                 String username, password;
 
                 username = _UsernameEditText.getText().toString();
                 password = _PasswordEditText.getText().toString();
+
+                // Make sure the user enters a username
+                if (username.equals(""))
+                {
+                    _InfoMessageText.setText("Please enter your username");
+                    return;
+                }
+
+                // Make sure the user enters a password
+                if(password.equals(""))
+                {
+                    _InfoMessageText.setText("Please enter your password");
+                    return;
+                }
 
                 long registrationStatus  = ((MainActivity)getActivity()).registerUser(username, password, _AuthenticationBool);
 

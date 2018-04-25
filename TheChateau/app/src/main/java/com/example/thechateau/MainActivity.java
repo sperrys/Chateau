@@ -154,11 +154,14 @@ public class MainActivity extends AppCompatActivity
     /*                             User Registration Variables                                    */
     /**********************************************************************************************/
 
-    private boolean             _UserIsRegistered = false; // True if user has been registered
+    private boolean             _UserIsRegistered           = false;
     private String              _CurrentUser;
     private String              _CurrentPassword;
     private boolean             _RegisterWithAuthentication = false;
-    private boolean             _UserHasRegisteredBefore = false;
+    private boolean             _UserHasRegisteredBefore    = false;
+
+    private final String  _DefaultUserToken = "";
+    private String        _UserToken = _DefaultUserToken;
 
 
 
@@ -249,6 +252,8 @@ public class MainActivity extends AppCompatActivity
     private final long   _RandomMessageSuccess  = 200;
     private final long   _RandomMessageError    = 400;
     private final long   _NoOtherUsersErrorCode = 404;
+
+    private final long   _TokenNotAuthenticErrorCode = 301;
 
     /**********************************************************************************************/
     /*                               Message Preview Variables                                    */
@@ -464,7 +469,7 @@ public class MainActivity extends AppCompatActivity
         String message = json.toString();
 
         // Ask server for Random person to chat
-        MessageAck messageAck = sendMessageToServer(json);
+        MessageAck messageAck = sendMessageToServer(json, _RandomMessageRequest);
 
         if (messageAck != null)
         {
@@ -783,7 +788,7 @@ public class MainActivity extends AppCompatActivity
 
 
         Log.i(tag, "Sending chat message(): " + message);
-        MessageAck ack = sendMessageToServer(json);
+        MessageAck ack = sendMessageToServer(json, _GeneralMessageSendRequest);
 
         if (ack != null )
         {
@@ -1066,7 +1071,7 @@ public class MainActivity extends AppCompatActivity
 
 
         Log.i("MainActivity", "Sending registration message(): " + message);
-        MessageAck ack = sendMessageToServer(json);
+        MessageAck ack = sendMessageToServer(json, _RegisterRequest);
 
         if (ack != null )
         {
@@ -1075,9 +1080,9 @@ public class MainActivity extends AppCompatActivity
             if (status == _RegistrationApprovedCode)
             {
                 _RegisterWithAuthentication = doAuthentication;
-                _CurrentPassword = password;
-                _CurrentUser     = username;
-                _UserHasRegisteredBefore = true;
+                _CurrentPassword            = password;
+                _CurrentUser                = username;
+                _UserHasRegisteredBefore    = true;
 
                 Log.i(tag,"Registration approved");
             }
@@ -1134,6 +1139,7 @@ public class MainActivity extends AppCompatActivity
         return true;
     }*/
 
+
     /**********************************************************************************************/
     /*                           Miscellaneous Functions                                          */
     /**********************************************************************************************/
@@ -1163,11 +1169,14 @@ public class MainActivity extends AppCompatActivity
                 case _RegisterResponse:
                 {
                     // If user was successfully registered
-                    if (status == _RegistrationApprovedCode )
+                    if (status == _RegistrationApprovedCode)
                     {
                         Log.i(tag, "Registration successful");
 
                         _UserIsRegistered = true;
+
+                        // Get the token from the message
+                        _UserToken = (String)jsonObject.get("token");
 
                     }
 
@@ -1397,9 +1406,15 @@ public class MainActivity extends AppCompatActivity
                     Log.i(tag, "Received an error response" );
 
                     long messageID = (long)jsonObject.get(_messageIDField);
+
+
                     _AllMessageConfirmations.add(new MessageAck(messageID, status));
+
+
+
+                    break;
                 }
-                break;
+
 
                 default:
                 {
@@ -1462,7 +1477,7 @@ public class MainActivity extends AppCompatActivity
         String message = json.toString();
 
         Log.i("MainActivity", "Sending getClientMessage(): " + message);
-        MessageAck ack = sendMessageToServer(json);
+        MessageAck ack = sendMessageToServer(json, _ClientListRequest);
 
         // Return current contact list regardless of the result
         if (ack != null)
@@ -1599,8 +1614,8 @@ public class MainActivity extends AppCompatActivity
         // Otherwise, send a group chat
         JSONObject json = new JSONObject();
 
-
-        try {
+        try
+        {
 
             JSONArray jsonArrayBetter =  new JSONArray();
 
@@ -1613,16 +1628,16 @@ public class MainActivity extends AppCompatActivity
             json.put("recipients", (Object)jsonArrayBetter);
             json.put("chatname"  , chatName);
 
-        } catch (JSONException e) {
+        } catch (JSONException e)
+        {
             e.printStackTrace();
             return false;
         }
 
         String message = json.toString();
 
-
         Log.i(tag, "Sending group init message(): " + message);
-        MessageAck ack = sendMessageToServer(json);
+        MessageAck ack = sendMessageToServer(json, _GroupMessageInitRequest);
 
         if (ack != null )
         {
@@ -1689,33 +1704,59 @@ public class MainActivity extends AppCompatActivity
     }*/
 
     // Waits until the web socket client is connected, and then sends a message
-    private MessageAck sendMessageToServer(JSONObject json)
+    private MessageAck sendMessageToServer(JSONObject json, String msgType)
     {
+
+        String tag = "sendMessageToServer";
+
         try
         {
             // Put the current ID in the json string
             json.put(_messageIDField, _currentMessageID);
+
+            // Add a token to the request if it's not a register request
+            if (!msgType.equals(_RegisterRequest))
+            {
+                json.put("token", _UserToken);
+            }
         }
         catch (Exception e)
         {
             return null;
         }
+
         String message = json.toString();
 
-        Log.i("sendMessageToServer", "in sendMessageToServer() for message " + message);
-        while (_WSClient == null || _WSConnected != true);
+        Log.i(tag, "in sendMessageToServer() for message " + message);
 
+        // Loop until we are connected to the server, then send the message
+        while (_WSClient == null || _WSConnected != true);
         _WSClient.send(message);
 
-
-
+        // Wait up to 2 seconds for server to respond to our message
         MessageAck ack = waitUntilMessageAcked(_currentMessageID, 2000);
-        //Log.i("sendMessageToServer", "msgID before: " + _currentMessageID);
+
+        // Check if our token is still valid and retrieve a new one if necessary
+        if (ack != null && ack.getStatus() == _TokenNotAuthenticErrorCode)
+        {
+            Log.i(tag, "Received TokenNotAuthenticErrorCode");
+
+            // Keep trying to register the user again until we are successful
+            long registerStatus;
+
+            do
+            {
+                Log.i(tag, "Attempting to retrieve token from server again");
+                registerStatus = registerUser(_CurrentUser, _CurrentPassword, _RegisterWithAuthentication);
+                Log.i(tag, "Got Registration code: " + registerStatus);
+
+            } while(registerStatus != _RegistrationApprovedCode);
+        }
+
+        // Update message ID counter
         _currentMessageID++;
-        //Log.i("sendMessageToServer", "msgID after: " + _currentMessageID);
 
-
-        // Reset message ID if necessary
+        // Reset our message ID counter if necessary
         if (_currentMessageID > _MaxMessageID)
         {
             _currentMessageID = 0;
