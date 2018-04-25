@@ -29,8 +29,8 @@ Arguments
 	- `"auth"`
 
 Response:
-	- If successful, `"type": "RegisterResponse", "status": 200`, your username when chatting 
-	  is now the username entered.
+	- If successful, `"type": "RegisterResponse", "status": 200, "token": "token_stirng"` your username when chatting 
+	  is now the username entered. The token is a JWT that a client then uses to identify themselves with requests.
 	- if generic failure, `"type": "ErrorResponse", status": 400` 
 	- if user's socket is already registered with a username, `"type": "ErrorResponse", status": 302` 
 	- if username has already been taken, `"type": "ErrorResponse", status": 302` 
@@ -56,7 +56,7 @@ Response:
 
 **Send a Message to a Chat or Client**
 
-"type": "GroupMessageRequest"
+"type": "MessageRequest"
 
 Arguments: 
 	- `"recipient"` - recipient is either the username of a single person or the name of a groupchat.
@@ -64,18 +64,9 @@ Arguments:
 
 Response:
 	- If sucessful, `"type": "MessageSendResponse"` and `"status": 200` goes to the person who sent the message
-	- If sucessful, all clients in chat will get a `"type": "GroupMessageRecv"`, `"content": "food"`
+	- If sucessful, all clients in chat will get a `"type": "MessageRecv"`, `"content": "foo", "sender": "client1", "chatname": "client1"`
 	- If generic failure, `"type": "ErrorResponse", "status": 400`
 
-
-**Message From Other Person in Group Chat**
-
-"type" : "GroupMessageRecv"
-
-arguments: 
-	`"status": 201` (if chat was newly created), `200` if afterthat
-	"sender": username of the person who sent the message
-	"content": the actual content of the new message in the chat
 
 
 **Clients List:** 

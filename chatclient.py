@@ -3,7 +3,13 @@
 import time
 import sys
 
+import bcrypt
+import jwt
+import binascii
+
 from response import Response
+
+key = "This_should_be_a_secret"
 
 class Clients():
     def __init__(self):
@@ -29,6 +35,13 @@ class Clients():
             if c.username == username:
                 return c
         return None
+
+    # Returns a client based upon the token 
+    def find_w_token(self, msg):
+        decoded = jwt.decode(msg["token"], key, algorithms='HS256')
+        username = decoded['username']
+        print("Username is :", username)
+        return self.find_w_username(username)
 
     # Remove Client Based on Username,
     # assumes unique usernames
@@ -69,6 +82,7 @@ class ChatClient():
         self.sock = WebSocketHandler
         self.username = ""
         self.registered = False
+        self.hashpw = None
 
     def set_username(self, username):
         self.username = username
@@ -76,29 +90,38 @@ class ChatClient():
     def get_username(self):
         return self.username
 
-    def register(self, username, clients, msg_id):
+    def register(self, username, clients, msg):
 
         # Make sure client is already registered
         if  self.registered:
             response = Response("RegisterResponse", 303)
-            response.add_pair("msg_id", msg_id)
+            response.add_pair("msg_id", msg['msg_id'])
             response.add_pair("detail", "client already registered")
             self.send(response.jsonify())
 
         # Check for unique username
         elif not clients.unique_username(username):
             response = Response("RegisterResponse", 302)
-            response.add_pair("msg_id", msg_id)
+            response.add_pair("msg_id", msg['msg_id'])
             response.add_pair("detail", "username is already taken")
             self.send(response.jsonify())
             
         # Successfully Register
         else: 
             self.username = username
+            pw = (msg['password'].encode('utf-8'))
+
+            # Store Hashed Password With Salt in Memory with Client's info (Not Secure)
+            self.hashpw = bcrypt.hashpw(pw, bcrypt.gensalt())
             self.registered = True
+
+            # Generate Token with Server's 'secret key', prove request's identity
+            token = jwt.encode({'username': self.username}, key, algorithm='HS256')
             
             response = Response("RegisterResponse", 200) 
-            response.add_pair("msg_id", msg_id)            
+            response.add_pair("msg_id", msg['msg_id']) 
+            response.add_pair("token", token.decode('utf-8'))
+          
             self.send(response.jsonify()) 
 
 

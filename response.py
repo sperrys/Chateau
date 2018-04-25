@@ -5,7 +5,8 @@ valid_types = [
                "RegisterResponse", 
                "GroupMessageInitResponse", 
                "GroupMessageResponse", 
-               "ClientListResponse"
+               "ClientListResponse",
+               "PartitionRequest"
                ]
 
 class Response():

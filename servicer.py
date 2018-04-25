@@ -34,7 +34,7 @@ import traceback
 
 from tornado import ioloop, web, websocket, httpserver
 
-class WebSocketHandler(tornado.websocket.WebSocketHandler):
+class WebSocketHandler(websocket.WebSocketHandler):
 
     # When A Web Socket Connection Has Been Opened 
     def open(self):
@@ -68,7 +68,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         clients.remove_w_sock(self)
 
 
-app = tornado.web.Application([
+app = web.Application([
     (r'/ws', WebSocketHandler)
 ])
 

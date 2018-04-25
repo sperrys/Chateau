@@ -5,8 +5,8 @@ valid_types = [
                "GroupMessageInitRequest",
                "RandomMessageRequest",
                "ClientListRequest",
-               "GroupMessageRecv",
-               "GroupMessageSendResponse"
+               "PartitionRequest",
+               "ClientListRequest"
                ]
 
 class Request():

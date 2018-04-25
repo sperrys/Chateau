@@ -3,14 +3,15 @@
 # Try it with: python -m tornado.testing discover
 
 
-import json
+import json, jwt, binascii
 
 from request import Request
-
 from tornado import testing, httpserver, gen, websocket
 from service_authority import app
 
 from test_client import TestClient
+
+key = "This_should_be_a_secret"
 
 class TestChatHandler(testing.AsyncHTTPTestCase):
 
@@ -37,9 +38,15 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         print(response)
 
         data = json.loads(response)
-        # Make sure that we got a 'hello' not 'bye'
+
+        # Mimic What token should be
+        token = jwt.encode({'username': 'sperry02'}, key, algorithm='HS256')
+        token = token.decode("utf-8")
+
         self.assertEqual(data["type"], "RegisterResponse")
         self.assertEqual(data["status"], 200)
+        self.assertEqual(data["token"], token)
+        print("Register sperry passed")
 
 
     @testing.gen_test
@@ -77,6 +84,8 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         
         russ.write_message(reg.jsonify())
         response = yield russ.read_message()
+        data = json.loads(response)
+        russ_token = data["token"]
         
         # Register Sperry02
         spencer = yield websocket.websocket_connect(ws_url)     
@@ -93,6 +102,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         # Mgomez request client list
         cli_list = Request("ClientListRequest")
         cli_list.add_pair("msg_id", 1)
+        cli_list.add_pair("token", russ_token)
         russ.write_message(cli_list.jsonify())
 
         response = yield russ.read_message()
@@ -119,6 +129,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         russ.write_message(reg.jsonify())
         response = yield russ.read_message()
         data = json.loads(response)
+        russ_token = data["token"]
         
         # Register Sperry02
         spencer = yield websocket.websocket_connect(ws_url)     
@@ -133,13 +144,14 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         response = yield spencer.read_message()
         data = json.loads(response)
         self.assertEqual(data["status"], 200)
-        
+        spencer_token = data["token"]
 
         # Mgomez3 chats sperry3
         msg = Request("MessageRequest")
         msg.add_pair("recipient", "sperry3")
         msg.add_pair("msg_id", 3)
         msg.add_pair("content", "hey")
+        msg.add_pair("token", russ_token)
 
         russ.write_message(msg.jsonify())
 
@@ -177,6 +189,8 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         reg.add_pair("auth", "false")
         russ.write_message(reg.jsonify())
         response = yield russ.read_message()
+        data = json.loads(response)
+        russ_token = data["token"]
         
         # Register Sperry02
         spencer = yield websocket.websocket_connect(ws_url)     
@@ -187,6 +201,8 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         reg1.add_pair("auth", "false") 
         spencer.write_message(reg1.jsonify())
         response = yield spencer.read_message()
+        data = json.loads(response)
+        spencer_token = data["token"]
 
         # Register fahad
         fahad = yield websocket.websocket_connect(ws_url)     
@@ -197,18 +213,20 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         reg2.add_pair("auth", "false") 
         fahad.write_message(reg2.jsonify())
         response = yield fahad.read_message()
+        data = json.loads(response)
+        fahad_token = data["token"]
 
         # Mgomez3 create group chat
         chat_init = Request("GroupMessageInitRequest")
         chat_init.add_pair("recipients", ["sperry4", "fahad"])
         chat_init.add_pair("chatname", "comp112")
+        chat_init.add_pair("token", russ_token)
         chat_init.add_pair("msg_id", 3)
 
         russ.write_message(chat_init.jsonify())
 
         send_response = yield russ.read_message()
         data = json.loads(send_response)
-        print(data)
 
         self.assertEqual(data["type"], "GroupMessageInitResponse")
         self.assertEqual(data["status"], 200)
@@ -227,8 +245,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         # Make sure Fahad Gets Create Message
         recv_response = yield fahad.read_message()
         data = json.loads(recv_response)
-        print(data)
-
+ 
         self.assertEqual(data["type"], "GroupMessageInitResponse")
         self.assertEqual(data["status"], 201)
         self.assertEqual(data["chatname"], "comp112")
@@ -237,6 +254,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         chat_msg = Request("MessageRequest")
         chat_msg.add_pair("recipient", "comp112")
         chat_msg.add_pair("content", "hey")
+        chat_msg.add_pair("token", spencer_token)
         chat_msg.add_pair("msg_id", 1)
 
         spencer.write_message(chat_msg.jsonify())        
@@ -258,7 +276,7 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
 
         # Register mgomez
         russ = yield websocket.websocket_connect(ws_url)     
-        
+
         reg = Request("RegisterRequest")
         reg.add_pair("username",  "russ5")
         reg.add_pair("password", "")
@@ -267,6 +285,8 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         
         russ.write_message(reg.jsonify())
         response = yield russ.read_message()
+        data = json.loads(response)
+        russ_token = data["token"]
         
         # Register Sperry02
         spencer = yield websocket.websocket_connect(ws_url)     
@@ -279,10 +299,12 @@ class TestChatHandler(testing.AsyncHTTPTestCase):
         
         spencer.write_message(reg1.jsonify())
         response = yield spencer.read_message()
+        data = json.loads(response)
 
         # Russ send random message
         rand_msg = Request("RandomMessageRequest")
         rand_msg.add_pair("msg_id", 1)
+        rand_msg.add_pair("token", russ_token)
         russ.write_message(rand_msg.jsonify())
 
         response = yield russ.read_message()

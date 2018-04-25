@@ -33,7 +33,6 @@ class GroupChats():
 class GroupChat():
     def  __init__(self, creator, chatname, recipients):
         self.chatname = chatname
-        self.message_id = 0
         self.recipients = recipients
         self.creator = creator
         self.valid_clients = []
@@ -43,9 +42,6 @@ class GroupChat():
         for r in self.valid_clients:
             if r != sender:
                 r.send(content)
-
-        # Increment Message ID      
-        self.message_id += 1
 
     # Make sure that all recipients are valid clients
     def validate_recipients(self, clients, msg_id):

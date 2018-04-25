@@ -9,6 +9,7 @@
 import json
 import os
 import traceback
+import math
 
 from random import sample
 
@@ -20,6 +21,9 @@ import tornado.httpserver
 
 from chatclient import ChatClient, Clients 
 from chat import GroupChat, GroupChats
+
+from partition_handlers import PartitionRequestHandler
+
 from response import Response
 from ldap_client import TuftsAuth
 
@@ -103,12 +107,15 @@ def MessageHandler(sock, msg):
             ClientListRequestHandler(sock, msg)
         elif msgType == "RandomMessageRequest":
             RandomMessageRequestHandler(sock, msg)
+        elif msgType == "PartitionRequest":
+            PartitionRequestHandler(sock, msg)
         else: 
             sock.write_message(Response("ErrorResponse", 400).jsonify())
 
     except Exception as e: 
         print(e)
         print(traceback.format_exc())
+        print("Sending Message...")
         sock.write_message(Response("ErrorResponse", 400).jsonify())
 
 
@@ -118,8 +125,8 @@ def RegisterRequestHandler(sock, msg):
     try: 
         name = msg["username"]
         pw = msg["password"]
-        auth_type = msg["auth"]  
-        c = clients.find_w_sock(sock) 
+        auth_type = msg["auth"]
+        c = clients.find_w_sock(sock)
 
         if auth_type == True:     
             auth = TuftsAuth(name, pw)
@@ -127,14 +134,15 @@ def RegisterRequestHandler(sock, msg):
             auth = True
             
         if auth:     
-            c.register(name, clients, msg["msg_id"])
+            c.register(name, clients, msg)
          
         # Handle Error For Bad Authentication
         else: 
             auth_err = Response("ErrorResponse", 301)
             auth_err.add_pair("msg_id", msg["msg_id"])
-            auth_err.add_pair("detail", "Authentication failed")
-            c.send(auth_err.jsonify())
+            auth_err.add_pair("detail", "Authentication With Tufts failed")
+            print("Sending Message...")
+            sock.send(auth_err.jsonify())
 
     # Handle Generic Exception
     except Exception as e:
@@ -142,6 +150,7 @@ def RegisterRequestHandler(sock, msg):
         print(traceback.format_exc())
         generic_err = Response("ErrorResponse", 400)
         generic_err.add_pair("msg_id", msg["msg_id"])
+        print("Sending Message...")
         sock.write_message(generic_err.jsonify())
 
     
@@ -150,9 +159,9 @@ def GroupMessageInitHandler(sock, msg):
     print("GroupMessageInitRequest")
 
     try: 
-        c = clients.find_w_sock(sock)
+        c = clients.find_w_token(msg)
   
-        if c.registered:
+        if c != None:
     
             name = msg["chatname"]
             recipients = msg["recipients"]
@@ -166,7 +175,6 @@ def GroupMessageInitHandler(sock, msg):
             # Validate the chat's recipients, send error if not valid
             if new_chat.validate_recipients(clients, msg["msg_id"]):
 
-                print(chats)
                 # Add chat to list of chats, check chatname uniqueness
                 if chats.add(new_chat):
                     # Send ACK back to group chat creator
@@ -177,21 +185,22 @@ def GroupMessageInitHandler(sock, msg):
                     # Send notification of creation to all others in chat
                     chat_res = Response("GroupMessageInitResponse", 201)
                     chat_res.add_pair("chatname", name)
+                    print("Sending Message...")
                     new_chat.send(chat_res.jsonify(), c)
                 
                 else: 
                     err = Response("ErrorResponse", 303)
                     err.add_pair("msg_id", msg["msg_id"])
                     err.add_pair("detail", "chatname already taken")
+                    print("Sending Message...")
                     c.send(err.jsonify())
-
-
 
         # Handle if Client is Not Registered
         else:
             err = Response("ErrorResponse", 301)
             err.add_pair("msg_id", msg["msg_id"])
-            c.send(err.jsonify())
+            print("Sending Message...")
+            sock.send(err.jsonify())
 
     # Handle Other Exceptions
     except Exception as e:
@@ -200,6 +209,7 @@ def GroupMessageInitHandler(sock, msg):
 
         err = Response("ErrorResponse", 400)
         err.add_pair("msg_id", msg["msg_id"])
+        print("Sending Message...")
         sock.write_message(err.jsonify())
 
 
@@ -221,7 +231,7 @@ def find_recipient(recipient, client, msg_id):
     err = Response("ErrorResponse", 303)
     err.add_pair("msg_id", msg_id)
     err.add_pair("detail", "Recipient Doesn't Exist")
-
+    print("Sending Message...")
     c.send(err.jsonify())
     return None
 
@@ -229,10 +239,10 @@ def find_recipient(recipient, client, msg_id):
 def MessageRequestHandler(sock, msg):
     print("Message Request")
     try: 
-        c = clients.find_w_sock(sock)
+        c = clients.find_w_token(msg)
 
         # If the client isn't registered, remove them from the list
-        if c.registered:
+        if c != None:
             
             content = msg["content"]
             recipient = find_recipient(msg["recipient"], c, msg["msg_id"])
@@ -258,6 +268,7 @@ def MessageRequestHandler(sock, msg):
                 # Send Ack back to sender
                 ack = Response("MessageSendResponse", 200) 
                 ack.add_pair("msg_id", msg["msg_id"])
+                print("Sending Message...")
                 c.send(ack.jsonify())
          
         # Catch Exception if the client is not registered.  
@@ -265,6 +276,7 @@ def MessageRequestHandler(sock, msg):
             print(c.username, " is not registered!!")
             err = Response("ErrorResponse", 301)
             err.add_pair("msg_id", msg["msg_id"])
+            print("Sending Message...")
             sock.write_message(err.jsonify())
 
     # Catch Generic Exception
@@ -273,6 +285,7 @@ def MessageRequestHandler(sock, msg):
         print(traceback.format_exc())
         res = Response("ErrorResponse", 400)
         res.add_pair("msg_id", msg["msg_id"])
+        print("Sending Message...")
         sock.write_message(res.jsonify())
 
 
@@ -281,27 +294,30 @@ def ClientListRequestHandler(sock, msg):
     print("Client List Request")
 
     try: 
-        c = clients.find_w_sock(sock)
+        c = clients.find_w_token(msg)
 
-        if c.registered:
+        if c != None:
             usernames = clients.usernames()
             usernames.remove(c.username)
 
             response = Response("ClientListResponse", 200)
             response.add_pair("msg_id", msg["msg_id"])
             response.add_pair("clients", usernames)
+            print("Sending Message...")
             c.send(response.jsonify())
 
         # Handle Error for Client not registered
         else: 
             err = Response("ErrorResponse", 301)
             err.add_pair("msg_id", msg["msg_id"])
-            c.send(err.jsonify())
+            print("Sending Message...")
+            sock.send(err.jsonify())
     
     # Handle Generic Error, or no client with Sock
     except Exception as e:
         print (e)
         print(traceback.format_exc())
+        print("Sending Message...")
         sock.write_message(Response("ErrorResponse", 400).jsonify())
 
 
@@ -310,22 +326,17 @@ def RandomMessageRequestHandler(sock, msg):
     print("Random Message Request")
 
     try:
-        c = clients.find_w_sock(sock)
-        print("client: ", c)
+        c = clients.find_w_token(msg)
     
-        if c.registered:
+        if c != None:
             usernames = clients.usernames()
             usernames.remove(c.username)
-            print(usernames)
 
             if usernames != []:
 
                 s = sample(usernames, 1)
-                print("rand", s)
                 rand = s[0]
-                
                 new_friend = clients.find_w_username(rand)
-                print("New friend:" , new_friend.username)
 
                 # Send Ack Back to Sender 
                 send_response = Response("RandomMessageResponse", 200)
@@ -350,6 +361,8 @@ def RandomMessageRequestHandler(sock, msg):
         sock.write_message(Response("ErrorResponse", 400).jsonify())
 
 
+
+# Expose the Application
 app = tornado.web.Application([
     (r'/', IndexHandler),
     (r'/ws', WebSocketHandler),
