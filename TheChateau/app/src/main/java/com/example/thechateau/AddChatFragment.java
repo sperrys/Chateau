@@ -436,7 +436,7 @@ public class AddChatFragment extends Fragment {
 
         if (ChatNameAlreadyExists(chatName))
         {
-            _ErrorText.setText("ERROR: Chat name already exists");
+            _ErrorText.setText("ERROR: Chat already exists");
             _ChatNameText.getText().clear();
             return false;
         }

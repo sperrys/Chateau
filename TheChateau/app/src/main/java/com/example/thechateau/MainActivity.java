@@ -42,8 +42,8 @@ public class MainActivity extends AppCompatActivity
     /**********************************************************************************************/
     private boolean             _WSConnected = false;
     private ChatWebSocket       _WSClient;
-    private String              _WSHOST      = "ws://10.0.2.2:5000/ws";
-    private String              _HerokuHost  = "ws://chateautufts.herokuapp.com:80/ws";
+    //private String              _WSHOST      = "ws://10.0.2.2:5000/ws";
+    private String              _MainHost  = "ws://chateautufts.herokuapp.com:80/ws";
     URI                         _ServerURI;
 
     /**********************************************************************************************/
@@ -160,17 +160,24 @@ public class MainActivity extends AppCompatActivity
     private boolean             _RegisterWithAuthentication = false;
     private boolean             _UserHasRegisteredBefore    = false;
 
+
+
     private final String  _DefaultUserToken = "";
-    private String        _UserToken = _DefaultUserToken;
+    private       String  _UserToken        = _DefaultUserToken;
 
 
+    private int          _CurrentServerHostIndex = 0;
+    private int          _ServerRetries          = 0; // Number of times we've tried to connect to the server
+    private final int    _MaxServerRetries       = 5;
 
+    // List of servers we can try to connect to
+    private List<String> _ServerHosts            = new ArrayList<>(Arrays.asList(_MainHost));
     /**********************************************************************************************/
     /*                                  Fragment Variables                                        */
     /**********************************************************************************************/
 
     private FragmentManager _FragmentManager;
-    private String openChatWindowString = "Opening ChatWindow: ";
+    private String           openChatWindowString = "Opening ChatWindow: ";
 
     /**********************************************************************************************/
     /*                            Connecting Layout Variables                                     */
@@ -178,6 +185,7 @@ public class MainActivity extends AppCompatActivity
     private TextView       _ConnectingText;
     private RelativeLayout _ConnectingLayout;
 
+    /*
     private Runnable _SetConnectedText = new Runnable() {
         @Override
         public void run() {
@@ -188,6 +196,7 @@ public class MainActivity extends AppCompatActivity
             _ConnectingText.setText("Connected!");
         }
     };
+
 
     private Runnable _SetConnectingText = new Runnable() {
         @Override
@@ -207,7 +216,7 @@ public class MainActivity extends AppCompatActivity
             _ConnectingLayout.setVisibility(View.GONE);
         }
     };
-
+*/
 
     /**********************************************************************************************/
     /*                                       Buttons                                              */
@@ -413,20 +422,8 @@ public class MainActivity extends AppCompatActivity
         /* Set up WebSocket */
         /********************/
 
-        // Set up URI to connect to the server
-
-        try
-        {
-            _ServerURI = new URI(_HerokuHost);
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        // Connect to web server
-        Log.i("MainActivity", "Calling SetupWS()");
-        _WSClient = new ChatWebSocket(_ServerURI, this);
-
+        // Set up our web socket connection and connect
+        setupWebSocketConnection(_ServerHosts.get(0));
         callWSConnect();
 
         String simepleChatName = "Spencer";
@@ -443,7 +440,32 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    private void setupServerURI(String hostString)
+    {
+        Log.i("SetupServerURI", "Setting up URI for: " + hostString);
 
+        try
+        {
+            _ServerURI = new URI(_MainHost);
+            Log.i("SetupServerURI", "Setting up URI succeeded for: " + hostString);
+        }
+        catch (URISyntaxException e)
+        {
+            Log.i("SetupServerURI", "Setting up URI failed for: " + hostString);
+            e.printStackTrace();
+            return;
+        }
+
+    }
+
+    private void setupWebSocketConnection(String hostString)
+    {
+        // Set up the URI for the connection
+        setupServerURI(hostString);
+
+        // Create new websocket object
+        _WSClient = new ChatWebSocket(_ServerURI, this);
+    }
 
     /**********************************************************************************************/
     /*                                  Add Chat Functions                                        */
@@ -918,7 +940,40 @@ public class MainActivity extends AppCompatActivity
     // Prompt WS client to connect to the server
     private void callWSConnect()
     {
-        Log.i("MainActivity", "Calling WSConnect()");
+        String tag = "callWSConnect";
+
+        Log.i(tag, "WSConnect() with _ServerRetries at " + _ServerRetries);
+
+        if (_ServerRetries >= _MaxServerRetries)
+        {
+            Log.i(tag, "Max retries reached for current host with index " + _CurrentServerHostIndex);
+
+            // Try another server host
+            _CurrentServerHostIndex++;
+
+            Log.i(tag, "Next host index is: " + _CurrentServerHostIndex);
+
+            // Reset server host index if necessary
+            if (_CurrentServerHostIndex > _ServerHosts.size() - 1)
+            {
+                Log.i(tag, "Resetting host index to 0");
+                _CurrentServerHostIndex = 0;
+            }
+
+            // Set up a connection to the new host
+            String nextHost = _ServerHosts.get(_CurrentServerHostIndex);
+
+            Log.i(tag, "Trying backup host: " + nextHost);
+
+            // Set up the web socket connection with the host we chose
+            setupWebSocketConnection(nextHost);
+
+            // Reset number of times we've tried to connect to this host
+            _ServerRetries = 0;
+        }
+
+        Log.i(tag, "Calling _WSClient.connect()");
+        // Attempt to connect to the server
         _WSClient.connect();
     }
 
@@ -931,7 +986,8 @@ public class MainActivity extends AppCompatActivity
         // Indicate to everyone that we're connected to the server
         _WSConnected = true;
 
-
+        // Reset number of server retries
+        _ServerRetries = 0;
 
         // Register current user with the server if necessary
         //if(!_UserHasRegisteredBefore)
@@ -1016,6 +1072,9 @@ public class MainActivity extends AppCompatActivity
         Log.i("MainActivity", "Called OnServerDisconnect");
 
         _WSConnected = false;
+
+        // Update number of retries
+        _ServerRetries++;
 
         // Set connected attribute to "connecting"
         setConnectingLayout(View.VISIBLE, "Connecting...");
