@@ -1,4 +1,0 @@
-#Sun Mar 25 00:22:21 EDT 2018
-base.0=/Users/russgomez/Desktop/Chateau/TheChateau/app/build/intermediates/transforms/dexMerger/debug/28
-path.0=classes.dex
-renamed.0=classes.dex
