@@ -51,8 +51,6 @@ public class MainActivity extends AppCompatActivity
     /**********************************************************************************************/
 
     private ArrayList<MessageAck>                  _AllMessageConfirmations  = new ArrayList<>();
-    //private ArrayList<String>                      _MessageSentConfirmations = new ArrayList();
-    //private ArrayList<String>                      _GroupInitConfirmations   = new ArrayList<>();
     private ArrayList<ReceivedMessage>             _MessagesReceived         = new ArrayList<>();
 
     private class ReceivedMessage {
@@ -160,18 +158,21 @@ public class MainActivity extends AppCompatActivity
     private boolean             _RegisterWithAuthentication = false;
     private boolean             _UserHasRegisteredBefore    = false;
 
-
-
     private final String  _DefaultUserToken = "";
     private       String  _UserToken        = _DefaultUserToken;
 
 
-    private int          _CurrentServerHostIndex = 0;
-    private int          _ServerRetries          = 0; // Number of times we've tried to connect to the server
-    private final int    _MaxServerRetries       = 5;
+    /**********************************************************************************************/
+    /*                             Server / Host Variables                                        */
+    /**********************************************************************************************/
 
     // List of servers we can try to connect to
     private List<String> _ServerHosts            = new ArrayList<>(Arrays.asList(_MainHost));
+
+    private int          _CurrentServerHostIndex = 0; // Index of current host we're trying to connect to
+    private int          _HostRetries            = 0; // Number of times we've tried to connect to the current host
+    private final int    _MaxHostRetries         = 5;
+
     /**********************************************************************************************/
     /*                                  Fragment Variables                                        */
     /**********************************************************************************************/
@@ -182,41 +183,9 @@ public class MainActivity extends AppCompatActivity
     /**********************************************************************************************/
     /*                            Connecting Layout Variables                                     */
     /**********************************************************************************************/
+
     private TextView       _ConnectingText;
     private RelativeLayout _ConnectingLayout;
-
-    /*
-    private Runnable _SetConnectedText = new Runnable() {
-        @Override
-        public void run() {
-
-            Log.i("MainActivity", "setting connected text to connected");
-            _ConnectingLayout.setVisibility(View.VISIBLE);
-
-            _ConnectingText.setText("Connected!");
-        }
-    };
-
-
-    private Runnable _SetConnectingText = new Runnable() {
-        @Override
-        public void run() {
-            Log.i("MainActivity", "setting connected text to connecting");
-            _ConnectingLayout.setVisibility(View.VISIBLE);
-
-            _ConnectingText.setText("Connecting...");
-        }
-    };
-
-    private Runnable _RemoveConnectingText = new Runnable() {
-        @Override
-        public void run() {
-
-            Log.i("WaiterThread", "Setting ConnectingLayout to Gone");
-            _ConnectingLayout.setVisibility(View.GONE);
-        }
-    };
-*/
 
     /**********************************************************************************************/
     /*                                       Buttons                                              */
@@ -230,15 +199,12 @@ public class MainActivity extends AppCompatActivity
     /**********************************************************************************************/
 
     /* Message Type And Status Code Definitions */
-    public final static String _RegisterRequest           = "RegisterRequest";
-    public final static String _RegisterResponse          = "RegisterResponse";
+    public final static String _RegisterRequest               = "RegisterRequest";
+    public final static String _RegisterResponse              = "RegisterResponse";
     public final static long   _RegistrationApprovedCode      = 200;
     public final static long   _UserAlreadyRegisteredCode     = 303;
     public final static long   _GenericRegistrationErrorCode  = 400;
     public final static long   _NoServerResponseCode          = -1;
-
-    private final String _GroupInitExample             = "SingleExample";
-    private final String _SingleMessageResponseExample = "GroupExample";
 
     private final String _GroupMessageInitRequest       = "GroupMessageInitRequest";
     private final String _GroupMessageInitResponse      = "GroupMessageInitResponse";
@@ -254,7 +220,7 @@ public class MainActivity extends AppCompatActivity
     private final String _ClientListResponse     = "ClientListResponse";
     private final long   _ClientListProvidedCode = 200;
 
-    private final String _ErrorResponse = "ErrorResponse";
+
 
     private final String _RandomMessageRequest  = "RandomMessageRequest";
     private final String _RandomMessageResponse = "RandomMessageResponse";
@@ -262,11 +228,13 @@ public class MainActivity extends AppCompatActivity
     private final long   _RandomMessageError    = 400;
     private final long   _NoOtherUsersErrorCode = 404;
 
+    private final String _ErrorResponse              = "ErrorResponse";
     private final long   _TokenNotAuthenticErrorCode = 301;
 
     /**********************************************************************************************/
     /*                               Message Preview Variables                                    */
     /**********************************************************************************************/
+
     private String _defaultPreviewMessage = "No Message History";
     private String _sentPreviewText       = "Sent: ";
     private String _readPreviewText       = "Received: ";
@@ -278,8 +246,14 @@ public class MainActivity extends AppCompatActivity
 
     private       long   _currentMessageID = 0;
     private final long   _MaxMessageID     = 10000;
-    private       long   _messageIDRegistrationGimmick = _MaxMessageID + 1;
     private final String _messageIDField   = "msg_id";
+
+    /**********************************************************************************************/
+    /*                                Random Chat Variables                                        */
+    /**********************************************************************************************/
+
+    private RelativeLayout _RandomChatInfoLayout;
+    private TextView       _RandomChatInfoText;
 
     /**********************************************************************************************/
     /*                                  Data Access Functions                                     */
@@ -303,9 +277,26 @@ public class MainActivity extends AppCompatActivity
         return _Chats.get(chatName).getChatHistory();
     }
 
+    // Gets the current list of chats displayed on the main screen
     public List<ChatListItem> getChatList() {
         return _ChatListEntries;
     }
+
+    // Searches through a list of chat names and checks if one of them has a chatName
+    // that matches the chatname argument
+    // Returns the ChatListItem if found, null otherwise
+    public ChatListItem getChatListItemWithChatName(List<ChatListItem> chatListItems, String chatName)
+    {
+        for(ChatListItem item: chatListItems)
+        {
+            if (item.chatName.equals(chatName))
+            {
+                return item;
+            }
+        }
+        return null;
+    }
+
 
     @Override
     public void onFragmentInteraction(Uri uri){
@@ -313,11 +304,8 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    private RelativeLayout _RandomChatInfoLayout;
-    private TextView       _RandomChatInfoText;
-
     /**********************************************************************************************/
-    /*                            Larger Functions And Logic                                      */
+    /*                      "On Create" Function (Called on Applicatoin Startup)                    */
     /**********************************************************************************************/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -327,15 +315,13 @@ public class MainActivity extends AppCompatActivity
         // Set current user
         _CurrentUser = "User1";
 
-
+        // Set up UI elements for the connecting layout
         _ConnectingText   = findViewById(R.id.ConnectingText);
         _ConnectingLayout = findViewById(R.id.ConnectingLayout);
 
+        // Set up UI elements for Random Chats
         _RandomChatInfoLayout = findViewById(R.id.RandomChatInfoLayout);
         _RandomChatInfoText   = findViewById(R.id.RandomChatInfo);
-
-
-
 
         _RandomChatButton = findViewById(R.id.RandomChatButton);
         _RandomChatButton.setOnClickListener(new View.OnClickListener() {
@@ -345,9 +331,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        /******************************/
-        /* Set up Add New Chat Button */
-        /******************************/
+        // Set up UI element and click event for Add Chat Button
         _AddNewChatButton = findViewById(R.id.addChatButton);
         _AddNewChatButton.setOnClickListener(
                 new View.OnClickListener()
@@ -355,7 +339,6 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onClick(View view)
                     {
-
                         // Open an Add Chat Fragment
                         openAddChatWindow();
                     }
@@ -364,9 +347,9 @@ public class MainActivity extends AppCompatActivity
 
         Log.i("Setup", "In Setup");
 
-        /*************************/
-        /* Set up Chat List View */
-        /*************************/
+        /**********************************/
+        /* Set up List of Chats on the UI */
+        /**********************************/
 
         // Make linked list of strings so we can easily add elements to front of list
         _ChatListEntries = new LinkedList<>();
@@ -376,13 +359,11 @@ public class MainActivity extends AppCompatActivity
             _ChatListEntries.add(new ChatListItem(chatName, _defaultPreviewMessage));
         }
 
-
         // Make an adapter for the Chat List view and set it
         _ChatListAdapter = new ChatListAdapter(this, R.layout.chat_list_item_row, _ChatListEntries);
 
-
-        // Set up Chat List View from UI
-        // If a chat list item is clicked, it opens a chat window activity
+        // Set up the chat list view so that it opens the appropriate chat window
+        // when clicked
         _ChatListView = findViewById(R.id.chat_list_view);
         _ChatListView.setAdapter(_ChatListAdapter);
         _ChatListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
@@ -417,18 +398,11 @@ public class MainActivity extends AppCompatActivity
             _Chats.put(chatName, newChat);
         }
 
-
-        /********************/
-        /* Set up WebSocket */
-        /********************/
-
-        // Set up our web socket connection and connect
-        setupWebSocketConnection(_ServerHosts.get(0));
-        callWSConnect();
-
+        // Add default messages to one of our sample chats
         String simepleChatName = "Spencer";
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++)
+        {
             // Sample Code to check if Spencer chat reads its pending messages when opening
             Message m = new Message("Hi Russ", new User(simepleChatName), System.currentTimeMillis());
             ReceivedMessage newPair = new ReceivedMessage(simepleChatName, m);
@@ -438,42 +412,26 @@ public class MainActivity extends AppCompatActivity
             Message n = new Message("I'm Russ", new User("mgomez"), System.currentTimeMillis());
             _MessagesReceived.add(new ReceivedMessage(simepleChatName, n));
         }
-    }
 
-    private void setupServerURI(String hostString)
-    {
-        Log.i("SetupServerURI", "Setting up URI for: " + hostString);
+        /********************/
+        /* Set up WebSocket */
+        /********************/
 
-        try
-        {
-            _ServerURI = new URI(_MainHost);
-            Log.i("SetupServerURI", "Setting up URI succeeded for: " + hostString);
-        }
-        catch (URISyntaxException e)
-        {
-            Log.i("SetupServerURI", "Setting up URI failed for: " + hostString);
-            e.printStackTrace();
-            return;
-        }
+        // Set up our web socket connection and connect to default host at
+        // index 0
+        setupWebSocketConnection(_ServerHosts.get(0));
+        callWSConnect();
 
-    }
-
-    private void setupWebSocketConnection(String hostString)
-    {
-        // Set up the URI for the connection
-        setupServerURI(hostString);
-
-        // Create new websocket object
-        _WSClient = new ChatWebSocket(_ServerURI, this);
     }
 
     /**********************************************************************************************/
     /*                                  Add Chat Functions                                        */
     /**********************************************************************************************/
 
+    // Starts a random chat with a username specified by the server
     private void startRandomChat(String content)
     {
-        // Set loading bar on UI screen with messages showing retrieval process?
+        // TODO Set loading bar on UI screen with messages showing retrieval process?
 
         JSONObject json = new JSONObject();
 
@@ -493,6 +451,9 @@ public class MainActivity extends AppCompatActivity
         // Ask server for Random person to chat
         MessageAck messageAck = sendMessageToServer(json, _RandomMessageRequest);
 
+        // If we a get a positive response from the server, open
+        // up a chat with the username it specified
+        // Otherwise, display an error message saying the chat could not be created
         if (messageAck != null)
         {
             Long status = messageAck.getStatus();
@@ -538,14 +499,11 @@ public class MainActivity extends AppCompatActivity
 
         }
 
-
-        // Check if random person is already being chatted with?
-        // -But what if they exist in a 1-1 chat you already have?
-
-
-        // Open chat window of random chat created
+        // TODO Check if random person is already being chatted with?
     }
 
+    // Displays info for a Random Chat for 2 seconds
+    // in the Random Chat text layout, and then disappears from the view
     private void brieflyDisplayRandomChatInfo(String infoMessage)
     {
         _RandomChatInfoLayout.setVisibility(View.VISIBLE);
@@ -569,7 +527,6 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void run()
             {
-
                 try
                 {
                     Thread.sleep(delayMillis);
@@ -586,6 +543,8 @@ public class MainActivity extends AppCompatActivity
         waiter.run();
     }
 
+    // Set the visibility and message of the connecting layout that appears
+    // on the screen when a disconnect from the server occurs
     private void setConnectingLayout(final int visibility, final String connectMessage)
     {
         Log.i("setConnectingLayout", "Setting connected layout to " + visibility + " with message " + connectMessage);
@@ -670,22 +629,6 @@ public class MainActivity extends AppCompatActivity
         runOnUiThread(moveChat);
     }
 
-
-    // Searches through a list of chat names and checks if one of them has a chatName
-    // that matches the chatname argument
-    // Returns the ChatListItem if found, null otherwise
-    public ChatListItem getChatListItemWithChatName(List<ChatListItem> chatListItems, String chatName)
-    {
-        for(ChatListItem item: chatListItems)
-        {
-            if (item.chatName.equals(chatName))
-            {
-                return item;
-            }
-        }
-        return null;
-    }
-
     /**********************************************************************************************/
     /*                                  Fragment Functions                                        */
     /**********************************************************************************************/
@@ -708,6 +651,8 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    // Starts the AddChatFragment, which brings the user to the screen for adding chats
+    // to their list of chats
     private void openAddChatWindow()
     {
         _FragmentManager = this.getSupportFragmentManager();
@@ -725,6 +670,7 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    // Starts the login fragment, which launches the loginfragment UI and uses the LoginFragment.java file
     private void startLoginFragment()
     {
         _FragmentManager = this.getSupportFragmentManager();
@@ -742,32 +688,56 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    private void startConnectingFragment()
+    /*private void startConnectingFragment()
     {
         // Start a connecting fragment so that the connecting message appears and disappears
         // as hoped for
 
 
-    }
+    }*/
 
 
+    // Removes all active fragments from the application
+    // Generally called when a server disconnection occurs
     private void removeAllFragments()
     {
         Log.i("MainActivity", "Called RemoveAllFragments");
         for (Fragment fragment:getSupportFragmentManager().getFragments())
         {
-            /*if(fragment instanceof NavigationDrawerFragment)
-            {
-                continue;
-            }
-            else
-            {*/
+
             if(fragment != null)
             {
                 getSupportFragmentManager().beginTransaction().remove(fragment).commit();
             }
-            //}
         }
+    }
+
+    // Check if the chat window with the name chatName is currently open
+    // Returns the chatwindow fragment with the specified name
+    // Returns null if the fragment isn't found
+    ChatWindowFragment getChatWindowFragment(String chatName)
+    {
+        Log.i("MainActivity", "Called getChatWindowFragment");
+
+        for (Fragment fragment: getSupportFragmentManager().getFragments())
+        {
+
+            if (fragment!=null)
+            {
+                if(fragment.getClass().equals(ChatWindowFragment.class))
+                {
+                    if(((ChatWindowFragment)fragment).getChatName().equals(chatName))
+                    {
+                        Log.i("getChatWindowFragment", "found fragment with name " + chatName);
+                        return (ChatWindowFragment)fragment;
+                    }
+                }
+
+            }
+
+        }
+
+        return null;
     }
 
     // Have to override this so returning fragments don't leave main activity blank
@@ -833,52 +803,7 @@ public class MainActivity extends AppCompatActivity
             return false;
         }
 
-        /*
-        if(waitUntilMessageSent(3000))
-        {
-
-            return true;
-        }
-        else
-        {
-            return false;
-        }*/
     }
-
-    // Waits for timetoWaitMS milliseconds for a message confirmation to be received
-    // If it receives a message confirmation in that time, it returns true
-    // Else, returns false
-    /*private boolean waitUntilMessageSent(long timeToWaitMS)
-    {
-        // Calc time that we will timeout
-        long timeOutExpiredTimeMS = System.currentTimeMillis() + timeToWaitMS;
-
-        boolean messageConfirmationReceived = false;
-
-        while (!messageConfirmationReceived)
-        {
-            Log.i("waitUntilMessageSent", "Waiting for message");
-
-            long waitMs = timeOutExpiredTimeMS - System.currentTimeMillis();
-
-            if (waitMs <= 0)
-            {
-                Log.i("waitUntilMessageSent", "reached timeout for waiting for message");
-                return false;
-            }
-
-            if (_MessageSentConfirmations.size() >= 1)
-            {
-                Log.i("waitUntilMessageSent", "found message confirmation");
-                _MessageSentConfirmations.remove(_SingleMessageResponseExample);
-
-                return true;
-            }
-        }
-
-
-        return true;
-    }*/
 
     // Returns the status code of a message if it was found in the list of message confirmations
     // Returns -1 if the message was never received
@@ -934,17 +859,48 @@ public class MainActivity extends AppCompatActivity
 
 
     /**********************************************************************************************/
-    /*                           Server Connection Functions                                      */
+    /*                           Websocket and Server Connection Functions                        */
     /**********************************************************************************************/
+
+    // Converts a host url to the Java URI object
+    // Helper function for setting up a websocket
+    private void setupServerURI(String hostString)
+    {
+        Log.i("SetupServerURI", "Setting up URI for: " + hostString);
+
+        try
+        {
+            _ServerURI = new URI(_MainHost);
+            Log.i("SetupServerURI", "Setting up URI succeeded for: " + hostString);
+        }
+        catch (URISyntaxException e)
+        {
+            Log.i("SetupServerURI", "Setting up URI failed for: " + hostString);
+            e.printStackTrace();
+            return;
+        }
+
+    }
+
+    private void setupWebSocketConnection(String hostString)
+    {
+        // Set up the URI for the connection
+        setupServerURI(hostString);
+
+        // Create new websocket object
+        _WSClient = new ChatWebSocket(_ServerURI, this);
+    }
+
+
 
     // Prompt WS client to connect to the server
     private void callWSConnect()
     {
         String tag = "callWSConnect";
 
-        Log.i(tag, "WSConnect() with _ServerRetries at " + _ServerRetries);
+        Log.i(tag, "WSConnect() with _ServerRetries at " + _HostRetries);
 
-        if (_ServerRetries >= _MaxServerRetries)
+        if (_HostRetries >= _MaxHostRetries)
         {
             Log.i(tag, "Max retries reached for current host with index " + _CurrentServerHostIndex);
 
@@ -969,7 +925,7 @@ public class MainActivity extends AppCompatActivity
             setupWebSocketConnection(nextHost);
 
             // Reset number of times we've tried to connect to this host
-            _ServerRetries = 0;
+            _HostRetries = 0;
         }
 
         Log.i(tag, "Calling _WSClient.connect()");
@@ -987,7 +943,7 @@ public class MainActivity extends AppCompatActivity
         _WSConnected = true;
 
         // Reset number of server retries
-        _ServerRetries = 0;
+        _HostRetries = 0;
 
         // Register current user with the server if necessary
         //if(!_UserHasRegisteredBefore)
@@ -1012,8 +968,6 @@ public class MainActivity extends AppCompatActivity
         setConnectingLayout(View.VISIBLE, "Connected!");
         //runOnUiThread(_SetConnectedText);
 
-
-
         // Set screen to touchable
         //setScreenTouchability(true);
 
@@ -1025,47 +979,6 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    // Attempts to register a user that has already been registered in the system
-    // up to <timesToTry> times
-    private boolean registerUserAgain(int timesToTry)
-    {
-
-        String tag = "RegisterUserAgain";
-        for (int i = 0; i < timesToTry ; i++)
-        {
-            Log.i(tag, "Attempt " + i + " to Re-Register User: " + _CurrentUser);
-            long status = registerUser(_CurrentUser, _CurrentPassword, _RegisterWithAuthentication);
-
-            if (status == _RegistrationApprovedCode)
-            {
-                Log.i(tag, "Re-Registration Success");
-                return true;
-            }
-            else if (status == _UserAlreadyRegisteredCode)
-            {
-                Log.i(tag, "Previous username " + _CurrentUser + " has been taken");
-                return false;
-            }
-        }
-
-        return false;
-    }
-
-    // Sets the screen to touchable or untouchable based on the argument
-    private void setScreenTouchability(final boolean makeTouchable)
-    {
-        String tag = "setScreenTouchability";
-        Log.i(tag, "in setScreenTouch with boolean " + makeTouchable);
-
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                View view = getWindow().getDecorView().getRootView();
-                view.setEnabled(makeTouchable);
-            }
-        });
-    }
-
     // Called by the websocket client when the server disconnects
     public void onServerDisconnect()
     {
@@ -1074,7 +987,7 @@ public class MainActivity extends AppCompatActivity
         _WSConnected = false;
 
         // Update number of retries
-        _ServerRetries++;
+        _HostRetries++;
 
         // Set connected attribute to "connecting"
         setConnectingLayout(View.VISIBLE, "Connecting...");
@@ -1093,7 +1006,23 @@ public class MainActivity extends AppCompatActivity
         _WSClient = new ChatWebSocket(_ServerURI, this);
         callWSConnect();
 
+    }
 
+
+
+    // Sets the screen to touchable or untouchable based on the argument
+    private void setScreenTouchability(final boolean makeTouchable)
+    {
+        String tag = "setScreenTouchability";
+        Log.i(tag, "in setScreenTouch with boolean " + makeTouchable);
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                View view = getWindow().getDecorView().getRootView();
+                view.setEnabled(makeTouchable);
+            }
+        });
     }
 
 
@@ -1101,7 +1030,7 @@ public class MainActivity extends AppCompatActivity
     /*                           User Registration Functions                                      */
     /**********************************************************************************************/
 
-    // Register current client in chat server
+    // Register current client in chat server using the arguments passed to the function
     // Returns the status of the register code received, or a register failed code if
     // no response was received from the server
     public long registerUser(String username, String password, boolean doAuthentication)
@@ -1116,9 +1045,7 @@ public class MainActivity extends AppCompatActivity
             json.put("username", username);
             json.put("password", password);
 
-            // TODO change to be variable authentication
             json.put("auth", doAuthentication);
-
 
         }
         catch (JSONException e)
@@ -1157,45 +1084,32 @@ public class MainActivity extends AppCompatActivity
             Log.i(tag,"Error, ack was null for Registration ");
             return _NoServerResponseCode;
         }
-
-        /*
-        // Wait to see if client gets a registration response in 2 seconds, if not return false;
-        if(waitUntilRegistered(2000))
-        {
-            _CurrentUser = username;
-            return true;
-        }
-
-        else
-        {
-            return false;
-        }*/
-
     }
 
-    /*// Loops for a given amount of time until the user is registered
-    // Returns true if user was registered in a given amount of time, false otherwise
-    private boolean waitUntilRegistered(long timeToWaitMS)
+    /*// Attempts to register a user that has already been registered in the system
+    // up to <timesToTry> times
+    private boolean registerUserAgain(int timesToTry)
     {
-        // Calc time that we will timeout
-        long timeOutExpiredTimeMS = System.currentTimeMillis() + timeToWaitMS;
 
-        while (!_RegisteredUser)
+        String tag = "RegisterUserAgain";
+        for (int i = 0; i < timesToTry ; i++)
         {
-            //Log.i("waitUntilRegistered", "Waiting for register timeout");
+            Log.i(tag, "Attempt " + i + " to Re-Register User: " + _CurrentUser);
+            long status = registerUser(_CurrentUser, _CurrentPassword, _RegisterWithAuthentication);
 
-            long waitMs = timeOutExpiredTimeMS - System.currentTimeMillis();
-
-            if (waitMs <= 0)
+            if (status == _RegistrationApprovedCode)
             {
-                Log.i("waitUntilRegistered", "Timed out");
+                Log.i(tag, "Re-Registration Success");
+                return true;
+            }
+            else if (status == _UserAlreadyRegisteredCode)
+            {
+                Log.i(tag, "Previous username " + _CurrentUser + " has been taken");
                 return false;
             }
-
         }
 
-        Log.i("waitUntilRegistered", "user became registered");
-        return true;
+        return false;
     }*/
 
 
@@ -1293,7 +1207,6 @@ public class MainActivity extends AppCompatActivity
                     if(status == _GroupChatCreationApprovedCode)
                     {
                         Log.i(tag, "Success, status is " + status);
-                        //_GroupInitConfirmations.add(_GroupInitExample);
                     }
 
                     // Indicates that a group was created by another user that includes this user
@@ -1336,11 +1249,8 @@ public class MainActivity extends AppCompatActivity
                         {
                             String contact = (String)jsonArray.get(i);
 
-                            //Log.i(tag, "current contact:" + contact);
-
                             if(!contact.equals(_CurrentUser) && !contact.equals(""))
                             {
-                                //Log.i(tag, "adding contact:" + contact);
                                 contacts[i] = (String) jsonArray.get(i);
                             }
                         }
@@ -1360,7 +1270,7 @@ public class MainActivity extends AppCompatActivity
                     Log.i(tag, "Got Random Message Response");
                     if (status == _RandomMessageSuccess)
                     {
-
+                        Log.i(tag, "Success, got success code for random message");
                     }
                     else if (status == _RandomMessageError)
                     {
@@ -1484,8 +1394,6 @@ public class MainActivity extends AppCompatActivity
                     break;
                 }
 
-
-
                 case _ErrorResponse:
                 {
                     Log.i(tag, "Received an error response" );
@@ -1517,35 +1425,9 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    // Check if the chat window with the name chatName is currently open
-    // Returns the chatwindow fragment with the specified name
-    // Returns null if the fragment isn't found
-    ChatWindowFragment getChatWindowFragment(String chatName)
-    {
-        Log.i("MainActivity", "Called getChatWindowFragment");
 
-        for(Fragment fragment: getSupportFragmentManager().getFragments())
-        {
-
-            if (fragment!=null)
-            {
-                if(fragment.getClass().equals(ChatWindowFragment.class))
-                {
-                    if(((ChatWindowFragment)fragment).getChatName().equals(chatName))
-                    {
-                        Log.i("getChatWindowFragment", "found fragment with name " + chatName);
-                        return (ChatWindowFragment)fragment;
-                    }
-                }
-
-            }
-
-        }
-
-        return null;
-    }
-
-    // Request a contact list from the chat server
+    // Requests a contact list from the chat server
+    // Returns the current contact list that the chat application has most recently saved
     public ArrayList<String> requestContactList()
     {
         JSONObject json = new JSONObject();
@@ -1587,71 +1469,11 @@ public class MainActivity extends AppCompatActivity
         }
 
 
-        /*// Wait a few seconds for contact list to be retrieved, then return contact list
-        waitUntilTimeReached(2000);
-
-        Log.i("requestContactList", "List of current contacts");
-
-        for(String s: _ContactList)
-        {
-            Log.i("requestContactList", "contact:" + s);
-        }
-
-        // Remove current user from contact list (user will never need to chat with themselves
-        //_ContactList = removeNameFromContactList(_ContactList, _CurrentUser);
-
-        return _ContactList;*/
-
     }
 
-    private ArrayList<String> removeNameFromContactList(ArrayList<String> contacts, String currentUser)
-    {
-        String tag = "RemoveNameFromContacts";
-
-        Log.i(tag, "in " + tag + " for " + currentUser);
-
-        for (int i = 0; i < contacts.size(); i++)
-        {
-            String contact = contacts.get(i);
-
-            Log.i(tag, "current contact " + contact);
-
-            if (contact.equals(currentUser))
-            {
-                Log.i(tag, "Removing " + currentUser);
-                contacts.remove(i); // Remove the string, and then the spot in the array list?
-
-                break;
-            }
-        }
-        return contacts;
-    }
-
-    // Runs until the timeToWaitMS has been reached, then returns
-    private void waitUntilTimeReached(long timeToWaitMS)
-    {
-        // Calc time that we will timeout
-        long timeOutExpiredTimeMS = System.currentTimeMillis() + timeToWaitMS;
-
-        boolean messageConfirmationReceived = false;
-
-        while (1 == 1)
-        {
-            Log.i("waitUntilTimeReached", "Waiting");
-
-            long waitMs = timeOutExpiredTimeMS - System.currentTimeMillis();
-
-            if (waitMs <= 0)
-            {
-
-                Log.i("waitUntilTimeReached", "reached timeout for waiting for message");
-                return;
-            }
-        }
-    }
-
-    // Checks for new messages for this chat using main's MessagesReceivedList and
-    // removes them from main and adds them here if it finds any
+    // Checks for new messages for a given chat using main's MessagesReceivedList
+    // Adds any messages it finds for the chat to the chat's chat history, and removes
+    // it from the received messages list
     public void checkForNewMessages(String chatName)
     {
         Log.i("ChatWindowFragment", "in checkForNewMessages()");
@@ -1686,6 +1508,11 @@ public class MainActivity extends AppCompatActivity
         }
 
     }
+
+    // Attempts to register a chat with the server
+    // Returns true automatically for single chats, since they don't need to be registered,
+    // or group chats that received a groupChatApproved Code
+    // Returns false if the chat registration was not approved by the server
     public boolean sendChatRegistrationToServer(List<String> contactsToAdd, String chatName)
     {
         String tag = "SendChatRegisToServer";
@@ -1713,7 +1540,8 @@ public class MainActivity extends AppCompatActivity
             json.put("recipients", (Object)jsonArrayBetter);
             json.put("chatname"  , chatName);
 
-        } catch (JSONException e)
+        }
+        catch (JSONException e)
         {
             e.printStackTrace();
             return false;
@@ -1744,49 +1572,7 @@ public class MainActivity extends AppCompatActivity
             Log.i(tag,"Error, Ack was null for Group Chat creation");
             return false;
         }
-        /*if(waitUntilGroupMessageInitResponseReceived(3000))
-        {
-            Log.i(tag, "Received init response");
-            return true;
-        }
-        else
-        {
-            Log.i(tag, "Did not receive init response");
-            return false;
-        }*/
     }
-
-    // Waits until the web socket client is connected, and then sends a message
-    /*private MessageAck sendRegistrationMessageToServer(JSONObject json)
-    {
-        try
-        {
-            // Put the current ID in the json string
-            json.put(_messageIDField, _messageIDRegistrationGimmick);
-        }
-        catch (Exception e)
-        {
-            return null;
-        }
-        String message = json.toString();
-
-        Log.i("sendMessageToServer", "in sendMessageToServer() for message " + message);
-        while (_WSClient == null || _WSConnected != true);
-
-        _WSClient.send(message);
-
-        MessageAck ack = waitUntilMessageAcked(_messageIDRegistrationGimmick, 2000);
-
-        _currentMessageID++;
-
-        // Reset message ID if necessary
-        if (_currentMessageID > _MaxMessageID)
-        {
-            _currentMessageID = 0;
-        }
-
-        return ack;
-    }*/
 
     // Waits until the web socket client is connected, and then sends a message
     private MessageAck sendMessageToServer(JSONObject json, String msgType)
@@ -1850,59 +1636,17 @@ public class MainActivity extends AppCompatActivity
         return ack;
     }
 
-    /*// Waits for timetoWaitMS milliseconds for a GroupInitResponse to be received
-    // If we receives a confirmation in that time, return true
-    // Else, returns false
-    private boolean waitUntilGroupMessageInitResponseReceived(long timeToWaitMS)
-    {
-        // Calc time that we will timeout
-        long timeOutExpiredTimeMS = System.currentTimeMillis() + timeToWaitMS;
-
-        boolean initConfirmationReceived = false;
-
-        while (!initConfirmationReceived)
-        {
-            Log.i("waitUntilMessageSent", "Waiting for message");
-
-            long waitMs = timeOutExpiredTimeMS - System.currentTimeMillis();
-
-            if (waitMs <= 0)
-            {
-                Log.i("waitUntilMessageSent", "reached timeout for waiting for message");
-                return false;
-            }
-
-            if (_GroupInitConfirmations.size() >= 1)
-            {
-                Log.i("waitUntilMessageSent", "found message confirmation");
-                _GroupInitConfirmations.remove(_GroupInitExample);
-
-                return true;
-            }
-        }
-
-        return true;
-    }*/
-
+    // Updates a chat with name <chatname> in the chat list and changes its preview message to
+    // <content>
     public void updateChatMessagePreviewAndNotification(String chatName, String content, boolean isSent)
     {
         Log.i("updatePreview()", "in updateChatMessage Preview");
 
-        // Update the chat message preview if it exists
-        //ChatListItem chat = getChatListItemWithChatName(_ChatListEntries, chatName);
-
         String newPreviewMessage = "";
 
-        /*if (isSent )
-            newPreviewMessage = _sentPreviewText;
-        else
-            newPreviewMessage = _readPreviewText;
-*/
         newPreviewMessage = content;
 
         ((ChatListAdapter)_ChatListAdapter).setPreviewMessage(chatName, newPreviewMessage);
-
-
 
         // Create a runnable action to run on the UI thread
         Runnable updateMsgPreview = new Runnable() {
@@ -1916,12 +1660,10 @@ public class MainActivity extends AppCompatActivity
 
         // Run action to update chatListAdapter
         runOnUiThread(updateMsgPreview);
-
-
-
     }
 
-    // Sets a chats notified attribute, indicating whether it should notify a new message or not
+    // Sets the chats notified attribute for the chatname specified in our chat list,
+    // The chats notified attribute indicating whether or not a new message is waiting in the chat
     public void setChatNotified(final String chatName, final boolean isNotified)
     {
         Log.i("setChatNotified", "in setChatNotified for chat " + chatName);

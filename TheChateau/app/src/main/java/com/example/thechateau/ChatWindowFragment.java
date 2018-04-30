@@ -73,7 +73,7 @@ public class ChatWindowFragment extends Fragment {
     }
 
 
-
+    // Static Constructor for ChatWindowFragment
     public static ChatWindowFragment newInstance(String chatName) {
 
         ChatWindowFragment fragment = new ChatWindowFragment();
@@ -218,11 +218,11 @@ public class ChatWindowFragment extends Fragment {
     }
 
 
+    // Gets the chat name of the current chat for this fragment instance
     public String getChatName()
     {
         return _ChatName;
     }
-
 
 
     // Updates the message history if necessary by adding
