@@ -1,81 +1,25 @@
-# Chateau
+# Frontend Instructions
 
-This is a Repository for networks project 1.
+1. Download Android Studio using the following link
+https://developer.android.com/studio/
 
-## Backend Server Instructions: 
+2. Install Android Studio following the steps described here
+https://developer.android.com/studio/install
 
-1) Make sure you have `pip` installed
-2) type `pip install virtualenv` , this will install a python project package manager. 
-3) Once virtualenv is installed, type `virtualenv -p python3 env` this will create a local environment called "env"
-4) Activate that local environment with `source env/bin/activate`
-5) Now once you're sandboxed in the environment, install dependencies with `pip install -r requirements.txt` 
-6) now run `python server.py`, this will start the server on localhost:8888
+3. Download or clone the most recent push to the chatApp branch 
 
+4. Open Android Studio
 
+5. In Android Studio, open the project using the "TheChateau" folder that should be found in the file downloaded in step 3
 
-# Server API Details
+6. Build the Project Using the hammer icon
+	-Android Studio may prompt you to download
+	 additional plugins before the build can truly 
+	 complete
 
-#### The WS portion of the Server takes JSON messsages at the /ws url and then based upon the message, acts accordingly. The messages and their responses are documented below. For message types and message arguements, the keyword format must match exactly.
+7. Connect an android device to your computer, or create an emulator using the following tutorial
+https://developer.android.com/studio/run/managing-avds
 
-### Message Types:
+8. Run the project on the device that was set up in step 7
 
-**Register Client:** 
-
-type: 1 
-
-Arguments
-	- `"username"`
-
-Response:
-	- If successful, `"status": 200`
-	- if generic failure, `"status": 400` 
-	- if no socket (this shouldn't happen), `"status": 300` 
-	- if user is already registered, `"status": 302` 
-
-
-**Message Client:**
-
-type: 3
-
-Arguments:
-	- `"clients"` usernames for who the message is going to
-	- `"content"` content of the actual message body
-
-Response:
-	- If successful, `"status": 200`
-	- if failure, `"status": 400` 
-
-
-**Clients List:** 
-
-type: 4 
-
-Arguments
-	- None
-Response:
-	- If successful, `"status": 200` and an array of `"clients"` usernames. 
-	- if failure, `"status": 400` 
-
-
-**Random Message:** 
-
-type: 5
-
-Arguments
-	- `"content"`
-Response:
-	- If successful, `"status": 200` and a random `"clients"` username. 
-	- if failure, `"status": 400` 
-
-
-
-# To Use The Python Test Client
-#### In order to use the python test client, make sure that the server is running locally with `python server.py`. Then
-in a seperate window, start the client with `python test_client.py`. The test client is configured to read in a json message from file eg. `message.json` and then send that json file to the server as a message. The test client then reads from the server and prints to console. The client will then loop back and listen for another file message. **Note that the client is currently configured to only read once, so if a message sent to the server prompts multiple messages back to the client, only one message will show. (Assumes port localhost:8888)
-
-# To Test the Potential Tufts Auth Functionality
-Run the script `python ldap_client.py` and try your utln and password. This is done over tls and you can check the source, nothing is saved"
-
-
-## Current Behaviours
-1) You must succesfully have a register client request (1) before making any other requests
+9. Enjoy the app!
