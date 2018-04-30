@@ -1237,6 +1237,25 @@ public class MainActivity extends AppCompatActivity
                         // Get the token from the message
                         _UserToken = (String)jsonObject.get("token");
 
+                        /*// Get the list of backups in case this host goes down
+                        org.json.simple.JSONArray jsonArray = (org.json.simple.JSONArray)jsonObject.get("backupList");
+                        String[] backups = new String[jsonArray.size()];
+
+                        // Add all backups to our list of hosts that aren't already
+                        // in the list
+                        for(int i = 0; i < jsonArray.size(); i++)
+                        {
+                            String backupHost = (String)jsonArray.get(i);
+
+                            //Log.i(tag, "current backupHost:" + backupHost);
+
+                            if(!_ServerHosts.contains(backupHost))
+                            {
+                                _ServerHosts.add(backupHost);
+                            }
+                        }*/
+
+
                     }
 
                     // If user is already registered
@@ -1245,6 +1264,13 @@ public class MainActivity extends AppCompatActivity
                         Log.i(tag, "Error, username was already registered");
                         // Tell user to pick a new username
                     }
+
+                    // if told to connect to a different server
+                    // -search for the index of the host specified
+                    // -set that index as the currentHostIndex
+                    // -setup WebSocket connection with the new host
+                    // -set hostRetries to 0
+                    // -call onServerDisconnected
 
                     else
                     {
